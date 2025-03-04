@@ -1,17 +1,15 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
+import dayjs from 'dayjs';
 import avatarImage from '@/assets/cl1_45.png';
-import dayjs from "dayjs";
 
-interface IAssistents {
+interface IAssistent {
   id: string;
   name: string;
   summary: string;
-  example?: string;
   image?: string;
   description: string;
   call_name: string;
   likes: number;
-  comments?: string[];
   comments_count: number;
   verified: boolean;
   created_at: string;
@@ -19,27 +17,12 @@ interface IAssistents {
   author_id: string;
 }
 
-interface IAssistentsStore {
-  assistents: IAssistents[];
-  sortOption: keyof typeof sortOptions;
-  filters: string[];
-}
-
-const sortOptions = {
-  popular: (a: IAssistents, b: IAssistents) => b.likes - a.likes,
-  new: (a: IAssistents, b: IAssistents) =>
-    dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf(),
-};
-
-const filterOptions = {
-  all: (item: IAssistents) => item,
-  business: (item: IAssistents) => item.business,
-  author: (item: IAssistents) => item.author_id === '1',
-};
+export type SortOption = 'popular' | 'new';
+export type FilterOption = 'all' | 'business' | 'author';
 
 export const useAssistentsStore = defineStore('assistents', {
-  state: () : IAssistentsStore => ({
-    assistents: [
+  state: () => ({
+    assistants: [
       {
         id: '1',
         name: 'Бот 1',
@@ -164,36 +147,40 @@ export const useAssistentsStore = defineStore('assistents', {
         author_id: '20'
       }
     ],
-    sortOption: 'popular',
-    filters: ['all'],
+    
+    sortOption: 'popular' as SortOption,
+    activeFilter: 'all' as FilterOption,
   }),
 
   actions: {
-    setSortOption(option: 'popular' | 'new') {
+    setSortOption(option: SortOption) {
       this.sortOption = option;
     },
 
-    toggleFilter(filter: string) {
-      if (this.filters.includes(filter)) {
-        this.filters = this.filters.filter(f => f !== filter);
-      } else {
-        this.filters.push(filter);
-      }
+    setActiveFilter(filter: FilterOption) {
+      this.activeFilter = filter;
+    },
+  },
+
+  getters: {
+
+    filteredAssistents(state): IAssistent[] {
+      const filterMap: Record<FilterOption, (item: IAssistent) => boolean> = {
+        all: () => true,
+        business: (item) => item.business,
+        author: (item) => item.author_id === '1',
+      };
+
+      return state.assistants.filter(filterMap[state.activeFilter]);
     },
 
-    resetFilters() {
-      this.filters = [];
-    },
+    sortedAssistents(state): IAssistent[] {
+      const sortMap: Record<SortOption, (a: IAssistent, b: IAssistent) => number> = {
+        popular: (a, b) => b.likes - a.likes,
+        new: (a, b) => dayjs(b.created_at).unix() - dayjs(a.created_at).unix(),
+      };
 
-    sortedAssistents() {
-      let filteredAssistents = [...this.assistents];
-
-      for (const filter of this.filters) {
-        const filterFunc = filterOptions[filter as keyof typeof filterOptions];
-        filteredAssistents = filteredAssistents.filter(filterFunc);
-      }
-
-      return filteredAssistents.sort(sortOptions[this.sortOption]);
+      return this.filteredAssistents.sort(sortMap[state.sortOption]);
     },
   },
 });
