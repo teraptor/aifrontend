@@ -3,31 +3,38 @@ import avatarImage from '@/assets/cl1_45.png';
 import dayjs from "dayjs";
 
 interface IAssistents {
-  id: string,
-  name: string,
-  summary: string,
-  example?: string,
-  image?: string,
-  description: string,
-  call_name: string,
-  likes: number,
-  comments ?: string[],
-  comments_count: number,
-  verified: boolean,
-  created_at: string,
-  business: boolean,
-  author_id: string
+  id: string;
+  name: string;
+  summary: string;
+  example?: string;
+  image?: string;
+  description: string;
+  call_name: string;
+  likes: number;
+  comments?: string[];
+  comments_count: number;
+  verified: boolean;
+  created_at: string;
+  business: boolean;
+  author_id: string;
 }
 
 interface IAssistentsStore {
   assistents: IAssistents[];
   sortOption: keyof typeof sortOptions;
+  filters: string[];
 }
 
 const sortOptions = {
   popular: (a: IAssistents, b: IAssistents) => b.likes - a.likes,
   new: (a: IAssistents, b: IAssistents) =>
     dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf(),
+};
+
+const filterOptions = {
+  all: (item: IAssistents) => item,
+  business: (item: IAssistents) => item.business,
+  author: (item: IAssistents) => item.author_id === '1',
 };
 
 export const useAssistentsStore = defineStore('assistents', {
@@ -157,15 +164,36 @@ export const useAssistentsStore = defineStore('assistents', {
         author_id: '20'
       }
     ],
-    sortOption: 'popular'
+    sortOption: 'popular',
+    filters: ['all'],
   }),
+
   actions: {
-    setSortOption(option: keyof typeof sortOptions) {
+    setSortOption(option: 'popular' | 'new') {
       this.sortOption = option;
     },
 
+    toggleFilter(filter: string) {
+      if (this.filters.includes(filter)) {
+        this.filters = this.filters.filter(f => f !== filter);
+      } else {
+        this.filters.push(filter);
+      }
+    },
+
+    resetFilters() {
+      this.filters = [];
+    },
+
     sortedAssistents() {
-      return [...this.assistents].sort(sortOptions[this.sortOption]);
+      let filteredAssistents = [...this.assistents];
+
+      for (const filter of this.filters) {
+        const filterFunc = filterOptions[filter as keyof typeof filterOptions];
+        filteredAssistents = filteredAssistents.filter(filterFunc);
+      }
+
+      return filteredAssistents.sort(sortOptions[this.sortOption]);
     },
   },
-})
+});
