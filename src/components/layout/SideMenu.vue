@@ -1,25 +1,26 @@
 <template>
-  <aside class="side-menu" :class="{ 'side-menu--collapsed': isCollapsed }">
+  <aside class="side-menu" :class="{ 'side-menu--collapsed': SidebarIsOpen }">
     <div class="side-menu__header">
-      <button class="toggle-button" @click="toggleMenu">
+      <h1 v-show="!SidebarIsOpen">AI</h1>
+      <button class="toggle-button" @click="toggleSidebar">
         <span class="toggle-icon"></span>
       </button>
     </div>
-    <div class="auth-container" v-show="!isCollapsed">
+    <div class="auth-container" v-show="!SidebarIsOpen">
       <AuthForm />
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import AuthForm from './AuthForm.vue';
 
-const isCollapsed = ref(false);
+import { useLayoutStore } from '@/stores/useLayoutStore';
+import { storeToRefs } from 'pinia';
 
-const toggleMenu = () => {
-  isCollapsed.value = !isCollapsed.value;
-};
+const layoutStore = useLayoutStore();
+const { SidebarIsOpen } = storeToRefs(layoutStore);
+const { toggleSidebar } = layoutStore;
 </script>
 
 <style scoped>
@@ -45,12 +46,14 @@ const toggleMenu = () => {
 }
 
 .side-menu__header {
-  height: 48px;
+  width: 100%;
+  height: 60px;
   padding: 0 1rem;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   border-bottom: 1px solid #e5e7eb;
+  position: relative;
 }
 
 .toggle-button {
@@ -63,6 +66,11 @@ const toggleMenu = () => {
   align-items: center;
   justify-content: center;
   padding: 0;
+  padding: 0.5rem;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .toggle-icon {
