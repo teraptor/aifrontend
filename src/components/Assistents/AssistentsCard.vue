@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
   assistents: {
@@ -34,8 +34,41 @@ const generatedData = ref({
   name: '',
   profession: '',
   avatarId: 0,
-  isMale: false
+  isMale: false,
+  lastVisit: '10 minutes ago'
 });
+
+const startTime = ref(new Date());
+const currentTime = ref(new Date());
+let timer: number | null = null;
+let statusTimer: number | null = null;
+const dots = ref('');
+
+const statuses = [
+  'смотрит документы',
+  'печатает',
+  'думает',
+  'пьет чай'
+];
+
+const currentStatus = ref(statuses[0]);
+
+const updateDots = () => {
+  if (dots.value.length >= 3) {
+    dots.value = '';
+  } else {
+    dots.value += '.';
+  }
+};
+
+const updateStatus = () => {
+  const currentIndex = Math.floor(Math.random() * statuses.length);
+  currentStatus.value = statuses[currentIndex];
+  
+  // Устанавливаем следующее обновление через случайное время
+  const nextDelay = Math.floor(Math.random() * (10000 - 3000) + 3000); // от 3000 до 10000 мс
+  statusTimer = window.setTimeout(updateStatus, nextDelay);
+};
 
 // Загружаем или генерируем данные
 const loadOrGenerateData = () => {
@@ -53,7 +86,8 @@ const loadOrGenerateData = () => {
       name: 'Даша',
       profession: 'HR-специалист',
       avatarId: 1,
-      isMale: false
+      isMale: false,
+      lastVisit: '10 minutes ago'
     };
   } else {
     // Для остальных ассистентов оставляем случайную генерацию
@@ -67,7 +101,8 @@ const loadOrGenerateData = () => {
       name,
       profession,
       avatarId,
-      isMale
+      isMale,
+      lastVisit: '10 minutes ago'
     };
   }
 
@@ -75,8 +110,37 @@ const loadOrGenerateData = () => {
   localStorage.setItem(storageKey, JSON.stringify(generatedData.value));
 };
 
+const getTimeDisplay = computed(() => {
+  if (assistents.id === '1') {
+    return `${currentStatus.value}${dots.value}`;
+  } else {
+    const diffInSeconds = Math.floor((currentTime.value.getTime() - startTime.value.getTime()) / 1000);
+    if (diffInSeconds > 50) {
+      return 'one minute ago';
+    }
+    return `${diffInSeconds} seconds ago`;
+  }
+});
+
 onMounted(() => {
   loadOrGenerateData();
+  // Обновляем время каждые 10 секунд
+  timer = window.setInterval(() => {
+    currentTime.value = new Date();
+  }, 10000);
+
+  // Обновляем точки каждые 500мс
+  const dotsTimer = setInterval(updateDots, 500);
+
+  // Запускаем первое обновление статуса
+  updateStatus();
+
+  // Очищаем таймеры при размонтировании
+  onUnmounted(() => {
+    if (timer) clearInterval(timer);
+    if (statusTimer) clearTimeout(statusTimer);
+    if (dotsTimer) clearInterval(dotsTimer);
+  });
 });
 
 const randomName = computed(() => generatedData.value.name);
@@ -89,7 +153,7 @@ const randomAvatar = computed(() => {
 
 const status = computed(() => {
   if (!isMyDepartment) return null;
-  return Math.random() > 0.5 ? 'Active' : 'Disable';
+  return assistents.id === '1' ? 'Active' : 'Disable';
 });
 
 const statusClass = computed(() => {
@@ -109,21 +173,17 @@ const statusClass = computed(() => {
         decoding="async"
       />
       <div class="assistents-card__name-wrapper">
-        <h4 class="assistents-card__name">{{ randomProfession }} {{ randomName }}</h4>
-        <p class="assistents-card__summary">{{ isMyDepartment ? 'ИИ ассистент' : 'ИИ ассистент' }}</p>
+        <h4 class="assistents-card__name">{{ randomName }}</h4>
+        <p class="assistents-card__summary">{{ randomProfession }}</p>
+        <p v-if="isMyDepartment" 
+           class="assistents-card__last-visit"
+           :class="{ 'assistents-card__last-visit--runned': assistents.id === '1' }">
+          {{ getTimeDisplay }}
+        </p>
       </div>
-    </div>
-    <div class="assistents-card__like-wrapper" v-if="!isMyDepartment">
-      <p class="assistents-card__like">
-        {{ assistents.likes }}
-      </p>
-      <span class="icon icon-like" />
     </div>
     <div class="assistents-card__status" v-if="isMyDepartment">
       {{ status }}
-    </div>
-    <div class="assistents-card__verified" v-if="assistents.verified && !isMyDepartment">
-      <span class="icon icon-verified" />
     </div>
   </div>
 </template>
@@ -131,45 +191,45 @@ const statusClass = computed(() => {
 <style lang="scss" scoped>
 .assistents-card {
   position: relative;
-  max-width: 250px;
   width: 100%;
-  height: 120px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: $light-grey-color;
-  padding: 12px;
-  border-radius: 20px;
-  transition: transform 0.2s;
+  background: #FFFFFF;
+  padding: 24px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
   cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 
   &:hover {
-    transform: scale(1.04);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   &--disable {
-    opacity: 0.4;
+    opacity: 0.5;
   }
 
   &--active {
-    background: rgba($success-color, 0.1);
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &__container {
     width: 100%;
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 16px;
   }
 
   &__image {
-    width: 64px;
-    height: 64px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
     object-fit: cover;
-    background: white;
-    border: 1px solid rgba($help-color, 0.1);
+    background: #F5F5F5;
+    border: none;
     opacity: 0;
     transition: opacity 0.3s ease;
     
@@ -179,65 +239,58 @@ const statusClass = computed(() => {
   }
 
   &__name-wrapper {
-    width: calc( 100% - 64px - 12px);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 4px;
   }
 
   &__name {
-    font-weight: 600;
-    line-height: 1.5;
+    font-size: 16px;
+    font-weight: 500;
+    color: #111827;
+    margin: 0;
+    line-height: 1.4;
   }
 
   &__summary {
-    color: $help-color;
-    line-height: 1.2;
     font-size: 14px;
-  }
-
-  &__like-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 4px;
-    max-height: 20px;
-  }
-
-  &__like {
-    font-size: 14px;
-    font-weight: 600;
-    color: $help-color;
-    line-height: 1.5;
-    height: 100%;
+    color: #6B7280;
+    line-height: 1.4;
+    margin: 0;
   }
 
   &__status {
     position: absolute;
-    top: 2%;
-    right: 2%;
+    top: 24px;
+    right: 24px;
     font-size: 12px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 12px;
-    background: $success-color;
-    color: white;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: #22C55E;
+    color: #FFFFFF;
   }
 
   &--disable &__status {
-    background: $help-color;
+    background: #F3F4F6;
+    color: #6B7280;
   }
 
-  &__verified {
-    position: absolute;
-    top: 2%;
-    right: 2%;
+  &--active &__status {
+    background: #22C55E;
+    color: #FFFFFF;
+  }
 
-    .icon {
-      font-size: 30px;
-      color: $main-color;
+  &__last-visit {
+    font-size: 12px;
+    color: #9CA3AF;
+    line-height: 1.4;
+    margin: 0;
+    margin-top: 4px;
+    font-weight: 400;
+
+    &--runned {
+      color: rgba(34, 197, 94, 0.5);
     }
   }
 }

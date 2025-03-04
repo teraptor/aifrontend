@@ -2,7 +2,6 @@ import type { RouteRecordRaw } from 'vue-router'
 import { RouteNames } from './routeNames'
 
 const defaultMeta = {
-  showHeader: true,
   showFooter: true,
   showSidebar: true
 }

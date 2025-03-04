@@ -33,7 +33,7 @@ const sortLabels: Record<SortOption, string> = {
 };
 
 const myAssistents = computed(() => {
-  // Возвращаем двух ассистентов - HR Дашу и Николая
+  // Возвращаем трех ассистентов
   return [
     {
       id: '1',
@@ -54,6 +54,19 @@ const myAssistents = computed(() => {
       summary: 'HR-специалист',
       description: 'HR-специалист',
       call_name: 'HR_Nikolay',
+      likes: 0,
+      comments_count: 0,
+      verified: true,
+      created_at: "2024-03-02T18:15:00Z",
+      business: true,
+      author_id: '20'
+    },
+    {
+      id: '3',
+      name: 'Анна',
+      summary: 'HR-специалист',
+      description: 'HR-специалист',
+      call_name: 'HR_Anna',
       likes: 0,
       comments_count: 0,
       verified: true,
@@ -117,7 +130,10 @@ const toggleMyDepartment = () => {
       </div>
     </div>
 
-    <TitleWrapper title="Ассистенты" subtitle="Prompts & Plugins GPTs" />
+    <TitleWrapper 
+      title="Ассистенты" 
+      subtitle="Сделано для вас с ❤️"
+    />
     
     <div class="assistents__nav-group">
       <SortFiltersTab

@@ -37,12 +37,15 @@
       </router-link>
 
       <router-link to="/chats" class="menu-item">
-        <span class="menu-item__icon">
+        <span class="menu-item__icon" :class="{ 'menu-item__icon--active': unreadChats > 0 }">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
+          <span v-if="unreadChats > 0" class="menu-item__counter">{{ unreadChats }}</span>
         </span>
-        <span class="menu-item__text" v-show="!SidebarIsOpen">Диалоги ассистентов</span>
+        <span class="menu-item__text" v-show="!SidebarIsOpen">
+          Вопросы ассистентов
+        </span>
         <span class="menu-item__plus" v-show="!SidebarIsOpen">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M12 6V12M12 12V18M12 12H18M12 12L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -79,6 +82,7 @@ import AuthForm from './AuthForm.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
 
 const layoutStore = useLayoutStore();
 const { SidebarIsOpen } = storeToRefs(layoutStore);
@@ -87,13 +91,15 @@ const { toggleSidebar } = layoutStore;
 const authStore = useAuthStore();
 const { isAuthenticated } = storeToRefs(authStore);
 const { logout } = authStore;
+
+const unreadChats = ref(2); // Временное значение для демонстрации
 </script>
 
 <style scoped>
 .side-menu {
   width: 280px;
   height: 100vh;
-  background: #FFFFFF;
+  background: #FAFAFA;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
@@ -113,8 +119,8 @@ const { logout } = authStore;
 
 .side-menu__header {
   width: 100%;
-  height: 60px;
-  padding: 0 1rem;
+  height: 72px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -172,45 +178,51 @@ const { logout } = authStore;
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 8px;
+  padding: 24px;
+  gap: 4px;
   margin-bottom: auto;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
   text-decoration: none;
   color: #111827;
   transition: all 0.2s ease;
-  border-radius: 12px;
-  background: #F3F4F6;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .menu-item:hover {
-  background-color: #E5E7EB;
+  background-color: #F3F4F6;
 }
 
 .menu-item__icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 12px;
+  color: #6B7280;
+  position: relative;
+}
+
+.menu-item__icon--active {
+  color: #E07C5E;
 }
 
 .menu-item__text {
   flex: 1;
-  font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .menu-item__arrow,
 .menu-item__plus {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -218,11 +230,11 @@ const { logout } = authStore;
 }
 
 .side-menu__footer {
-  padding: 16px;
+  padding: 24px;
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .profile-link {
@@ -234,18 +246,17 @@ const { logout } = authStore;
   display: flex;
   align-items: center;
   padding: 8px;
-  border-radius: 12px;
-  background: #F3F4F6;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .profile:hover {
-  background: #E5E7EB;
+  background: #F3F4F6;
 }
 
 .profile__avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #4B9093;
   display: flex;
@@ -256,7 +267,7 @@ const { logout } = authStore;
 
 .profile__avatar-letter {
   color: #FFFFFF;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -265,32 +276,31 @@ const { logout } = authStore;
 }
 
 .profile__name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: #111827;
 }
 
 .profile__action {
-  font-size: 14px;
+  font-size: 13px;
   color: #6B7280;
 }
 
 .logout-button {
   width: 100%;
-  padding: 8px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 12px;
-  background: #FEE2E2;
+  border-radius: 6px;
+  background: #FEF2F2;
   color: #DC2626;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .logout-button:hover {
   background: #FEE2E2;
-  opacity: 0.9;
 }
 
 .auth-container {
@@ -298,7 +308,26 @@ const { logout } = authStore;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px;
   width: 100%;
+}
+
+.menu-item__counter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #E07C5E;
+  color: #FFFFFF;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  z-index: 1;
 }
 </style> 
