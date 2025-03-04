@@ -98,7 +98,6 @@ watch(internalValue, newValue => {
 .form__group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   font-weight: 300;
   font-size: 14px;
 
@@ -115,9 +114,10 @@ watch(internalValue, newValue => {
   }
 
   &-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    background: $light-grey-color;
+    padding: 10px 10px 10px 30px;
+    border: none;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 300;
     box-sizing: border-box;
@@ -129,9 +129,8 @@ watch(internalValue, newValue => {
     }
 
     &:focus {
-      border-color: #4b9cd3;
-      background-color: #fff;
-      box-shadow: 0 0 8px rgba(75, 156, 211, 0.5);
+      background-color: $light-color;
+      box-shadow: $box-shadow;
       outline: none;
     }
 
@@ -146,7 +145,7 @@ watch(internalValue, newValue => {
   }
 
   .medium {
-    width: 200px;
+    width: 170px;
     max-height: 36px;
   }
 
@@ -157,9 +156,14 @@ watch(internalValue, newValue => {
 
   &-icon {
     position: absolute;
-    right: 10px;
+    left: 10px;
     top: 30%;
     cursor: pointer;
+
+    .icon {
+      color: $help-color;
+      font-size: 14px;
+    }
   }
   &-error {
     color: red;

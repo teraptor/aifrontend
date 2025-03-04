@@ -18,7 +18,7 @@ interface IAssistent {
 }
 
 export type SortOption = 'popular' | 'new';
-export type FilterOption = 'all' | 'business' | 'author';
+export type FilterOption = 'all' | 'business' | 'my';
 
 export const useAssistentsStore = defineStore('assistents', {
   state: () => ({
@@ -49,7 +49,7 @@ export const useAssistentsStore = defineStore('assistents', {
         verified: true,
         created_at: "2024-03-08T18:15:00Z",
         business: true,
-        author_id: '20'
+        author_id: '1'
       },
       {
         id: '3',
@@ -168,7 +168,7 @@ export const useAssistentsStore = defineStore('assistents', {
       const filterMap: Record<FilterOption, (item: IAssistent) => boolean> = {
         all: () => true,
         business: (item) => item.business,
-        author: (item) => item.author_id === '1',
+        my: (item) => item.author_id === '1',
       };
 
       return state.assistants.filter(filterMap[state.activeFilter]);
