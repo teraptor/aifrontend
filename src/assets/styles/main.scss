@@ -1,0 +1,21 @@
+@use './reset.scss';
+@use './normalize.scss';
+@use './variables.scss';
+@use '../icons/connect-icons.scss';
+
+* {
+  font-family: "Manrope", serif;
+  font-optical-sizing: auto;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+body {
+  background-color: rgba(249 250 251);
+}
+
+main {
+  min-height: 100vh;
+}
+
+
