@@ -1,59 +1,65 @@
 <script lang="ts" setup>
 </script>
 <template>
-  <div class="header">
-    <div class="header__inner">
-      <div class="header__logo">
-        <RouterLink to="/">
-          <img src="@/assets/logo.png" alt="logo" class="logo"/>
-        </RouterLink>
+  <header class="header">
+    <div class="header__items">
+      <div class="header__item">
+        <span class="icon icon-world"/>
+      </div>
+      <div class="header__select">Быстрый выбор</div>
+      <div class="header__item">
+        <span class="icon icon-paintbrush"/>
       </div>
     </div>
-  </div>
+  </header>
 
 </template>
 <style lang="scss" scoped>
 
 .header {
   width: 100%;
-  border-bottom: 2px solid $border-light;
-  background-color: $light-color;
-  padding: 10px 16px;
-  box-shadow: $box-shadow;
+  height: 60px;
+  position: fixed;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   z-index: 100;
 
-  &__inner {
-    max-width: 1320px;
+  &__items {
     width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__item {
+    height: 40px;
+    width: 40px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-  }
+    justify-content: center;
+    background-color: rgba(249 250 251), 0.5;
+    border-radius: 8px;
+    backdrop-filter: blur(30px);
+    cursor: pointer;
 
-  .logo {
-    width: 160px;
-    height: 40px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header {
-    &__inner {
-      max-width: 680px;
+    .icon {
+      font-size: 26px;
+      font-weight: 600;
+      color: $help-color;
     }
   }
-}
 
-@media (max-width: 480px) {
-  .header {
-    &__inner {
-      max-width: 480px;
-      padding: 0 16px;
-    }
+  &__select {
+    padding: 10px 16px;
+    border-radius: 16px;
+    background-color: $light-grey-color;
+    backdrop-filter: blur(30px);
+    cursor: pointer;
+    font-weight: 600;
   }
 }
+
 </style>

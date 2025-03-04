@@ -432,3 +432,15 @@
     content: $icon-verified;
   }
 }
+
+.icon-world {
+  &::before {
+    content: $icon-world;
+  }
+}
+
+.icon-paintbrush {
+  &::before {
+    content: $icon-paintbrush;
+  }
+}

@@ -11,7 +11,6 @@ import FAQ from '@/components/FAQ/FAQ.vue';
 <style lang="scss" scoped>
 .main {
   width: 100%;
-  padding: 40px 0;
   display: flex;
   flex-direction: column;
   gap: 40px;

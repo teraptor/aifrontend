@@ -4,6 +4,7 @@ import { RouteNames } from './routeNames'
 const defaultMeta = {
   showHeader: true,
   showFooter: true,
+  showSidebar: true
 }
 
 export const MAIN_ROUTES: RouteRecordRaw[] = [

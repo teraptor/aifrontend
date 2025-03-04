@@ -1,53 +1,85 @@
 <script lang="ts" setup>
+import { useLayoutStore } from '@/stores/useLayoutStore';
 import dayjs from 'dayjs'
 const currentYear: number = dayjs().year()
+const layout = useLayoutStore();
 </script>
 <template>
-  <div class="footer">
-    <div class="footer__inner">
-    <p class="footer__text">© {{ currentYear }} - Все права защищены</p>
+  <footer class="footer">
+    <ul class="footer__items">
+      <li class="footer__item" v-for="item in layout.footerNav" :key="item.id">
+        <RouterLink :to="item.link" class="footer__item-link">{{ item.link_name }}</RouterLink>
+      </li>
+    </ul>
+    <p class="footer__text">
+      Сделано с <span class="icon icon-like"/> в {{ currentYear }}
+    </p>
+    <div class="footer__contacts">
+      <a href="https://web.telegram.org/">
+        <span class="icon icon-telegram"/>
+      </a>
+      <a href="https://workspace.google.com/intl/ru/gmail/">
+        <span class="icon icon-mail"/>
+      </a>
     </div>
-  </div>
+  </footer>
 </template>
 <style lang="scss" scoped>
 .footer {
   width: 100%;
-  border-top: 2px solid $border-light;
-  background-color: $light-color;
-  box-shadow: $box-shadow;
+  background: transparent;
+  padding: 32px 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 20px 16px;
+  gap: 32px;
 
-  &__inner {
-    max-width: 1320px;
-    width: 100%;
+  &__items {
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba($help-color, 0.1);
+    border-radius: 16px;
+  }
+
+  &__item {
+    color: $help-color;
+    font-size: 12px;
+    line-height: 1.4;
+    display: flex;
+
+    &:hover {
+      color: $dark-color;
+    }
   }
 
   &__text {
-    font-size: 14px;
-    font-weight: 300;
     color: $help-color;
-  }
-}
+    line-height: 1.4;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 
-@media (max-width: 768px) {
-  .footer {
-    &__inner {
-      max-width: 680px;
+    .icon {
+      color: $danger-color;
     }
   }
-}
 
-@media (max-width: 480px) {
-  .footer {
-    &__inner {
-      max-width: 480px;
-      padding: 0 16px;
+  &__contacts {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 30px;
+
+    .icon {
+      color: $help-color;
+      font-size: 28px;
+
+      &:hover {
+        color: $primary-color;
+      }
     }
   }
 }

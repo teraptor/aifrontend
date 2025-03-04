@@ -27,7 +27,7 @@ const { toggleSidebar } = layoutStore;
 .side-menu {
   width: 280px;
   height: 100vh;
-  background: #ffffff;
+  background: transparent;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
@@ -52,7 +52,6 @@ const { toggleSidebar } = layoutStore;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e5e7eb;
   position: relative;
 }
 
