@@ -1,5 +1,8 @@
 <template>
   <div class="layout">
+    <Notivue v-slot="item">
+      <Notification :item="item" />
+    </Notivue>
     <SideMenu v-if="route.meta.showSidebar" />
     <div class="content-wrapper" :class="{ 'content-wrapper--expanded': !SidebarIsOpen }">
       <Header class="header" v-if="route.meta.showHeader"/>
@@ -18,6 +21,7 @@ import Footer from '@/components/layout/Footer.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router'
+import { Notivue, Notification } from 'notivue'
 
 const route = useRoute()
 

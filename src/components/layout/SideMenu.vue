@@ -6,7 +6,7 @@
         <span class="toggle-icon"></span>
       </button>
     </div>
-    <div class="auth-container" v-show="!SidebarIsOpen">
+    <div class="auth-container" v-show="!SidebarIsOpen" >
       <AuthForm />
     </div>
   </aside>
@@ -14,7 +14,6 @@
 
 <script setup lang="ts">
 import AuthForm from './AuthForm.vue';
-
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
 
