@@ -57,14 +57,14 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
 <style lang="scss" scoped>
 .btn {
   padding: 10px;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   color: $light-color;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 300;
   max-height: 40px;
 
@@ -75,13 +75,11 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
 
   &-small {
     width: 100px;
-    padding: 4px;
     height: 32px;
   }
   &-medium {
-    width: 150px;
-    padding: 4px;
-    height: 32px;
+    width: 170px;
+    height: 36px;
   }
 
   &-large {
@@ -107,18 +105,15 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
 }
 
 .btn-secondary {
-  border: 1px solid $btn-secondary;
-  color: $btn-secondary;
-  background-color: $light-color;
+  background-color: $btn-secondary;
+  border: none;
 
   &:disabled {
-    border: 1px solid $btn-secondary-disabled;
-    color: $btn-secondary-disabled;
+    background-color: $btn-secondary-disabled;
     cursor: not-allowed;
   }
-  &:active {
-    border: 1px solid $btn-secondary-active;
-    color: $btn-secondary-active;
+  &.active {
+    background-color: $btn-secondary-active;
   }
 }
 

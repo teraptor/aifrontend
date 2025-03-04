@@ -5,6 +5,8 @@ import AssistentsCard from './AssistentsCard.vue';
 import SortFiltersTab from '../ui/SortFiltersTab.vue';
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
+import InputField from '../ui/InputField.vue';
+import Button from '../ui/Button.vue';
 
 const assistentsStore = useAssistentsStore();
 const activeTab = ref<SortOption>(assistentsStore.sortOption);
@@ -13,7 +15,7 @@ const activeFilter = ref<FilterOption>('all');
 const filterLabels: Record<FilterOption, string> = {
   all: 'Все',
   business: 'Бизнес',
-  author: 'Автор',
+  my: 'Мои',
 };
 
 const sortLabels: Record<SortOption, string> = {
@@ -40,16 +42,28 @@ const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
 <template>
   <div class="assistents">
     <TitleWrapper title="Ассистенты" subtitle="Prompts & Plugins GPTs" />
-
-    <SortFiltersTab
-      :sortLabels="sortLabels"
-      :filterLabels="filterLabels"
-      :activeTab="activeTab"
-      :activeFilter="activeFilter"
-      @update:sort="changeSortOption"
-      @update:filter="changeFilter"
-    />
-
+    <div class="assistents__nav-group">
+      <SortFiltersTab
+        :sortLabels="sortLabels"
+        :filterLabels="filterLabels"
+        :activeTab="activeTab"
+        :activeFilter="activeFilter"
+        @update:sort="changeSortOption"
+        @update:filter="changeFilter"
+      />
+      <div class="assistents__btn-group">
+        <InputField 
+          icon='icon icon-search'
+          size="medium"
+          placeholder="Найти ассистента"
+        />
+        <Button
+          button-type="secondary"
+          text="Создать ассистента"
+          size="medium"
+        />
+      </div>
+    </div>
     <div class="assistents__list">
       <AssistentsCard
         v-for="item in filteredAssistents"
@@ -66,6 +80,20 @@ const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
+
+  &__nav-group {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__btn-group {
+    width: 50%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+  }
 
   &__list {
     width: 100%;
