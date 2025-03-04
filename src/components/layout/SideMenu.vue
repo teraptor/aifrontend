@@ -30,10 +30,18 @@ const toggleMenu = () => {
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
 }
 
 .side-menu--collapsed {
   width: 72px;
+}
+
+.side-menu--collapsed + .main-content {
+  margin-left: 72px;
 }
 
 .side-menu__header {

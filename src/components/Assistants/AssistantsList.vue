@@ -158,7 +158,7 @@ const assistants = [
 
 <style scoped>
 .assistants {
-  padding: 2rem 2.5rem;
+  width: 100%;
 }
 
 .assistants-header {
