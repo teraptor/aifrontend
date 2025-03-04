@@ -15,7 +15,7 @@ const props = defineProps({
     default: '',
   },
   size: {
-    type: String as PropType<'tab' | 'small' | 'medium' | 'large'>,
+    type: String as PropType<'tab' | 'small' | 'medium' | 'big' | 'large'>,
     default: 'large',
   },
   icon: {
@@ -66,7 +66,7 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
   color: $light-color;
   font-size: 14px;
   font-weight: 300;
-  max-height: 40px;
+  max-height: 48px;
 
   &-tab {
     width: 50px;
@@ -81,6 +81,11 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
     width: 170px;
     height: 36px;
   }
+  &-big {
+    width: 220px;
+    height: 48px;
+  }
+
 
   &-large {
     width: 100%;

@@ -1,4 +1,9 @@
 <template>
+    <AuthModal 
+      ref="authModal" 
+      title="Авторизация"
+      help="Для получения логина и пароля обратитесь к вашему администратору"
+    />
   <div class="auth-form">
     <h2>Войти или зарегистрироваться</h2>
     <p class="subtitle">используя социальную сеть</p>
@@ -26,14 +31,22 @@
       </button>
     </div>
 
-    <button class="login-password">
+    <button class="login-password" @click="openAuthModal">
       У меня есть логин/пароль
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-// Здесь будет логика компонента
+import { ref } from 'vue';
+import AuthModal from '@/components/Modal/AuthModal.vue';
+
+
+const authModal = ref<InstanceType<typeof AuthModal> | null>(null);
+
+const openAuthModal = () => {
+  authModal.value?.openModal();
+};
 </script>
 
 <style scoped>

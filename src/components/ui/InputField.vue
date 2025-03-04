@@ -115,7 +115,7 @@ watch(internalValue, newValue => {
 
   &-input {
     background: $light-grey-color;
-    padding: 10px 10px 10px 30px;
+    padding: 10px 10px 10px 36px;
     border: none;
     border-radius: 12px;
     font-size: 14px;
@@ -147,6 +147,15 @@ watch(internalValue, newValue => {
   .medium {
     width: 170px;
     max-height: 36px;
+  }
+
+  .big {
+    width: 220px;
+    height: 48px;
+
+    & ~ .form__group-icon .icon {
+      font-size: 18px;
+    }
   }
 
   .large {
