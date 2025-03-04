@@ -1,44 +1,35 @@
 <script setup lang="ts">
-import { Notivue, Notification } from 'notivue'
-import { useRoute } from 'vue-router'
-import Header from '@/components/layout/Header.vue';
-import Footer from '@/components/layout/Footer.vue';
-const route = useRoute()
+import SideMenu from '@/components/layout/SideMenu.vue';
+import AssistantsList from '@/components/Assistants/AssistantsList.vue';
 </script>
 
 <template>
-  <div class="layout" v-cloak>
-    <Notivue v-slot="item">
-      <Notification :item="item" />
-    </Notivue>
-    <Header v-if="route.meta.showHeader" />
-    <div class="main-content">
-      <div class="main-content-inner">
-        <slot />
+  <div class="layout">
+    <SideMenu />
+    <main class="main-content">
+      <div class="content-container">
+        <AssistantsList />
       </div>
-    </div>
-    <Footer v-if="route.meta.showFooter" />
+    </main>
   </div>
 </template>
+
 <style lang="scss" scoped>
 .layout {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
+}
 
-  .main-content {
-    padding: 20px;
-    display: flex;
-    flex-grow: 1;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
+.main-content {
+  flex: 1;
+  background-color: white;
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;
+}
 
-    align-items: center;
-
-    &-inner {
-      width: 48rem;
-    }
-  }
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 </style>
