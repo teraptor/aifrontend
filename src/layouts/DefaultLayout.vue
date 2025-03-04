@@ -29,7 +29,7 @@ const { SidebarIsOpen } = storeToRefs(layoutStore);
     justify-content: center;
     align-items: center;
 
-    &-container {
+    &__container {
       width: 48rem;
     }
   }
