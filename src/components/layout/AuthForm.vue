@@ -35,14 +35,6 @@
       У меня есть логин/пароль
     </button>
   </div>
-  <div v-else>
-    <Button
-      button-type="danger"
-      text="Выйти"
-      size="medium"
-      @click="logout"
-    />
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -50,7 +42,6 @@ import { ref } from 'vue';
 import AuthModal from '@/components/Modal/AuthModal.vue';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { storeToRefs } from 'pinia';
-import Button from '../ui/Button.vue';
 
 const authModal = ref<InstanceType<typeof AuthModal> | null>(null);
 const authStore = useAuthStore()
@@ -58,7 +49,6 @@ const { isAuthenticated } = storeToRefs(authStore);
 const openAuthModal = () => {
   authModal.value?.openModal();
 };
-const logout = () => authStore.logout()
 </script>
 
 <style scoped>
