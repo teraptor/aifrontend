@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import avatarImage from '@/assets/cl1_45.png';
+import dayjs from "dayjs";
 
 interface IAssistents {
   id: string,
@@ -19,8 +20,15 @@ interface IAssistents {
 }
 
 interface IAssistentsStore {
-  assistents: IAssistents[]
+  assistents: IAssistents[];
+  sortOption: keyof typeof sortOptions;
 }
+
+const sortOptions = {
+  popular: (a: IAssistents, b: IAssistents) => b.likes - a.likes,
+  new: (a: IAssistents, b: IAssistents) =>
+    dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf(),
+};
 
 export const useAssistentsStore = defineStore('assistents', {
   state: () : IAssistentsStore => ({
@@ -148,6 +156,16 @@ export const useAssistentsStore = defineStore('assistents', {
         business: false,
         author_id: '20'
       }
-    ]
-  })
+    ],
+    sortOption: 'popular'
+  }),
+  actions: {
+    setSortOption(option: keyof typeof sortOptions) {
+      this.sortOption = option;
+    },
+
+    sortedAssistents() {
+      return [...this.assistents].sort(sortOptions[this.sortOption]);
+    },
+  },
 })
