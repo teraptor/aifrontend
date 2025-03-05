@@ -6,23 +6,38 @@
         <span class="toggle-icon"></span>
       </button>
     </div>
-    <div class="auth-container" v-show="!SidebarIsOpen" >
-      <AuthForm />
+    <div class="side-menu__container" v-show="!SidebarIsOpen" >
+      <AuthForm v-if="!isAuthenticated"/>
+      <div v-else>
+        <Button
+          button-type="danger"
+          text="Выйти"
+          size="medium"
+          @click="logout"
+        />
+      </div>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import AuthForm from './AuthForm.vue';
+import AuthForm from '../SidebarComponents/AuthForm.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
+import { useAuthStore } from '@/stores/useAuthStore';
+import Button from '../ui/Button.vue';
+
+const authStore = useAuthStore()
+const { isAuthenticated } = storeToRefs(authStore);
 
 const layoutStore = useLayoutStore();
 const { SidebarIsOpen } = storeToRefs(layoutStore);
 const { toggleSidebar } = layoutStore;
+
+const logout = () => authStore.logout()
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .side-menu {
   width: 280px;
   height: 100vh;
@@ -34,24 +49,33 @@ const { toggleSidebar } = layoutStore;
   top: 0;
   left: 0;
   z-index: 10;
-}
 
-.side-menu--collapsed {
-  width: 72px;
-}
+  &--collapsed {
+    width: 72px;
+  }
 
-.side-menu--collapsed + .main-content {
-  margin-left: 72px;
-}
+  &--collapsed + .main-content {
+    margin-left: 72px;
+  }
 
-.side-menu__header {
-  width: 100%;
-  height: 60px;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
+  &__header {
+    width: 100%;
+    height: 60px;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  &__container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 100%;
+  }
 }
 
 .toggle-button {
@@ -77,36 +101,27 @@ const { toggleSidebar } = layoutStore;
   height: 2px;
   background-color: #111827;
   transition: all 0.3s ease;
-}
 
-.toggle-icon::before,
-.toggle-icon::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 2px;
-  background-color: #111827;
-  transition: all 0.3s ease;
-}
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 2px;
+    background-color: #111827;
+    transition: all 0.3s ease;
+  }
 
-.toggle-icon::before {
-  transform: translateY(-6px);
-}
+  &::before {
+    transform: translateY(-6px);
+  }
 
-.toggle-icon::after {
-  transform: translateY(6px);
+  &::after {
+    transform: translateY(6px);
+  }
 }
 
 .side-menu--collapsed .toggle-icon {
   transform: rotate(180deg);
-}
-
-.auth-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  width: 100%;
 }
 </style> 
