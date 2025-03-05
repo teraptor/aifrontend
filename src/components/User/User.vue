@@ -29,7 +29,7 @@ const goToProfile = ():void => {
   padding: 8px;
   border-radius: 6px;
   transition: all 0.2s ease;
-  width: 100%;
+  width: 250px;
   cursor: pointer;
   background: transparent;
 

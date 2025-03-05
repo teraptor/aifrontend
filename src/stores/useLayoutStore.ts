@@ -7,9 +7,17 @@ interface IFooterNav {
   link: string
 }
 
+interface ISidebarAuthNav {
+  id: string,
+  icon: string,
+  link_name: string,
+  link: string
+}
+
 interface ILayoutStore {
   SidebarIsOpen: boolean,
-  footerNav: IFooterNav[]
+  footerNav: IFooterNav[],
+  sidebarAuthNav: ISidebarAuthNav[]
 }
 export const useLayoutStore = defineStore('Layout', {
   state: () : ILayoutStore => ({
@@ -44,6 +52,26 @@ export const useLayoutStore = defineStore('Layout', {
         id: '6',
         link_name: 'API',
         link: RouteNames.NOT_FOUND
+      },
+    ],
+    sidebarAuthNav: [
+      {
+        id: '1',
+        icon: 'icon icon-menu',
+        link_name: 'Ассистенты GPT',
+        link: RouteNames.MAIN.name
+      },
+      {
+        id: '2',
+        icon: 'icon icon-activity',
+        link_name: 'Инструменты AI',
+        link: RouteNames.INSTRUMENTS
+      },
+      {
+        id: '3',
+        icon: 'icon icon-message-circle',
+        link_name: 'Вопросы ассистентов',
+        link: RouteNames.QUESTIONS
       },
     ]
   }),
