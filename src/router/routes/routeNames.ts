@@ -12,6 +12,9 @@ export const RouteNames = {
     QUESTIONS: {
       name: '/questions',
     },
+    CREATE_ASSISTANT: {
+      name: '/create-assistant',
+    },
   },
   NOT_FOUND: '/:pathMatch(.*)',
 }

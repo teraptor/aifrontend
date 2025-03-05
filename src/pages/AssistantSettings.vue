@@ -73,10 +73,17 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import SideMenu from '@/components/layout/SideMenu.vue';
 
+interface Assistant {
+  id?: string;
+  name?: string;
+  profession?: string;
+  avatar?: string;
+}
+
 const router = useRouter();
 const route = useRoute();
 
-const assistant = ref(null);
+const assistant = ref<Assistant | null>(null);
 const settings = ref({
   name: '',
   role: '',

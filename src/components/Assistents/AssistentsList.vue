@@ -7,11 +7,14 @@ import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
 import InputField from '../ui/InputField.vue';
 import Button from '../ui/Button.vue';
+import { useRouter } from 'vue-router';
+import { RouteNames } from '@/router/routes/routeNames';
 
 const assistentsStore = useAssistentsStore();
 const activeTab = ref<SortOption>(assistentsStore.sortOption);
 const activeFilter = ref<FilterOption>('all');
 const isMyDepartmentExpanded = ref(false);
+const router = useRouter();
 
 // Загружаем сохраненное состояние при монтировании компонента
 onMounted(() => {
@@ -161,9 +164,11 @@ const toggleMyDepartment = () => {
           placeholder="Найти ассистента"
         />
         <Button
-          button-type="secondary"
+          button-type="custom"
           text="Создать ассистента"
           size="medium"
+          class="create-button"
+          @click="router.push(RouteNames.MAIN.CREATE_ASSISTANT.name)"
         />
       </div>
     </div>
@@ -229,6 +234,15 @@ const toggleMyDepartment = () => {
     display: flex;
     justify-content: flex-start;
     gap: 16px;
+
+    :deep(.create-button) {
+      background-color: #CD7F32;
+      color: white;
+      
+      &:hover {
+        background-color: #B26B2A;
+      }
+    }
   }
 
   &__list {

@@ -44,6 +44,16 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Questions.vue')
   },
   {
+    path: `${RouteNames.MAIN.CREATE_ASSISTANT.name}`,
+    name: RouteNames.MAIN.CREATE_ASSISTANT.name,
+    meta: {
+      title: 'Создание ассистента',
+      showFooter: false,
+      showSidebar: true
+    },
+    component: () => import('@/pages/CreateAssistant.vue')
+  },
+  {
     path: `${RouteNames.NOT_FOUND}`,
     name: RouteNames.NOT_FOUND,
     component: () => import('@/pages/NotFound.vue'),

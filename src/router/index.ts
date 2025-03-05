@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { MAIN_ROUTES } from '@/router/routes'
-import { routeNames } from '@/router/routeNames'
 import QuestionDialog from '@/pages/QuestionDialog.vue'
-import Questions from '@/pages/Questions.vue'
 import AssistantSettings from '../pages/AssistantSettings.vue'
 
 const router = createRouter({
@@ -10,13 +8,8 @@ const router = createRouter({
   routes: [
     ...MAIN_ROUTES,
     {
-      path: '/questions',
-      name: routeNames.QUESTIONS,
-      component: Questions
-    },
-    {
       path: '/questions/:id',
-      name: routeNames.QUESTION_DIALOG,
+      name: 'QuestionDialog',
       component: QuestionDialog
     },
     {
