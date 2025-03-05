@@ -83,5 +83,6 @@ export const useLayoutStore = defineStore('Layout', {
   persist: {
     key: 'layout-store',
     storage: localStorage,
+    pick: ['SidebarIsOpen']
   },
 });
