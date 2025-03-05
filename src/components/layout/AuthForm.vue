@@ -1,39 +1,52 @@
 <template>
-    <AuthModal 
-      ref="authModal" 
-      title="Авторизация"
-      help="Для получения логина и пароля обратитесь к вашему администратору"
-    />
-  <div class="auth-form" v-if="!isAuthenticated">
-    <h2>Войти или зарегистрироваться</h2>
-    <p class="subtitle">используя социальную сеть</p>
+  <AuthModal 
+    ref="authModal" 
+    title="Авторизация"
+    help="Для получения логина и пароля обратитесь к вашему администратору"
+  />
+  <div class="auth-variants" v-if="!isAuthenticated">
+    <div class="auth-variants__title-wrapper">
+      <h2 class="auth-variants__title">Войти или зарегистрироваться</h2>
+      <p class="auth-variants__subtitle">используя социальную сеть</p>
+    </div>
+    <div class="auth-variants__buttons-group">
+      <Button
+        type="button"
+        button-type="light"
+        text="Войти через Yandex"
+        size="big"
+        image="yandex.svg"
+      />
 
-    <div class="social-buttons">
-      <button class="social-button yandex">
-        <img src="@/assets/icons/yandex.svg" alt="Яндекс" />
-        Войти через Яндекс
-      </button>
-
-      <button class="social-button google">
-        <img src="@/assets/icons/google.svg" alt="Google" />
-        Войти через Google
-      </button>
+      <Button
+        type="button"
+        button-type="light"
+        text="Войти через Google"
+        size="big"
+        image="google.svg"
+      />
     </div>
 
-    <div class="divider">
+    <div class="auth-variants__divider">
       <span>или</span>
     </div>
 
-    <div class="alternative-auth">
-      <button class="auth-button email">
-        <img src="@/assets/icons/email.svg" alt="Email" />
-        Через эл.почту
-      </button>
+    <div class="auth-variants__buttons-group">
+      <Button
+        type="button"
+        button-type="light"
+        text="Войти через почту"
+        size="big"
+        image="email.svg"
+      />
+      <Button
+        type="button"
+        @click="openAuthModal"
+        button-type="light"
+        text="У меня есть логин/пароль"
+        size="big"
+      />
     </div>
-
-    <button class="login-password" @click="openAuthModal">
-      У меня есть логин/пароль
-    </button>
   </div>
   <div v-else>
     <Button
@@ -61,82 +74,58 @@ const openAuthModal = () => {
 const logout = () => authStore.logout()
 </script>
 
-<style scoped>
-.auth-form {
+<style lang="scss" scoped>
+.auth-variants {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 260px;
-  margin: 0 auto;
-}
-
-h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-  text-align: center;
-}
-
-.subtitle {
-  font-size: 1rem;
-  color: #6b7280;
-  margin: -1rem 0 0;
-  text-align: center;
-}
-
-.social-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.social-button {
-  display: flex;
+  gap: 24px;
+  max-width: 250px;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  background: white;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #111827;
-  cursor: pointer;
-  transition: all 0.2s;
   width: 100%;
-}
 
-.social-button:hover {
-  background: #f9fafb;
-}
+  &__title-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
 
-.social-button img {
-  width: 1.5rem;
-  height: 1.5rem;
-}
+  &__title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
 
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.875rem;
-  width: 100%;
-}
+  &__subtitle {
+    font-size: 14px;
+    line-height: 1.25;
+    color: $help-color;
+  }
 
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e5e7eb;
-}
+  &__buttons-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-.divider span {
-  margin: 0 0.5rem;
+  &__divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    color: $help-color;
+    font-size: 14px;
+    width: 100%;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid $light-grey-color;
+    }
+  }
 }
 
 .alternative-auth {
