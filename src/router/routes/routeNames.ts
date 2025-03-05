@@ -1,8 +1,9 @@
 export const RouteNames = {
   MAIN: {
-    MAIN_PAGE: {
       name: '/',
-    },
+  },
+  PROFILE: {
+    name: 'profile'
   },
   NOT_FOUND: '/:pathMatch(.*)',
 }

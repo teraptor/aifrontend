@@ -7,25 +7,18 @@
       </button>
     </div>
     <div class="side-menu__container" v-show="!SidebarIsOpen" >
-      <AuthForm v-if="!isAuthenticated"/>
-      <div v-else>
-        <Button
-          button-type="danger"
-          text="Выйти"
-          size="medium"
-          @click="logout"
-        />
-      </div>
+      <SidebarUnauthenticated v-if="!isAuthenticated"/>
+      <SidebarAuthenticated v-else/>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import AuthForm from '../SidebarComponents/AuthForm.vue';
+import SidebarUnauthenticated from '../SidebarComponents/SidebarUnauthenticated.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/stores/useAuthStore';
-import Button from '../ui/Button.vue';
+import SidebarAuthenticated from '../SidebarComponents/SidebarAuthenticated.vue';
 
 const authStore = useAuthStore()
 const { isAuthenticated } = storeToRefs(authStore);
@@ -34,7 +27,7 @@ const layoutStore = useLayoutStore();
 const { SidebarIsOpen } = storeToRefs(layoutStore);
 const { toggleSidebar } = layoutStore;
 
-const logout = () => authStore.logout()
+
 </script>
 
 <style scoped lang="scss">

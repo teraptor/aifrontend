@@ -2,20 +2,28 @@ import type { RouteRecordRaw } from 'vue-router'
 import { RouteNames } from './routeNames'
 
 const defaultMeta = {
-  showHeader: true,
   showFooter: true,
   showSidebar: true
 }
 
 export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
-    path: `${RouteNames.MAIN.MAIN_PAGE.name}`,
-    name: RouteNames.MAIN.MAIN_PAGE.name,
+    path: `${RouteNames.MAIN.name}`,
+    name: RouteNames.MAIN.name,
     meta: {
       title: 'Главная страница',
       ...defaultMeta,
     },
     component: () => import('@/pages/Index.vue')
+  },
+  {
+    path: `/${RouteNames.PROFILE.name}`,
+    name: RouteNames.PROFILE.name,
+    meta: {
+      title: 'Профиль',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/Profile.vue')
   },
   {
     path: `${RouteNames.NOT_FOUND}`,

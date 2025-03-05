@@ -6,9 +6,9 @@
   >
     <span v-if="isLoading" class="icon icon-spinner"></span>
     <span v-else class="btn-content">
-      <span v-if="icon" :class="icon"/>
       <img v-if="image" :src="image" class="btn-content__img"/>
       {{ text }}
+      <span v-if="icon" :class="icon"/>
     </span>
   </button>
 </template>
