@@ -89,7 +89,16 @@ const changeFilter = (filter: string) => {
   assistentsStore.setActiveFilter(filterOption);
 };
 
-const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
+const filteredAssistents = computed(() => {
+  const sorted = [...assistentsStore.sortedAssistents];
+  // Перемещаем разблокированного ассистента в начало списка
+  const unlockedIndex = sorted.findIndex(item => item.id === '1');
+  if (unlockedIndex > 0) {
+    const [unlocked] = sorted.splice(unlockedIndex, 1);
+    sorted.unshift(unlocked);
+  }
+  return sorted;
+});
 
 const toggleMyDepartment = () => {
   isMyDepartmentExpanded.value = !isMyDepartmentExpanded.value;
@@ -126,6 +135,7 @@ const toggleMyDepartment = () => {
           :key="item.id"
           :assistents="item"
           :isMyDepartment="true"
+          :isLocked="false"
         />
       </div>
     </div>
@@ -163,6 +173,7 @@ const toggleMyDepartment = () => {
         :key="item.id"
         :assistents="item"
         :isMyDepartment="false"
+        :isLocked="item.id !== '1'"
       />
     </div>
   </div>

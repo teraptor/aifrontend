@@ -1,41 +1,34 @@
 <script setup lang="ts">
-const props = defineProps({
-  title: {
-    text: String,
-    default: ''
-  },
-  subtitle: {
-    text: String,
-    default: ''
-  }
-})
+defineProps<{
+  title: string
+  subtitle?: string
+}>()
 </script>
+
 <template>
-<div class="title-wrapper">
-  <h4 class="title">
-    {{ props.title }}
-  </h4>
-  <p class="subtitle">{{ props.subtitle }}</p>
-</div>
+  <div class="title-wrapper">
+    <h1 class="title">{{ title }}</h1>
+    <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
+  </div>
 </template>
-<style lang="scss" scoped>
+
+<style scoped lang="scss">
 .title-wrapper {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-bottom: 8px;
+}
 
-  .title {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.5;
-  }
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  margin-bottom: 4px;
+}
 
-  .subtitle {
-    font-size: 14px;
-    color: $help-color;
-    font-weight: 300;
-    line-height: 1.25;
-  }
+.subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
 }
 </style>

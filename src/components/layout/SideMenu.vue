@@ -8,21 +8,21 @@
     </div>
 
     <div class="side-menu__content" v-if="isAuthenticated">
-      <router-link to="/assistants" class="menu-item">
+      <router-link v-if="isAuthenticated" :to="RouteNames.MAIN.MAIN_PAGE.name" class="menu-item">
         <span class="menu-item__icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
         <span class="menu-item__text" v-show="!SidebarIsOpen">Ассистенты GPTs</span>
-        <span class="menu-item__arrow" v-show="!SidebarIsOpen">
+        <span class="menu-item__plus" v-show="!SidebarIsOpen">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 6V12M12 12V18M12 12H18M12 12L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
       </router-link>
 
-      <router-link to="/tools" class="menu-item">
+      <router-link v-if="isAuthenticated" :to="RouteNames.MAIN.INSTRUMENTS.name" class="menu-item">
         <span class="menu-item__icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M13 10V3L4 14H11L11 21L20 10L13 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -36,7 +36,7 @@
         </span>
       </router-link>
 
-      <router-link to="/chats" class="menu-item">
+      <router-link v-if="isAuthenticated" :to="RouteNames.MAIN.QUESTIONS.name" class="menu-item">
         <span class="menu-item__icon" :class="{ 'menu-item__icon--active': unreadChats > 0 }">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -83,6 +83,7 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
+import { RouteNames } from '@/router/routes/routeNames';
 
 const layoutStore = useLayoutStore();
 const { SidebarIsOpen } = storeToRefs(layoutStore);

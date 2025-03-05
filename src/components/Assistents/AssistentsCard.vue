@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   assistents: {
@@ -9,10 +10,14 @@ const props = defineProps({
   isMyDepartment: {
     type: Boolean,
     default: false
+  },
+  isLocked: {
+    type: Boolean,
+    default: true
   }
 })
 
-const { assistents, isMyDepartment } = props;
+const { assistents, isMyDepartment, isLocked } = props;
 
 const maleNames = [
   'Сергей', 'Александр', 'Дмитрий', 'Андрей', 'Михаил',
@@ -160,10 +165,32 @@ const statusClass = computed(() => {
   if (!status.value) return '';
   return `assistents-card--${status.value.toLowerCase()}`;
 });
+
+const cardClass = computed(() => ({
+  'assistents-card--locked': isLocked && !isMyDepartment,
+  [statusClass.value]: true
+}))
+
+const router = useRouter();
+
+const emit = defineEmits(['click']);
+
+const handleClick = () => {
+  if (!isLocked || isMyDepartment) {
+    router.push(`/assistant/${assistents.id}/settings`);
+  }
+};
 </script>
 
 <template>
-  <div class="assistents-card" :class="statusClass">
+  <div 
+    class="assistents-card" 
+    :class="cardClass"
+    @click="handleClick"
+  >
+    <div v-if="isLocked && !isMyDepartment" class="assistents-card__soon">
+      Скоро
+    </div>
     <div class="assistents-card__container">
       <img 
         :src="randomAvatar" 
@@ -202,7 +229,50 @@ const statusClass = computed(() => {
   cursor: pointer;
   border: 1px solid rgba(0, 0, 0, 0.1);
 
-  &:hover {
+  &--locked {
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(243, 244, 246, 0.6);
+      border-radius: 16px;
+      backdrop-filter: blur(1px);
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 20px;
+      height: 20px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'%3E%3C/path%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+
+    .assistents-card__soon {
+      position: absolute;
+      top: 24px;
+      right: 52px;
+      font-size: 14px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+    
+    .assistents-card__container {
+      pointer-events: none;
+    }
+  }
+
+  &:hover:not(.assistents-card--locked) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }

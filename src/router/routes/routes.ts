@@ -17,6 +17,33 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Index.vue')
   },
   {
+    path: `${RouteNames.MAIN.ASSISTS.name}`,
+    name: RouteNames.MAIN.ASSISTS.name,
+    meta: {
+      title: 'Ассистенты',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/Assists.vue')
+  },
+  {
+    path: `${RouteNames.MAIN.INSTRUMENTS.name}`,
+    name: RouteNames.MAIN.INSTRUMENTS.name,
+    meta: {
+      title: 'Инструменты AI',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/Instruments.vue')
+  },
+  {
+    path: `${RouteNames.MAIN.QUESTIONS.name}`,
+    name: RouteNames.MAIN.QUESTIONS.name,
+    meta: {
+      title: 'Вопросы ассистентов',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/Questions.vue')
+  },
+  {
     path: `${RouteNames.NOT_FOUND}`,
     name: RouteNames.NOT_FOUND,
     component: () => import('@/pages/NotFound.vue'),
