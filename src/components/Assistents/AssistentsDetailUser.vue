@@ -51,16 +51,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { defineProps } from 'vue';
+import type { IAssistent } from '@/stores/useAssistentsStore';
 
-const route = useRoute();
-const assistentsStore = useAssistentsStore();
+const props = defineProps({
+  assistent: {
+    type: Object as () => IAssistent,
+    required: true,
+  },
+})
 
-const assistent = computed(() => {
-  return assistentsStore.assistants.find((a) => a.id === route.params.id);
-});
+const { assistent } = props;
 </script>
 <style lang="scss">
 .assistent-setting {

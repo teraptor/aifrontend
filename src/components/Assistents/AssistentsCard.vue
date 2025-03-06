@@ -129,8 +129,8 @@ const goToAssistentDetails = () => {
   }
 
   &__image {
-    width: 100px;
-    height: 100px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
   }
 

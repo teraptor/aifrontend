@@ -217,5 +217,9 @@ export const useAssistentsStore = defineStore('assistents', {
 
       return state.assistants.filter((assistant) => assistant.author_id === '1');
     },
+
+    getAssistentById: (state) => (id: string) => {
+      return state.assistants.find((a) => a.id === id);
+    },
   },
 });
