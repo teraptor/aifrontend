@@ -3,6 +3,7 @@ export const RouteNames = {
       name: '/',
   },
   PROFILE: 'profile',
+  ASSISTENT_DETAIL: 'assistent',
   INSTRUMENTS: 'instruments',
   QUESTIONS: 'questions',
   NOT_FOUND: '/:pathMatch(.*)',

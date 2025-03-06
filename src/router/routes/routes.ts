@@ -53,6 +53,15 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Profile.vue')
   },
   {
+    path: `/${RouteNames.ASSISTENT_DETAIL}/:id`,
+    name: RouteNames.ASSISTENT_DETAIL,
+    meta: {
+      title: 'Профиль',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentDetail.vue')
+  },
+  {
     path: `${RouteNames.NOT_FOUND}`,
     name: RouteNames.NOT_FOUND,
     component: () => import('@/pages/NotFound.vue'),

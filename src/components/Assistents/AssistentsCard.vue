@@ -2,7 +2,10 @@
 import type { IAssistent } from '@/stores/useAssistentsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { RouteNames } from '@/router/routes/routeNames';
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const props = defineProps({
@@ -30,9 +33,15 @@ const statusText = computed(() => {
   if (!assistents) return '';
   return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : '';
 });
+
+const goToAssistentDetails = () => {
+  if (cardClass.value !== 'assistents-card--locked') {
+    router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
+  }
+};
 </script>
 <template>
-  <div :class="['assistents-card', cardClass]" v-if="assistents">
+  <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
     <div class="assistents-card__container">
       <img :src="assistents.image" class="assistents-card__image"/>
       <div class="assistents-card__name-wrapper">
