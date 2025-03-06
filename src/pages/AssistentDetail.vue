@@ -1,24 +1,41 @@
 <template>
-  <div v-if="assistent">
-    <h1>{{ assistent.name }}</h1>
-    <p>{{ assistent.description }}</p>
-    <p>Установки: {{ assistent.install }}</p>
-    <p>Статус: {{ assistent.isActive ? 'Активный' : 'Неактивный' }}</p>
-  </div>
-  <div v-else>
-    <p>Ассистент не найден</p>
+  <div class="assistent">
+  <span class="icon icon-chevron-left" @click="goBack"/>
+  <AssistentsDetailNotUser />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import AssistentsDetailNotUser from '@/components/Assistents/AssistentsDetailNotUser.vue';
+import { useRouter } from 'vue-router';
 
-const route = useRoute();
-const assistentsStore = useAssistentsStore();
+const router = useRouter();
 
-const assistent = computed(() => {
-  return assistentsStore.assistants.find((a) => a.id === route.params.id);
-});
+const goBack = (): void => router.back()
 </script>
+<style lang="scss" scoped>
+.assistent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+
+  .icon {
+    font-size: 30px;
+    color: $help-color;
+    cursor: pointer;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    background: $light-grey-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: $danger-color;
+    }
+  }
+}
+</style>

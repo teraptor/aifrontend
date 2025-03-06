@@ -126,24 +126,11 @@ const goToAssistentDetails = () => {
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
-
-    .icon {
-      width: 48px;
-      height: 48px;
-      border: 2px solid rgba($help-color, 0.1);
-      border-radius: 50%;
-      color: $help-color;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: 500;
-    }
   }
 
   &__image {
-    width: 48px;
-    height: 48px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
   }
 
