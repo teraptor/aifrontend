@@ -13,6 +13,7 @@ export interface IAssistent {
   install: number;
   comments_count: number;
   isLocked: boolean;
+  isActive: boolean;
   isDisabled: boolean;
   created_at: string;
   business: boolean;
@@ -35,6 +36,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 3,
         comments_count: 2,
         isLocked: false,
+        isActive: true,
         isDisabled: false,
         created_at: "2024-03-02T18:15:00Z",
         business: true,
@@ -50,6 +52,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 4,
         comments_count: 2,
         isLocked: false,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-03-08T18:15:00Z",
         business: true,
@@ -65,6 +68,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 2,
         comments_count: 2,
         isLocked: false,
+        isActive: false,
         isDisabled: true,
         created_at: "2024-03-12T18:15:00Z",
         business: false,
@@ -80,6 +84,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 0,
         comments_count: 2,
         isLocked: false,
+        isActive: false,
         isDisabled: true,
         created_at: "2024-02-01T18:15:00Z",
         business: false,
@@ -95,6 +100,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 0,
         comments_count: 2,
         isLocked: false,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-03-15T18:15:00Z",
         business: false,
@@ -110,6 +116,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 2,
         comments_count: 2,
         isLocked: true,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-03-06T18:15:00Z",
         business: true,
@@ -125,6 +132,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 4,
         comments_count: 2,
         isLocked: true,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-01-01T18:15:00Z",
         business: false,
@@ -140,6 +148,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 1,
         comments_count: 2,
         isLocked: true,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-02-02T18:15:00Z",
         business: true,
@@ -155,6 +164,7 @@ export const useAssistentsStore = defineStore('assistents', {
         install: 1,
         comments_count: 2,
         isLocked: false,
+        isActive: false,
         isDisabled: false,
         created_at: "2024-03-22T18:15:00Z",
         business: false,

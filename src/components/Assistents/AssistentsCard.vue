@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { IAssistent } from '@/stores/useAssistentsStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { computed } from 'vue';
+
+const authStore = useAuthStore()
 
 const props = defineProps({
   assistents: {
@@ -10,14 +14,25 @@ const props = defineProps({
 
 const { assistents } = props;
 
-const getCardClass = (assistents: IAssistent | undefined | null): string => {
+const cardClass = computed(() => {
   if (!assistents) return '';
-  return assistents.isLocked ? 'assistents-card--locked' : assistents.isDisabled ? 'assistents-card--disabled' : '';
-};
-</script>
+  return !authStore.isAuthenticated
+    ? (assistents.isLocked || assistents.isDisabled ? 'assistents-card--locked' : '')
+    : (assistents.isDisabled ? 'assistents-card--disabled' : assistents.isLocked ? 'assistents-card--locked' : '');
+});
 
+const statusClass = computed(() => {
+  if (!assistents) return '';
+  return assistents.isDisabled ? 'assistents-card__footer-status--disabled' : assistents.isActive ? 'assistents-card__footer-status--active' : '';
+});
+
+const statusText = computed(() => {
+  if (!assistents) return '';
+  return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : '';
+});
+</script>
 <template>
-  <div :class="['assistents-card', getCardClass(assistents)]">
+  <div :class="['assistents-card', cardClass]" v-if="assistents">
     <div class="assistents-card__container">
       <img :src="assistents.image" class="assistents-card__image"/>
       <div class="assistents-card__name-wrapper">
@@ -25,13 +40,18 @@ const getCardClass = (assistents: IAssistent | undefined | null): string => {
         <p class="assistents-card__summary"> {{ assistents.summary }}</p>
       </div>
     </div>
-    <div class="assistents-card__install-wrapper" v-if="!assistents.isLocked && !assistents.isDisabled">
-      <p class="assistents-card__install">
+    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked'">
+      <div class="assistents-card__footer-status-wrapper">
+        <div :class="['assistents-card__footer-status', statusClass]" v-if="authStore.isAuthenticated && statusClass">
+          {{ statusText }}
+        </div>
+      </div>
+      <p class="assistents-card__footer-install">
         {{ assistents.install }}
+        <span class="icon icon-arrow-down-outline" />
       </p>
-      <span class="icon icon-arrow-down-outline" />
     </div>
-    <div class="assistents-card__lock-container" v-if="assistents.isLocked">
+    <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
       <p>Скоро</p>
       <span class="icon icon-lock"/>
     </div>
@@ -88,16 +108,7 @@ const getCardClass = (assistents: IAssistent | undefined | null): string => {
 
   &--disabled {
     position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: $blur-color;
-      border-radius: 16px;
-      backdrop-filter: blur(1px);
-      cursor: not-allowed;
-    }
+    background-color: $light-grey-color;
   }
 
   &__container {
@@ -146,19 +157,39 @@ const getCardClass = (assistents: IAssistent | undefined | null): string => {
     font-size: 14px;
   }
 
-  &__install-wrapper {
+  &__footer {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    color: $teal-color;
-  }
 
-  &__install {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.5;
-    height: 100%;
+    &-status {
+      text-transform: lowercase;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 4px 8px;
+      color: $light-color;
+
+      &--disabled {
+        background-color: $danger-color;
+      }
+
+      &--active {
+        background-color: $success-color;
+      }
+    }
+
+    &-install {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      height: 100%;
+      color: $teal-color;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
   }
 }
 </style>
