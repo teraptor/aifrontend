@@ -40,7 +40,7 @@ export const useAssistentsStore = defineStore('assistents', {
         isDisabled: false,
         created_at: "2024-03-02T18:15:00Z",
         business: true,
-        author_id: '20'
+        author_id: '1'
       },
       {
         id: '2',
@@ -56,7 +56,7 @@ export const useAssistentsStore = defineStore('assistents', {
         isDisabled: false,
         created_at: "2024-03-08T18:15:00Z",
         business: true,
-        author_id: '1'
+        author_id: '20'
       },
       {
         id: '3',
@@ -72,7 +72,7 @@ export const useAssistentsStore = defineStore('assistents', {
         isDisabled: true,
         created_at: "2024-03-12T18:15:00Z",
         business: false,
-        author_id: '20'
+        author_id: '1'
       },
       {
         id: '4',
@@ -209,6 +209,13 @@ export const useAssistentsStore = defineStore('assistents', {
       };
 
       return this.filteredAssistents.sort(sortMap[state.sortOption]);
+    },
+
+    userAssistents(state): IAssistent[] {
+      const authStore = useAuthStore();
+      if (!authStore.isAuthenticated) return [];
+
+      return state.assistants.filter((assistant) => assistant.author_id === '1');
     },
   },
 });
