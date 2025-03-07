@@ -8,7 +8,7 @@ const defaultMeta = {
 
 export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
-    path: `${RouteNames.MAIN.name}`,
+    path: RouteNames.MAIN.name,
     name: RouteNames.MAIN.name,
     meta: {
       title: 'Главная страница',
@@ -17,7 +17,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Index.vue')
   },
   {
-    path: `/${RouteNames.PROFILE}`,
+    path: RouteNames.PROFILE,
     name: RouteNames.PROFILE,
     meta: {
       title: 'Профиль',
@@ -26,7 +26,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Profile.vue')
   },
   {
-    path: `/${RouteNames.INSTRUMENTS}`,
+    path: RouteNames.INSTRUMENTS,
     name: RouteNames.INSTRUMENTS,
     meta: {
       title: 'Инструменты',
@@ -35,7 +35,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Instruments.vue')
   },
   {
-    path: `/${RouteNames.QUESTIONS}`,
+    path: RouteNames.QUESTIONS,
     name: RouteNames.QUESTIONS,
     meta: {
       title: 'Вопросы ассистентов',
@@ -44,7 +44,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/QuestionsList.vue')
   },
   {
-    path: `/${RouteNames.PROFILE}`,
+    path: RouteNames.PROFILE,
     name: RouteNames.PROFILE,
     meta: {
       title: 'Профиль',
@@ -53,7 +53,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Profile.vue')
   },
   {
-    path: `/${RouteNames.CREATE_ASSISTENT}`,
+    path: RouteNames.CREATE_ASSISTENT,
     name: RouteNames.CREATE_ASSISTENT,
     meta: {
       title: 'Создать ассистента',
@@ -62,7 +62,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/CreateAssistent.vue')
   },
   {
-    path: `/${RouteNames.ASSISTENT_DETAIL}/:id`,
+    path: `${RouteNames.ASSISTENT_DETAIL}/:id`,
     name: RouteNames.ASSISTENT_DETAIL,
     meta: {
       title: 'Детали ассистента',
@@ -71,7 +71,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/AssistentDetail.vue')
   },
   {
-    path: `/${RouteNames.QUESTION_DETAIL}/:id`,
+    path: `${RouteNames.QUESTION_DETAIL}/:id`,
     name: RouteNames.QUESTION_DETAIL,
     meta: {
       title: 'Вопросы ассистенту',
