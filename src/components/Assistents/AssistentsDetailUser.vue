@@ -10,49 +10,55 @@
     <div class="assistent-setting__section">
       <h3 class="assistent-setting__section-title">Основные настройки</h3>
       <div class="assistent-setting__form">
-        <div class="form-group">
-          <label>Имя ассистента</label>
-          <input type="text"  placeholder="Введите имя" />
-        </div>
-        <div class="form-group">
-          <label>Роль</label>
-          <input type="text" placeholder="Укажите роль" />
-        </div>
-        <div class="form-group">
-          <label>Язык общения</label>
-          <select>
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-          </select>
-        </div>
+        <InputField
+          label="Имя ассистента"
+          type="text"
+          placeholder="Введите имя"
+        />
+        <InputField
+          label="Роль"
+          type="text"
+          placeholder="Укажите роль"
+        />
+        <SelectField
+          v-model="language"
+          id="language"
+          label="Язык"
+          :enumObject="LanguagesEnum"
+          placeholder="Выберите язык"
+          :enableSearch="true"
+        />
       </div>
     </div>
     <div class="assistent-setting__section">
       <h3 class="assistent-setting__section-title">Дополнительные настройки</h3>
       <div class="assistent-setting__form">
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" />
-            Получать уведомления
-          </label>
-        </div>
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" />
-            Автоматические ответы
-          </label>
-        </div>
+        <InputField
+          label="Получать уведомления"
+          type="checkbox"
+        />
+        <InputField
+          label="Автоматические ответы"
+          type="checkbox"
+        />
       </div>
     </div>
-    <button class="assistent-setting__save">
-      Сохранить изменения
-    </button>
+    <Button
+      type="submit"
+      button-type="success"
+      text="Сохранить изменения"
+      size="large"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineProps } from 'vue';
 import type { IAssistent } from '@/stores/useAssistentsStore';
+import InputField from '../ui/InputField.vue';
+import SelectField from '../ui/SelectField.vue';
+import { LanguagesEnum } from '@/enums/enum';
+import Button from '../ui/Button.vue';
 
 const props = defineProps({
   assistent: {
@@ -62,6 +68,8 @@ const props = defineProps({
 })
 
 const { assistent } = props;
+
+const language = '';//заглушка для select компонента
 </script>
 <style lang="scss">
 .assistent-setting {
@@ -104,77 +112,29 @@ const { assistent } = props;
   }
 
   &__section {
-    background: #FFFFFF;
+    background: $light-color;
     border-radius: 12px;
     padding: 24px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid $light-grey-color;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 
   &__section-title {
     font-size: 18px;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 16px 0;
+    font-weight: 500;
+    color: $dark-color;
   }
 
   &__form {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
     gap: 16px;
   }
-
-  &__save {
-    width: 100%;
-    padding: 12px;
-    background: #22C55E;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-
-    &:hover {
-      background: #16A34A;
-    }
-  }
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  input, select {
-    padding: 8px 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 6px;
-    font-size: 14px;
-
-    &:focus {
-      outline: none;
-      border-color: #22C55E;
-      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-    }
-  }
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-  }
-}
 </style>
