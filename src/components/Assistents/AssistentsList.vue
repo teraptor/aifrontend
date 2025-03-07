@@ -8,12 +8,15 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
 import InputField from '../ui/InputField.vue';
 import Button from '../ui/Button.vue';
+import { useRouter } from 'vue-router';
+import { RouteNames } from '@/router/routes/routeNames';
 
 const assistentsStore = useAssistentsStore();
 const authStore = useAuthStore();
 const activeTab = ref<SortOption>(assistentsStore.sortOption);
 const activeFilter = ref<FilterOption>('all');
 const isOpenMyAssistents = ref<boolean>(true);
+const router = useRouter();
 
 const filterLabels: Record<FilterOption, string> = {
   all: 'Все',
@@ -45,6 +48,10 @@ const toogleMyAssistents = (): void => {
 
 const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
 const userAssistents = computed(() => assistentsStore.userAssistents);
+
+const navigateToCreateAssistent = ():void => {
+  router.push(RouteNames.CREATE_ASSISTENT)
+}
 </script>
 
 <template>
@@ -82,6 +89,8 @@ const userAssistents = computed(() => assistentsStore.userAssistents);
           button-type="secondary"
           text="Создать ассистента"
           size="medium"
+          type="button"
+          @click="navigateToCreateAssistent"
         />
       </div>
     </div>
