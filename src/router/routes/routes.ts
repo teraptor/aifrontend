@@ -53,15 +53,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Profile.vue')
   },
   {
-    path: `/${RouteNames.ASSISTENT_DETAIL}/:id`,
-    name: RouteNames.ASSISTENT_DETAIL,
-    meta: {
-      title: 'Профиль',
-      ...defaultMeta,
-    },
-    component: () => import('@/pages/AssistentDetail.vue')
-  },
-  {
     path: `/${RouteNames.CREATE_ASSISTENT}`,
     name: RouteNames.CREATE_ASSISTENT,
     meta: {
@@ -69,6 +60,24 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
       ...defaultMeta,
     },
     component: () => import('@/pages/CreateAssistent.vue')
+  },
+  {
+    path: `/${RouteNames.ASSISTENT_DETAIL}/:id`,
+    name: RouteNames.ASSISTENT_DETAIL,
+    meta: {
+      title: 'Детали ассистента',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentDetail.vue')
+  },
+  {
+    path: `/${RouteNames.QUESTION_DETAIL}/:id`,
+    name: RouteNames.QUESTION_DETAIL,
+    meta: {
+      title: 'Вопросы ассистенту',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/QuestionDetail.vue')
   },
   {
     path: `${RouteNames.NOT_FOUND}`,

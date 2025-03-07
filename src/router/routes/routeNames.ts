@@ -7,5 +7,6 @@ export const RouteNames = {
   CREATE_ASSISTENT: 'create-assistent',
   INSTRUMENTS: 'instruments',
   QUESTIONS: 'questions',
+  QUESTION_DETAIL: 'question',
   NOT_FOUND: '/:pathMatch(.*)',
 }

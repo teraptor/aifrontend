@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import type { IMessageList } from '@/stores/useQuestionsStore';
 import { computed } from 'vue';
+import { RouteNames } from '@/router/routes/routeNames';
 
 const props = defineProps({
   message: {
@@ -10,6 +12,7 @@ const props = defineProps({
 });
 
 const { message } = props;
+const router = useRouter();
 
 const cardClass = computed(() => {
   if (!message) return '';
@@ -26,13 +29,16 @@ const statusText = computed(() => {
   return message.isAnswered ? 'Отвечено' : 'Не отвечено';
 });
 
+const goToNavigateDetails  = () => {
+  router.push({ name: RouteNames.QUESTION_DETAIL, params: { id: message.id } });
+};
 </script>
 
 <template>
-  <div :class="['questions-card', cardClass]">
+  <div :class="['questions-card', cardClass]" @click="goToNavigateDetails">
     <div class="questions-card__container">
       <img :src="message.image" class="questions-card__image" />
-        <h4 class="questions-card__name">{{ message.name }}</h4>
+      <h4 class="questions-card__name">{{ message.name }}</h4>
     </div>
     <p class="questions-card__last-message">{{ message.lastMessage }}</p>
     <div class="questions-card__footer">
