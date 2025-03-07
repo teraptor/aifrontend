@@ -1,9 +1,9 @@
 <script setup lang="ts">
 
 const props = defineProps<{
-  sortLabels: Record<string, string>;
+  sortLabels?: Record<string, string>;
   filterLabels: Record<string, string>;
-  activeTab: string;
+  activeTab?: string;
   activeFilter: string;
 }>();
 

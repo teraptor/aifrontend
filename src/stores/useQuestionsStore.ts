@@ -10,8 +10,11 @@ export interface IMessageList {
   dateLastMessage: string;
 }
 
+export type FilterOption = 'all' | 'answered' | 'unanswered';
+
 interface IQuestionsStore {
   messageList: IMessageList[]
+  activeFilter: FilterOption;
 }
 
 export const useQuestionsStore = defineStore('questions', {
@@ -65,6 +68,23 @@ export const useQuestionsStore = defineStore('questions', {
         isAnswered: false,
         dateLastMessage: "2024-03-04T18:15:00Z"
       }
-    ]
-  })
+    ],
+    activeFilter: 'all'
+  }),
+  actions: {
+    setActiveFilter(filter: FilterOption) {
+      this.activeFilter = filter;
+    },
+  },
+  getters: {
+    filteredQuestions(state): IMessageList[] {
+      const filterMap: Record<FilterOption, (item: IMessageList) => boolean> = {
+        all: () => true,
+        answered: (item) => item.isAnswered,
+        unanswered: (item) => !item.isAnswered,
+      };
+
+      return state.messageList.filter(filterMap[state.activeFilter]);
+    },
+  },
 })
