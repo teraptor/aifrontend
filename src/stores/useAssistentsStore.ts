@@ -7,7 +7,7 @@ export interface IAssistent {
   id: string;
   name: string;
   summary: string;
-  image?: string;
+  image: string;
   description: string;
   call_name: string;
   install: number;

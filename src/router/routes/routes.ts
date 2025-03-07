@@ -41,7 +41,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
       title: 'Вопросы ассистентов',
       ...defaultMeta,
     },
-    component: () => import('@/pages/Questions.vue')
+    component: () => import('@/pages/QuestionsList.vue')
   },
   {
     path: `/${RouteNames.PROFILE}`,

@@ -23,7 +23,7 @@ const changeFilter = (filter: string) => {
 
 <template>
   <div class="tabs-container">
-    <div class="tabs">
+    <div class="tabs" v-if="props.sortLabels">
       <div
         v-for="(label, key) in sortLabels"
         :key="key"
