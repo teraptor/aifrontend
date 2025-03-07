@@ -13,7 +13,7 @@
     <div class="right-side-menu__container" v-show="!RightSidebarIsOpen">
       <div class="right-side-menu__section">
         <div class="right-side-menu__section-header" @click="toggleAssistens">
-          <h4 class="right-side-menu__section-title">Ассистенты</h4>
+          <h4 class="right-side-menu__section-title">Мои ассистенты</h4>
           <span :class="isOpenAssistents ? 'icon icon-chevron-up' : 'icon icon-chevron-down'" />
         </div>
         <ul class="right-side-menu__section-list" v-show="isOpenAssistents">

@@ -25,6 +25,30 @@ export const useSkillsStore = defineStore('Skills', {
         icon: 'icon icon-clipboard',
         title: 'Анализ данных',
         description: 'Обработка и анализ информации'
+      },
+      {
+        id: '3',
+        icon: 'icon icon-edit-3',
+        title: 'Общение',
+        description: 'Навык коммуникации и общения'
+      },
+      {
+        id: '4',
+        icon: 'icon icon-clipboard',
+        title: 'Анализ данных',
+        description: 'Обработка и анализ информации'
+      },
+      {
+        id: '5',
+        icon: 'icon icon-edit-3',
+        title: 'Общение',
+        description: 'Навык коммуникации и общения'
+      },
+      {
+        id: '6',
+        icon: 'icon icon-clipboard',
+        title: 'Анализ данных',
+        description: 'Обработка и анализ информации'
       }
     ]
   })
