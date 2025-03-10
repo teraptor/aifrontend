@@ -1,8 +1,8 @@
 <template>
   <Modal 
     ref="modal"
-    title="Регистрация"
-    help="Никому не сообщайте логин и пароль"
+    title="Авторизация"
+    help="Для получения логина и пароля обратитесь к вашему администратору"
   >
     <form @submit.prevent="submitForm" class="form">
       <InputField
@@ -25,7 +25,7 @@
       />
       <Button
         button-type="secondary"
-        text="Зарегистрироваться"
+        text="Войти"
         :icon="'icon icon-log-in'"
         type="submit"
         size="big"
@@ -55,9 +55,11 @@ const togglePassword = () => {
 };
 
 const submitForm = () => {
-  authStore.register(formData.value);
-  const userExists = authStore.users.some(user => user.username === formData.value.username);
-  if(userExists) modal.value?.closeModal();
+  authStore.login(formData.value);
+
+  if (authStore.isAuthenticated) {
+    modal.value?.closeModal();
+  }
 };
 
 defineExpose({ openModal: () => modal.value?.openModal() });

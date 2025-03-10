@@ -1,8 +1,13 @@
 <template>
+  <LoginModal 
+    ref="loginModal" 
+    title="Войти"
+    help="Для получения логина и пароля обратитесь к вашему администратору"
+  />
   <AuthModal 
     ref="authModal" 
-    title="Авторизация"
-    help="Для получения логина и пароля обратитесь к вашему администратору"
+    title="Регистрация"
+    help="Никому не сообщайте логин и пароль"
   />
   <div class="auth-variants">
     <div class="auth-variants__title-wrapper">
@@ -41,9 +46,16 @@
       />
       <Button
         type="button"
-        @click="openAuthModal"
+        @click="openLoginModal"
         button-type="light"
         text="У меня есть логин/пароль"
+        size="big"
+      />
+      <Button
+        type="button"
+        @click="openAuthModal"
+        button-type="text"
+        text="Зарегистрироваться"
         size="big"
       />
     </div>
@@ -52,10 +64,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import AuthModal from '@/components/Modal/AuthModal.vue';
+import LoginModal from '../Modal/LoginModal.vue';
 import Button from '../ui/Button.vue';
+import AuthModal from '../Modal/AuthModal.vue';
 
+const loginModal = ref<InstanceType<typeof LoginModal> | null>(null);
 const authModal = ref<InstanceType<typeof AuthModal> | null>(null);
+
+const openLoginModal = () => {
+  loginModal.value?.openModal();
+};
 
 const openAuthModal = () => {
   authModal.value?.openModal();

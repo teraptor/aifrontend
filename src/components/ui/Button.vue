@@ -106,7 +106,6 @@ const image = computed(() => {
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba($main-color, 0.2);
   }
 
   &:disabled {
@@ -115,6 +114,25 @@ const image = computed(() => {
   }
 }
 
+.btn-text {
+  background-color: $light-color;
+  border: none;
+  text-decoration: underline;
+  color: $dark-color;
+  outline: none;
+
+  &:hover {
+    color: color.scale($primary-color, $lightness: -5%);
+  }
+
+  &:disabled {
+    color:  color.scale($main-color, $lightness: 20%);
+  }
+
+  &.active {
+    color: color.scale($primary-color, $lightness: -10%);
+  }
+}
 .btn-light {
   background-color: $light-color;
   border: 1px solid $border-light;
@@ -141,15 +159,15 @@ const image = computed(() => {
   color: $light-color;
 
   &:hover {
-    background-color: darken($main-color, 5%);
+    background-color: color.scale($main-color, $lightness: -5%);
   }
 
   &:disabled {
-    background-color: lighten($main-color, 20%);
+    background-color: color.scale($main-color, $lightness: 20%);
   }
 
   &.active {
-    background-color: darken($main-color, 10%);
+    background-color: color.scale($main-color, $lightness: -10%);
   }
 }
 
@@ -163,7 +181,7 @@ const image = computed(() => {
 
   &:disabled {
     background-color: rgba($main-color, 0.05);
-    color: lighten($main-color, 20%);
+    color: color.scale($main-color, $lightness: 20%);
   }
 
   &.active {
@@ -176,7 +194,7 @@ const image = computed(() => {
   color: $light-color;
 
   &:hover {
-    background-color: lighten($btn-danger, 5%);
+    background-color: color.scale($danger-color, $lightness: -5%);
   }
 
   &:disabled {
@@ -193,15 +211,15 @@ const image = computed(() => {
   color: $light-color;
 
   &:hover {
-    background-color: darken($success-color, 5%);
+    background-color: color.scale($success-color, $lightness: -5%);
   }
 
   &:disabled {
-    background-color: lighten($success-color, 20%);
+    background-color: color.scale($success-color, $lightness: 20%);
   }
 
-  &:active {
-    background-color: darken($success-color, 10%);
+  &.active {
+    background-color: color.scale($success-color, $lightness: -10%);
   }
 }
 
