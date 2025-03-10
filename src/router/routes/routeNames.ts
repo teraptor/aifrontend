@@ -3,6 +3,7 @@ export const RouteNames = {
       name: '/',
   },
   PROFILE: '/profile',
+  ASSISTENS: '/my-assistants',
   ASSISTENT_DETAIL: '/assistent',
   CREATE_ASSISTENT: '/create-assistent',
   INSTRUMENTS: '/instruments',

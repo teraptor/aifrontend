@@ -51,29 +51,46 @@ const changeFilter = (filter: string) => {
 
 <style scoped lang="scss">
   .tabs-container {
-    width: 50%;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: 32px;
+    flex: 1;
 
     .tabs {
       display: flex;
       justify-content: flex-start;
       align-items: center;
-      gap: 16px;
-      width: 50%;
+      gap: 24px;
     } 
 
     .tab {
       font-size: 14px;
       color: $help-color;
-      font-weight: 300;
-      line-height: 1.5;
+      font-weight: 500;
+      line-height: 1.4;
       cursor: pointer;
+      padding: 8px 0;
+      position: relative;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: $dark-color;
+      }
 
       &.active {
-        border-bottom: 1px solid $dark-color;
         color: $dark-color;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 2px;
+          background-color: $main-color;
+          border-radius: 2px;
+        }
       }
     }
   }

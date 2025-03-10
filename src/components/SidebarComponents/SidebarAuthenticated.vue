@@ -5,6 +5,7 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
+import UserProfileButton from '../User/UserProfileButton.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -22,10 +23,19 @@ const logout = () => authStore.logout()
   <div class="menu">
     <div class="menu__nav">
       <ul class="menu__nav-items">
-        <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" @click="navigateToRoute(item.link)">
+        <li class="menu__nav-item" :class="{ 'menu__nav-item--active': route.name === 'my-assistants' }" @click="navigateToRoute('my-assistants')">
+          <span class="icon icon-users" />
+          <p class="menu__nav-item-name">Мои ассистенты</p>
+          <span class="icon icon-plus" v-if="route.name !== 'my-assistants'" />
+          <span class="icon icon-chevron-right" v-else />
+        </li>
+        <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" 
+            :class="{ 'menu__nav-item--active': route.name === item.link }"
+            @click="navigateToRoute(item.link)">
           <span :class="item.icon"/>
           <p class="menu__nav-item-name">{{ item.link_name }}</p>
-          <span :class="[route.name === item.link ? 'icon icon-chevron-right': 'icon icon-plus', { 'icon--active': route.name === item.link }]"/>
+          <span class="icon icon-plus" v-if="route.name !== item.link" />
+          <span class="icon icon-chevron-right" v-else />
         </li>
       </ul>
     </div>
@@ -45,56 +55,66 @@ const logout = () => authStore.logout()
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 24px;
   max-width: 250px;
-  align-items: center;
   width: 100%;
   height: 100%;
+  padding: 0;
 
   &__nav {
-    flex: 1;
     width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
 
     &-items {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      width: 250px;
+      width: 100%;
+      padding: 8px 16px;
+      gap: 2px;
     }
 
     &-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 12px;
+      padding: 12px;
       cursor: pointer;
-
-      &:hover {
-        background: $light-grey-color;
-        border-radius: 6px;
-      }
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: transparent;
 
       .icon {
+        font-size: 16px;
         color: $help-color;
-
-        &--active {
-          color: $success-color;
-        }
       }
 
       &-name {
-        width: 60%;
+        flex: 1;
+        margin: 0 12px;
         line-height: 1.2;
-        font-size: 15px;
+        font-size: 14px;
+        font-weight: 500;
+        color: $help-color;
+      }
+
+      &:hover {
+        background: $light-grey-color;
+      }
+
+      &--active {
+        background: $light-grey-color;
+
+        .menu__nav-item-name {
+          color: $dark-color;
+          font-weight: 600;
+        }
+
+        .icon {
+          color: $dark-color;
+        }
       }
     }
   }
-
 
   &__footer {
     display: flex;
@@ -102,7 +122,8 @@ const logout = () => authStore.logout()
     gap: 12px;
     align-items: center;
     width: 100%;
-    margin-bottom: 60px;
+    padding: 16px;
+    margin-top: auto;
   }
 }
 </style>

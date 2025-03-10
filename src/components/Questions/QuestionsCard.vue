@@ -67,11 +67,11 @@ const goToNavigateDetails  = () => {
   }
 
   &--answered {
-    border-left: 4px solid $success-color; 
+    background-color: rgba($success-color, 0.05);
   }
 
   &--unanswered {
-    border-left: 4px solid $danger-color;
+    background-color: rgba($danger-color, 0.05);
   }
 
   &__container {

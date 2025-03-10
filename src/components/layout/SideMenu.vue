@@ -34,7 +34,7 @@ const { toggleSidebar } = layoutStore;
 .side-menu {
   width: 280px;
   height: 100vh;
-  background: transparent;
+  background: $light-color;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
@@ -42,6 +42,7 @@ const { toggleSidebar } = layoutStore;
   top: 0;
   left: 0;
   z-index: 10;
+  border-right: 1px solid $border-light;
 
   &--collapsed {
     width: 72px;
@@ -59,15 +60,17 @@ const { toggleSidebar } = layoutStore;
     align-items: center;
     justify-content: space-between;
     position: relative;
+    border-bottom: 1px solid $border-light;
   }
 
   &__container {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
     padding: 0;
     width: 100%;
+    overflow-y: auto;
   }
 }
 

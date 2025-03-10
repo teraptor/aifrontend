@@ -68,21 +68,23 @@ const goToAssistentDetails = () => {
 </template>
 <style lang="scss" scoped>
 .assistents-card {
-  max-width: 250px;
+  max-width: 350px;
   width: 100%;
   min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background: $light-color;
-  padding: 20px 10px 10px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
-  border: 1px solid rgba($help-color, 20%);
+  border: 1px solid $border-light;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    transform: scale(1.04);
+    transform: translateY(-2px);
+    box-shadow: $box-shadow;
   }
 
   &--locked {
@@ -91,33 +93,35 @@ const goToAssistentDetails = () => {
       content: '';
       position: absolute;
       inset: 0;
-      background: $blur-color;
-      border-radius: 16px;
-      backdrop-filter: blur(1px);
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      backdrop-filter: blur(2px);
       cursor: not-allowed;
     }
   }
 
   &__lock-container {
     position: absolute;
-    top: 5%;
-    right: 5%;
+    top: 16px;
+    right: 16px;
     font-size: 14px;
     color: $help-color;
-    font-weight: 600;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 8px;
 
     .icon {
-      font-size: 20px;
+      font-size: 18px;
+      color: $help-color;
     }
   }
 
   &--disabled {
     position: relative;
     background-color: $light-grey-color;
+    opacity: 0.8;
   }
 
   &__container {
@@ -126,16 +130,18 @@ const goToAssistentDetails = () => {
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
+    margin-bottom: 12px;
   }
 
   &__image {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    object-fit: cover;
   }
 
   &__name-wrapper {
-    width: calc( 100% - 64px - 12px);
+    width: calc(100% - 52px);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -143,14 +149,18 @@ const goToAssistentDetails = () => {
   }
 
   &__name {
-    font-weight: 500;
-    line-height: 1.5;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.4;
+    color: $dark-color;
+    margin: 0;
   }
 
   &__summary {
     color: $help-color;
-    line-height: 1;
+    line-height: 1.4;
     font-size: 14px;
+    margin: 0;
   }
 
   &__footer {
@@ -158,13 +168,16 @@ const goToAssistentDetails = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid $border-light;
 
     &-status {
       text-transform: lowercase;
       font-size: 12px;
-      font-weight: 600;
-      border-radius: 8px;
-      padding: 4px 8px;
+      font-weight: 500;
+      border-radius: 16px;
+      padding: 4px 10px;
       color: $light-color;
 
       &--disabled {
@@ -178,13 +191,17 @@ const goToAssistentDetails = () => {
 
     &-install {
       font-size: 14px;
-      font-weight: 600;
-      line-height: 1.5;
-      height: 100%;
-      color: $teal-color;
+      font-weight: 500;
+      line-height: 1.4;
+      color: $main-color;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      gap: 4px;
+      margin: 0;
+
+      .icon {
+        font-size: 16px;
+      }
     }
   }
 }

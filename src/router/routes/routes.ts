@@ -17,6 +17,15 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Index.vue')
   },
   {
+    path: RouteNames.ASSISTENS,
+    meta: {
+      title: 'Мои ассистенты',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/Assists.vue')
+  },
+  
+  {
     path: RouteNames.PROFILE,
     name: RouteNames.PROFILE,
     meta: {

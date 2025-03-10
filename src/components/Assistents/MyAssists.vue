@@ -11,6 +11,7 @@ import Button from '../ui/Button.vue';
 import { useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
 import AddAssistantModal from '../Modal/AddAssistantModal.vue';
+import '@/assets/styles/assists.scss';
 
 const assistentsStore = useAssistentsStore();
 const authStore = useAuthStore();
@@ -22,12 +23,13 @@ const showAddModal = ref(false);
 
 const filterLabels: Record<FilterOption, string> = {
   all: 'Все',
-  business: 'Бизнес'
+  business: 'Бизнес',
+  my: 'Мои',
 };
 
 const sortLabels: Record<SortOption, string> = {
   popular: 'Популярные',
-  new: 'Новые'
+  new: 'Новые',
 };
 
 const changeSortOption = (option: string) => {
@@ -68,35 +70,18 @@ const handleAssistantSelect = (assistantId: string) => {
 </script>
 
 <template>
-  <div class="assistents">
-    <TitleWrapper title="Ассистенты" subtitle="Prompts & Plugins GPTs" />
-    <div class="assistents__nav-group">
-      <SortFiltersTab
-        :sortLabels="sortLabels"
-        :filterLabels="filterLabels"
-        :activeTab="activeTab"
-        :activeFilter="activeFilter"
-        @update:sort="changeSortOption"
-        @update:filter="changeFilter"
-      />
-      <div class="assistents__btn-group">
-        <InputField 
-          icon='icon icon-search'
-          size="medium"
-          placeholder="Найти ассистента"
-        />
-        <Button
-          button-type="secondary"
-          text="Создать ассистента"
-          size="medium"
-          type="button"
-          @click="navigateToCreateAssistent"
-        />
-      </div>
+  <div class="my-assistents" v-if="authStore.isAuthenticated">
+    <div class="my-assistents__collapse-toogle">
+      <span :class=" isOpenMyAssistents ? 'icon icon-chevron-left' : 'icon icon-chevron-right'" @click="toogleMyAssistents" />
+      <TitleWrapper title="Мои ассистенты" subtitle="Управляйте своими ассистентами и настройками" />
     </div>
-    <div class="assistents__list">
+    <div class="my-assistents__list" v-show="isOpenMyAssistents">
+      <div class="add-assistant" @click="openAddModal">
+        <span class="icon icon-plus"></span>
+        <p class="add-assistant__text">Добавить ассистента</p>
+      </div>
       <AssistentsCard
-        v-for="item in filteredAssistents"
+        v-for="item in userAssistents"
         :key="item.id"
         :assistents="item"
       />
@@ -111,29 +96,61 @@ const handleAssistantSelect = (assistantId: string) => {
 </template>
 
 <style lang="scss" scoped>
-.assistents {
+.add-assistant {
+  width: 100%;
+  height: 120px;
+  border: 2px dashed $help-color;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba($help-color, 0.05);
+  }
+
+  .icon {
+    font-size: 24px;
+    color: $help-color;
+  }
+
+  &__text {
+    font-size: 14px;
+    color: $help-color;
+  }
+}
+
+.my-assistents {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 24px;
+  margin-bottom: 32px;
 
-  &__nav-group {
-    width: 100%;
+  &__collapse-toogle {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  &__btn-group {
-    display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
     gap: 12px;
-    flex: 1;
-    min-width: 320px;
+
+    .icon {
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      color: $help-color;
+      padding: 8px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $light-grey-color;
+      }
+    }
   }
 
   &__list {

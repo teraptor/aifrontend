@@ -65,17 +65,19 @@ const image = computed(() => {
 </script>
 <style lang="scss" scoped>
 .btn {
-  padding: 10px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
   color: $light-color;
   font-size: 14px;
-  font-weight: 300;
-  max-height: 48px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  height: 40px;
 
   &-tab {
     width: 50px;
@@ -86,100 +88,120 @@ const image = computed(() => {
     width: 100px;
     height: 32px;
   }
+
   &-medium {
-    width: 170px;
-    height: 36px;
+    min-width: 140px;
+    height: 40px;
   }
+
   &-big {
     width: 220px;
     height: 48px;
   }
 
-
   &-large {
     width: 100%;
-    max-height: 36px;
+    height: 40px;
   }
+
   &:focus {
     outline: none;
+    box-shadow: 0 0 0 2px rgba($main-color, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 }
 
 .btn-light {
   background-color: $light-color;
-  border: 1px solid rgba($help-color, 40%);
+  border: 1px solid $border-light;
   color: $dark-color;
 
   &:hover {
-    background-color: color.adjust($light-color, $lightness: -2%);
-    border: 1px solid rgba($help-color, 40%);
-    color: $dark-color;
+    background-color: $light-grey-color;
   }
 
   &:disabled {
     background-color: $light-color;
-    opacity: 0.5;
-    border: 1px solid rgba($help-color, 40%);
-    color: $dark-color;
-    cursor: not-allowed;
+    border-color: $border-light;
   }
 
   &.active {
-    background-color: color.adjust($light-color, $lightness: -5%);
-    border: 1px solid rgba($help-color, 40%);
-    color: $dark-color;
+    background-color: $light-grey-color;
+    border-color: $main-color;
+    color: $main-color;
   }
 }
 
 .btn-primary {
-  background-color: $btn-primary;
-  border: none;
+  background-color: $main-color;
+  color: $light-color;
+
+  &:hover {
+    background-color: darken($main-color, 5%);
+  }
 
   &:disabled {
-    background-color: $btn-primary-disabled;
-    cursor: not-allowed;
+    background-color: lighten($main-color, 20%);
   }
+
   &.active {
-    background-color: $btn-primary-active;
+    background-color: darken($main-color, 10%);
   }
 }
 
 .btn-secondary {
-  background-color: $btn-secondary;
-  border: none;
+  background-color: rgba($main-color, 0.1);
+  color: $main-color;
+
+  &:hover {
+    background-color: rgba($main-color, 0.15);
+  }
 
   &:disabled {
-    background-color: $btn-secondary-disabled;
-    cursor: not-allowed;
+    background-color: rgba($main-color, 0.05);
+    color: lighten($main-color, 20%);
   }
+
   &.active {
-    background-color: $btn-secondary-active;
+    background-color: rgba($main-color, 0.2);
   }
 }
 
 .btn-danger {
   background-color: $btn-danger;
-  border: none;
+  color: $light-color;
+
+  &:hover {
+    background-color: lighten($btn-danger, 5%);
+  }
 
   &:disabled {
     background-color: $btn-danger-disabled;
-    cursor: not-allowed;
   }
+
   &:active {
     background-color: $btn-danger-active;
   }
 }
 
 .btn-success {
-  background-color: $btn-success;
-  border: none;
+  background-color: $success-color;
+  color: $light-color;
+
+  &:hover {
+    background-color: darken($success-color, 5%);
+  }
 
   &:disabled {
-    background-color: $btn-success-disabled;
-    cursor: not-allowed;
+    background-color: lighten($success-color, 20%);
   }
+
   &:active {
-    background-color: $btn-success-active;
+    background-color: darken($success-color, 10%);
   }
 }
 
@@ -191,26 +213,27 @@ const image = computed(() => {
   .icon-spinner {
     animation: spin 1s linear infinite;
   }
+
   .btn-content {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4px;
-    font-weight: 400;
+    gap: 8px;
+    font-weight: 500;
 
     &__img {
-      height: 24px;
-      width: 24px;
+      height: 20px;
+      width: 20px;
+    }
+
+    .icon {
+      font-size: 16px;
     }
   }
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

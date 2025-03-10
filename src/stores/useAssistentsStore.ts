@@ -21,18 +21,18 @@ export interface IAssistent {
 }
 
 export type SortOption = 'popular' | 'new';
-export type FilterOption = 'all' | 'business' | 'my';
+export type FilterOption = 'all' | 'business';
 
 export const useAssistentsStore = defineStore('assistents', {
   state: () => ({
     assistants: [
       {
         id: '1',
-        name: 'Бот 1',
-        summary: 'Краткое описание',  
+        name: 'Александр',
+        summary: 'Персональный помощник',  
         image: avatarImage,
-        description: 'Бот 1',
-        call_name: 'Bot1',
+        description: 'Персональный помощник для решения повседневных задач',
+        call_name: 'Alex',
         install: 3,
         comments_count: 2,
         isLocked: false,
@@ -44,11 +44,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '2',
-        name: 'Бот 2',
-        summary: 'Краткое описание', 
+        name: 'Мария',
+        summary: 'Бизнес-аналитик', 
         image: avatarImage,
-        description: 'Бот 2',
-        call_name: 'Bot2',
+        description: 'Помощник для анализа бизнес-процессов',
+        call_name: 'Maria',
         install: 4,
         comments_count: 2,
         isLocked: false,
@@ -60,11 +60,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '3',
-        name: 'Бот 3',
-        summary: 'Краткое описание', 
+        name: 'Дмитрий',
+        summary: 'Технический специалист', 
         image: avatarImage, 
-        description: 'Бот 3',
-        call_name: 'Bot3',
+        description: 'Эксперт по техническим вопросам',
+        call_name: 'Dmitry',
         install: 2,
         comments_count: 2,
         isLocked: false,
@@ -76,11 +76,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '4',
-        name: 'Бот 4',
-        summary: 'Краткое описание', 
-        description: 'Бот 4',
+        name: 'Анна',
+        summary: 'Маркетолог', 
+        description: 'Специалист по маркетингу и PR',
         image: avatarImage,
-        call_name: 'Bot4',
+        call_name: 'Anna',
         install: 0,
         comments_count: 2,
         isLocked: false,
@@ -92,11 +92,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '5',
-        name: 'Бот 5',
-        summary: 'Краткое описание', 
-        description: 'Бот 5',
+        name: 'Сергей',
+        summary: 'Финансовый консультант', 
+        description: 'Эксперт по финансам и инвестициям',
         image: avatarImage,
-        call_name: 'Bot5',
+        call_name: 'Sergey',
         install: 0,
         comments_count: 2,
         isLocked: false,
@@ -108,11 +108,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '6',
-        name: 'Бот 6',
-        summary: 'Краткое описание', 
-        description: 'Бот 6',
+        name: 'Екатерина',
+        summary: 'HR специалист', 
+        description: 'Консультант по управлению персоналом',
         image: avatarImage,
-        call_name: 'Bot6',
+        call_name: 'Kate',
         install: 2,
         comments_count: 2,
         isLocked: true,
@@ -124,11 +124,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '7',
-        name: 'Бот 7',
-        summary: 'Краткое описание', 
-        description: 'Бот 7',
+        name: 'Павел',
+        summary: 'Юрист', 
+        description: 'Специалист по правовым вопросам',
         image: avatarImage,
-        call_name: 'Bot8',
+        call_name: 'Pavel',
         install: 4,
         comments_count: 2,
         isLocked: true,
@@ -140,11 +140,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '8',
-        name: 'Бот 8',
-        summary: 'Краткое описание',
+        name: 'Ольга',
+        summary: 'Дизайнер',
         image: avatarImage,  
-        description: 'Бот 8',
-        call_name: 'Bot8',
+        description: 'Специалист по графическому дизайну',
+        call_name: 'Olga',
         install: 1,
         comments_count: 2,
         isLocked: true,
@@ -156,11 +156,11 @@ export const useAssistentsStore = defineStore('assistents', {
       },
       {
         id: '9',
-        name: 'Бот 9',
-        summary: 'Краткое описание', 
+        name: 'Игорь',
+        summary: 'Копирайтер', 
         image: avatarImage,
-        description: 'Бот 9',
-        call_name: 'Bot9',
+        description: 'Специалист по созданию контента',
+        call_name: 'Igor',
         install: 1,
         comments_count: 2,
         isLocked: false,
@@ -187,16 +187,10 @@ export const useAssistentsStore = defineStore('assistents', {
   },
 
   getters: {
-
     filteredAssistents(state): IAssistent[] {
-      const authStore = useAuthStore();
       const filterMap: Record<FilterOption, (item: IAssistent) => boolean> = {
         all: () => true,
-        business: (item) => item.business,
-        my: (item) => {
-          if (!authStore.isAuthenticated) return false;
-          return item.author_id === '1';
-        },
+        business: (item) => item.business
       };
 
       return state.assistants.filter(filterMap[state.activeFilter]);
