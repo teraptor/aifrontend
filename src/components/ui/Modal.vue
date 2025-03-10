@@ -59,7 +59,7 @@ defineExpose({ openModal, closeModal });
   background-color: $light-color;
   padding: 40px 20px 20px;
   border-radius: 20px;
-  box-shadow: $box-shadow;
+  box-shadow: $box-shadow-large;
   position: relative;
   width: 380px;
   height: 380px;

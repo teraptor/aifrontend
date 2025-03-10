@@ -80,11 +80,11 @@ const goToAssistentDetails = () => {
   transition: all 0.2s ease;
   cursor: pointer;
   border: 1px solid $border-light;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: $box-shadow-small;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: $box-shadow;
+    box-shadow: $box-shadow-large;
   }
 
   &--locked {
@@ -93,7 +93,7 @@ const goToAssistentDetails = () => {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba($light-color, 0.8);
       border-radius: 12px;
       backdrop-filter: blur(2px);
       cursor: not-allowed;

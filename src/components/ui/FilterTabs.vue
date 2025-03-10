@@ -1,3 +1,4 @@
+<!-- уже есть компонент для фильтрации -->
 <script setup lang="ts">
 interface FilterOption {
   id: string;

@@ -11,7 +11,6 @@ import Button from '../ui/Button.vue';
 import { useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
 import AddAssistantModal from '../Modal/AddAssistantModal.vue';
-import '@/assets/styles/assists.scss';
 
 const assistentsStore = useAssistentsStore();
 const authStore = useAuthStore();

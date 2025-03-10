@@ -1,3 +1,4 @@
+<!-- не используется -->
 <template>
   <div class="profile-menu" v-if="isOpen" ref="menuRef">
     <div class="profile-menu__user">

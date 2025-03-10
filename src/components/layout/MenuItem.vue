@@ -1,3 +1,4 @@
+<!-- компонент не используется -->
 <template>
   <router-link :to="to" class="menu-item" :class="{ 'menu-item--collapsed': collapsed }">
     <div class="menu-item__icon">

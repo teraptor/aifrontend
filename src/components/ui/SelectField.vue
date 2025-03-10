@@ -194,7 +194,7 @@ watch(internalValue, newValue => {
     }
     &--active {
       background-color: $light-color;
-      box-shadow: $box-shadow;
+      box-shadow: $box-shadow-large;
       outline: none;
     }
     &--error {
@@ -215,7 +215,7 @@ watch(internalValue, newValue => {
     overflow-y: auto;
     background-color: $light-color;
     z-index: 20;
-    box-shadow: $box-shadow;
+    box-shadow: $box-shadow-large;
   }
 
   &-search {

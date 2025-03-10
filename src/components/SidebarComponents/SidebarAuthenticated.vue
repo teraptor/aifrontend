@@ -5,7 +5,6 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
-import UserProfileButton from '../User/UserProfileButton.vue';
 
 const router = useRouter();
 const route = useRoute();

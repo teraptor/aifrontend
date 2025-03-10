@@ -1,3 +1,4 @@
+<!-- не используется -->
 <template>
   <div class="profile-button" ref="buttonRef">
     <button class="profile-button__trigger" @click="toggleMenu">

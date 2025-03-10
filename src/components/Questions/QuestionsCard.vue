@@ -63,7 +63,7 @@ const goToNavigateDetails  = () => {
   transition: all 0.2s ease;
 
   &:hover {
-    box-shadow: $box-shadow;
+    box-shadow: $box-shadow-large;
   }
 
   &--answered {

@@ -153,7 +153,7 @@ watch(internalValue, newValue => {
 
     &:focus {
       background-color: $light-color;
-      box-shadow: $box-shadow;
+      box-shadow: $box-shadow-large;
       outline: none;
     }
 
