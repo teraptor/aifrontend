@@ -29,5 +29,6 @@ export const useAuthStore = defineStore('auth', {
   persist: {
     key: 'auth-store',
     storage: localStorage,
+    pick: ['isAuthenticated']
   },
 });

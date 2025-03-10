@@ -1,20 +1,12 @@
 export const RouteNames = {
   MAIN: {
-    MAIN_PAGE: {
       name: '/',
-    },
-    ASSISTS: {
-      name: '/assists',
-    },
-    INSTRUMENTS: {
-      name: '/instruments',
-    },
-    QUESTIONS: {
-      name: '/questions',
-    },
-    CREATE_ASSISTANT: {
-      name: '/create-assistant',
-    },
   },
+  PROFILE: '/profile',
+  ASSISTENT_DETAIL: '/assistent',
+  CREATE_ASSISTENT: '/create-assistent',
+  INSTRUMENTS: '/instruments',
+  QUESTIONS: '/questions',
+  QUESTION_DETAIL: '/question',
   NOT_FOUND: '/:pathMatch(.*)',
 }

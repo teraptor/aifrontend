@@ -1,6 +1,22 @@
+<template>
+  <button
+    :type="type"
+    :disabled="disabled || isLoading"
+    :class="['btn', buttonSize, buttonClass, { active: isActive }]"
+  >
+    <span v-if="isLoading" class="icon icon-spinner"></span>
+    <span v-else class="btn-content">
+      <img v-if="image" :src="image" class="btn-content__img"/>
+      {{ text }}
+      <span v-if="icon" :class="icon"/>
+    </span>
+  </button>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PropType } from 'vue'
+
 const props = defineProps({
   type: {
     type: String as PropType<'submit' | 'reset' | 'button'>,
@@ -22,6 +38,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  image: {
+    type: String,
+    default: ''
+  },
   isLoading: {
     type: Boolean,
     default: false,
@@ -38,22 +58,11 @@ const props = defineProps({
 
 const buttonSize = computed(() => `btn-${props.size}`)
 const buttonClass = computed(() => `btn-${props.buttonType}`)
+
+const image = computed(() => {
+  return props.image ? new URL(`/src/assets/icons/${props.image}`, import.meta.url).href : undefined;
+});
 </script>
-
-<template>
-  <button
-    :type="type"
-    :disabled="disabled || isLoading"
-    :class="['btn', buttonSize, buttonClass, { active: isActive }]"
-  >
-    <span v-if="isLoading" class="icon icon-spinner"></span>
-    <span v-else class="btn-content">
-      {{ text }}
-      <span v-if="icon" :class="icon"></span>
-    </span>
-  </button>
-</template>
-
 <style lang="scss" scoped>
 .btn {
   padding: 10px;
@@ -93,6 +102,32 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
   }
   &:focus {
     outline: none;
+  }
+}
+
+.btn-light {
+  background-color: $light-color;
+  border: 1px solid rgba($help-color, 40%);
+  color: $dark-color;
+
+  &:hover {
+    background-color: color.adjust($light-color, $lightness: -2%);
+    border: 1px solid rgba($help-color, 40%);
+    color: $dark-color;
+  }
+
+  &:disabled {
+    background-color: $light-color;
+    opacity: 0.5;
+    border: 1px solid rgba($help-color, 40%);
+    color: $dark-color;
+    cursor: not-allowed;
+  }
+
+  &.active {
+    background-color: color.adjust($light-color, $lightness: -5%);
+    border: 1px solid rgba($help-color, 40%);
+    color: $dark-color;
   }
 }
 
@@ -148,6 +183,7 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
   }
 }
 
+.btn-light,
 .btn-primary,
 .btn-danger,
 .btn-secondary,
@@ -161,6 +197,11 @@ const buttonClass = computed(() => `btn-${props.buttonType}`)
     align-items: center;
     gap: 4px;
     font-weight: 400;
+
+    &__img {
+      height: 24px;
+      width: 24px;
+    }
   }
 }
 

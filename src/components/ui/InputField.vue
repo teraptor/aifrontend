@@ -1,6 +1,6 @@
 <template>
-  <div class="form__group">
-    <label class="form__group-label" :for="id">
+  <div :class="[type === 'checkbox' ? 'form__group--checkbox' : 'form__group']">
+    <label class="form__group-label" v-if="label" :for="id">
       {{ label }}
       <span v-if="required">*</span>
     </label>
@@ -16,6 +16,7 @@
         :autocomplete="autocomplete"
         :class="[
           size && type !== 'checkbox' ? size : '',
+          {'form__group-input--basic': !icon },
           { 'input-error': hasError },
           { 'checkbox-input': type === 'checkbox' },
         ]"
@@ -101,8 +102,26 @@ watch(internalValue, newValue => {
   font-weight: 300;
   font-size: 14px;
 
+  &--checkbox {
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 8px;
+
+    .form__group-label {
+      margin-bottom: 0;
+      font-weight: 300;
+    }
+    .checkbox-input {
+      height: 14px;
+      width: 14px;
+    }
+  }
+
   &-label {
     font-weight: 300;
+    margin-bottom: 8px;
 
     span {
       color: $danger-color;
@@ -122,6 +141,10 @@ watch(internalValue, newValue => {
     font-weight: 300;
     box-sizing: border-box;
 
+    &--basic {
+      padding: 10px 10px 10px 15px;
+    }
+
     &::placeholder {
       font-size: 14px;
       font-weight: 300;
@@ -135,7 +158,7 @@ watch(internalValue, newValue => {
     }
 
     &.input-error {
-      border-color: red;
+      border-color: $danger-color;
     }
   }
 

@@ -4,7 +4,8 @@
       <Notification :item="item" />
     </Notivue>
     <SideMenu v-if="route.meta.showSidebar" />
-    <div class="content-wrapper" :class="{ 'content-wrapper--expanded': !SidebarIsOpen }">
+    <RightSideMenu v-if="route.name === RouteNames.CREATE_ASSISTENT"/>
+    <div class="content-wrapper" :class="{ 'content-wrapper--expanded': !SidebarIsOpen, 'content-wrapper--right-expanded': !RightSidebarIsOpen }">
       <main class="main-content">
         <slot />
       </main>
@@ -14,7 +15,9 @@
 </template>
 
 <script setup lang="ts">
+import { RouteNames } from '@/router/routes/routeNames';
 import SideMenu from '@/components/layout/SideMenu.vue';
+import RightSideMenu from '@/components/layout/RightSideMenu.vue';
 import Footer from '@/components/layout/Footer.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
@@ -24,7 +27,7 @@ import { Notivue, Notification } from 'notivue'
 const route = useRoute()
 
 const layoutStore = useLayoutStore();
-const { SidebarIsOpen } = storeToRefs(layoutStore);
+const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 </script>
 
 <style scoped lang="scss">
@@ -38,26 +41,27 @@ const { SidebarIsOpen } = storeToRefs(layoutStore);
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, margin-right 0.3s ease;
 
   &--expanded {
     margin-left: 280px;
   }
+
+  &--right-expanded {
+    margin-right: 280px;
+  }
 }
 
-.header,
 .footer {
   width: 100%;
   max-width: 48rem;
 }
 
 .main-content {
-  margin-top: 20px;
+  margin-top: 80px;
   flex-grow: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 48rem;
 }
-
 </style>

@@ -1,366 +1,190 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import type { IAssistent } from '@/stores/useAssistentsStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { RouteNames } from '@/router/routes/routeNames';
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const props = defineProps({
   assistents: {
-    type: Object,
+    type: Object as () => IAssistent,
     required: true,
   },
-  isMyDepartment: {
-    type: Boolean,
-    default: false
-  },
-  isLocked: {
-    type: Boolean,
-    default: true
-  }
 })
 
-const { assistents, isMyDepartment, isLocked } = props;
+const { assistents } = props;
 
-const maleNames = [
-  'Сергей', 'Александр', 'Дмитрий', 'Андрей', 'Михаил',
-  'Евгений', 'Иван', 'Алексей', 'Николай', 'Артём'
-];
-
-const femaleNames = [
-  'Анна', 'Елена', 'Мария', 'Ольга', 'Ирина',
-  'Татьяна', 'Наталья', 'Екатерина', 'Юлия', 'Светлана'
-];
-
-const professions = [
-  'Маркетолог', 'Дизайнер', 'Разработчик', 'Аналитик', 'Контент-менеджер',
-  'SMM-специалист', 'SEO-специалист', 'Копирайтер', 'PR-менеджер', 'HR-специалист'
-];
-
-// Сохраняем сгенерированные данные
-const generatedData = ref({
-  name: '',
-  profession: '',
-  avatarId: 0,
-  isMale: false,
-  lastVisit: '10 minutes ago'
-});
-
-const startTime = ref(new Date());
-const currentTime = ref(new Date());
-let timer: number | null = null;
-let statusTimer: number | null = null;
-const dots = ref('');
-
-const statuses = [
-  'смотрит документы',
-  'печатает',
-  'думает',
-  'пьет чай'
-];
-
-const currentStatus = ref(statuses[0]);
-
-const updateDots = () => {
-  if (dots.value.length >= 3) {
-    dots.value = '';
-  } else {
-    dots.value += '.';
-  }
-};
-
-const updateStatus = () => {
-  const currentIndex = Math.floor(Math.random() * statuses.length);
-  currentStatus.value = statuses[currentIndex];
-  
-  // Устанавливаем следующее обновление через случайное время
-  const nextDelay = Math.floor(Math.random() * (10000 - 3000) + 3000); // от 3000 до 10000 мс
-  statusTimer = window.setTimeout(updateStatus, nextDelay);
-};
-
-// Загружаем или генерируем данные
-const loadOrGenerateData = () => {
-  const storageKey = `assistant_${assistents.id}`;
-  const savedData = localStorage.getItem(storageKey);
-  
-  if (savedData) {
-    generatedData.value = JSON.parse(savedData);
-    return;
-  }
-
-  // Для отдела "Мой ИИ отдел" генерируем только HR Дашу
-  if (isMyDepartment) {
-    generatedData.value = {
-      name: 'Даша',
-      profession: 'HR-специалист',
-      avatarId: 1,
-      isMale: false,
-      lastVisit: '10 minutes ago'
-    };
-  } else {
-    // Для остальных ассистентов оставляем случайную генерацию
-    const isMale = Math.random() > 0.5;
-    const names = isMale ? maleNames : femaleNames;
-    const name = names[Math.floor(Math.random() * names.length)];
-    const profession = professions[Math.floor(Math.random() * professions.length)];
-    const avatarId = Math.floor(Math.random() * 1000);
-
-    generatedData.value = {
-      name,
-      profession,
-      avatarId,
-      isMale,
-      lastVisit: '10 minutes ago'
-    };
-  }
-
-  // Сохраняем в localStorage
-  localStorage.setItem(storageKey, JSON.stringify(generatedData.value));
-};
-
-const getTimeDisplay = computed(() => {
-  if (assistents.id === '1') {
-    return `${currentStatus.value}${dots.value}`;
-  } else {
-    const diffInSeconds = Math.floor((currentTime.value.getTime() - startTime.value.getTime()) / 1000);
-    if (diffInSeconds > 50) {
-      return 'one minute ago';
-    }
-    return `${diffInSeconds} seconds ago`;
-  }
-});
-
-onMounted(() => {
-  loadOrGenerateData();
-  // Обновляем время каждые 10 секунд
-  timer = window.setInterval(() => {
-    currentTime.value = new Date();
-  }, 10000);
-
-  // Обновляем точки каждые 500мс
-  const dotsTimer = setInterval(updateDots, 500);
-
-  // Запускаем первое обновление статуса
-  updateStatus();
-
-  // Очищаем таймеры при размонтировании
-  onUnmounted(() => {
-    if (timer) clearInterval(timer);
-    if (statusTimer) clearTimeout(statusTimer);
-    if (dotsTimer) clearInterval(dotsTimer);
-  });
-});
-
-const randomName = computed(() => generatedData.value.name);
-const isMale = computed(() => generatedData.value.isMale);
-const randomProfession = computed(() => generatedData.value.profession);
-
-const randomAvatar = computed(() => {
-  return `https://i.pravatar.cc/150?img=${generatedData.value.avatarId}`;
-});
-
-const status = computed(() => {
-  if (!isMyDepartment) return null;
-  return assistents.id === '1' ? 'Active' : 'Disable';
+const cardClass = computed(() => {
+  if (!assistents) return '';
+  return !authStore.isAuthenticated
+    ? (assistents.isLocked || assistents.isDisabled ? 'assistents-card--locked' : '')
+    : (assistents.isDisabled ? 'assistents-card--disabled' : assistents.isLocked ? 'assistents-card--locked' : '');
 });
 
 const statusClass = computed(() => {
-  if (!status.value) return '';
-  return `assistents-card--${status.value.toLowerCase()}`;
+  if (!assistents) return '';
+  return assistents.isDisabled ? 'assistents-card__footer-status--disabled' : assistents.isActive ? 'assistents-card__footer-status--active' : '';
 });
 
-const cardClass = computed(() => ({
-  'assistents-card--locked': isLocked && !isMyDepartment,
-  [statusClass.value]: true
-}))
+const statusText = computed(() => {
+  if (!assistents) return '';
+  return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : '';
+});
 
-const router = useRouter();
-
-const emit = defineEmits(['click']);
-
-const handleClick = () => {
-  if (!isLocked || isMyDepartment) {
-    router.push(`/assistant/${assistents.id}/settings`);
+const goToAssistentDetails = () => {
+  if (cardClass.value !== 'assistents-card--locked') {
+    router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
   }
 };
 </script>
-
 <template>
-  <div 
-    class="assistents-card" 
-    :class="cardClass"
-    @click="handleClick"
-  >
-    <div v-if="isLocked && !isMyDepartment" class="assistents-card__soon">
-      Скоро
-    </div>
+  <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
     <div class="assistents-card__container">
-      <img 
-        :src="randomAvatar" 
-        class="assistents-card__image" 
-        alt="avatar"
-        loading="lazy"
-        decoding="async"
-      />
+      <img :src="assistents.image" class="assistents-card__image"/>
       <div class="assistents-card__name-wrapper">
-        <h4 class="assistents-card__name">{{ randomName }}</h4>
-        <p class="assistents-card__summary">{{ randomProfession }}</p>
-        <p v-if="isMyDepartment" 
-           class="assistents-card__last-visit"
-           :class="{ 'assistents-card__last-visit--runned': assistents.id === '1' }">
-          {{ getTimeDisplay }}
-        </p>
+        <h4 class="assistents-card__name"> {{ assistents.name }}</h4>
+        <p class="assistents-card__summary"> {{ assistents.summary }}</p>
       </div>
     </div>
-    <div class="assistents-card__status" v-if="isMyDepartment">
-      {{ status }}
+    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked'">
+      <div class="assistents-card__footer-status-wrapper">
+        <div :class="['assistents-card__footer-status', statusClass]" v-if="authStore.isAuthenticated && statusClass">
+          {{ statusText }}
+        </div>
+      </div>
+      <p class="assistents-card__footer-install">
+        {{ assistents.install }}
+        <span class="icon icon-arrow-down-outline" />
+      </p>
+    </div>
+    <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
+      <p>Скоро</p>
+      <span class="icon icon-lock"/>
     </div>
   </div>
 </template>
-
 <style lang="scss" scoped>
 .assistents-card {
-  position: relative;
+  max-width: 250px;
   width: 100%;
   min-height: 120px;
   display: flex;
   flex-direction: column;
-  background: #FFFFFF;
-  padding: 24px;
+  justify-content: space-between;
+  background: $light-color;
+  padding: 20px 10px 10px;
   border-radius: 16px;
   transition: all 0.2s ease;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba($help-color, 20%);
+
+  &:hover {
+    transform: scale(1.04);
+  }
 
   &--locked {
-    cursor: not-allowed;
-    
-    &:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    
+    position: relative;
     &::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(243, 244, 246, 0.6);
+      background: $blur-color;
       border-radius: 16px;
       backdrop-filter: blur(1px);
-    }
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      width: 20px;
-      height: 20px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'%3E%3C/path%3E%3C/svg%3E");
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-
-    .assistents-card__soon {
-      position: absolute;
-      top: 24px;
-      right: 52px;
-      font-size: 14px;
-      color: #6B7280;
-      font-weight: 500;
-    }
-    
-    .assistents-card__container {
-      pointer-events: none;
+      cursor: not-allowed;
     }
   }
 
-  &:hover:not(.assistents-card--locked) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  &__lock-container {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    font-size: 14px;
+    color: $help-color;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    .icon {
+      font-size: 20px;
+    }
   }
 
-  &--disable {
-    opacity: 0.5;
-  }
-
-  &--active {
-    background: #FFFFFF;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+  &--disabled {
+    position: relative;
+    background-color: $light-grey-color;
   }
 
   &__container {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: flex-start;
+    gap: 12px;
   }
 
   &__image {
     width: 48px;
     height: 48px;
-    border-radius: 24px;
-    object-fit: cover;
-    background: #F5F5F5;
-    border: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    
-    &[src] {
-      opacity: 1;
-    }
+    border-radius: 50%;
   }
 
   &__name-wrapper {
+    width: calc( 100% - 64px - 12px);
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
   }
 
   &__name {
-    font-size: 16px;
     font-weight: 500;
-    color: #111827;
-    margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
   }
 
   &__summary {
+    color: $help-color;
+    line-height: 1;
     font-size: 14px;
-    color: #6B7280;
-    line-height: 1.4;
-    margin: 0;
   }
 
-  &__status {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 8px;
-    background: #22C55E;
-    color: #FFFFFF;
-  }
+  &__footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-  &--disable &__status {
-    background: #F3F4F6;
-    color: #6B7280;
-  }
+    &-status {
+      text-transform: lowercase;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 4px 8px;
+      color: $light-color;
 
-  &--active &__status {
-    background: #22C55E;
-    color: #FFFFFF;
-  }
+      &--disabled {
+        background-color: $danger-color;
+      }
 
-  &__last-visit {
-    font-size: 12px;
-    color: #9CA3AF;
-    line-height: 1.4;
-    margin: 0;
-    margin-top: 4px;
-    font-weight: 400;
+      &--active {
+        background-color: $success-color;
+      }
+    }
 
-    &--runned {
-      color: rgba(34, 197, 94, 0.5);
+    &-install {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      height: 100%;
+      color: $teal-color;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
     }
   }
 }

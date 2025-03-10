@@ -8,8 +8,8 @@ const defaultMeta = {
 
 export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
-    path: `${RouteNames.MAIN.MAIN_PAGE.name}`,
-    name: RouteNames.MAIN.MAIN_PAGE.name,
+    path: RouteNames.MAIN.name,
+    name: RouteNames.MAIN.name,
     meta: {
       title: 'Главная страница',
       ...defaultMeta,
@@ -17,41 +17,67 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Index.vue')
   },
   {
-    path: `${RouteNames.MAIN.ASSISTS.name}`,
-    name: RouteNames.MAIN.ASSISTS.name,
+    path: RouteNames.PROFILE,
+    name: RouteNames.PROFILE,
     meta: {
-      title: 'Ассистенты',
+      title: 'Профиль',
       ...defaultMeta,
     },
-    component: () => import('@/pages/Assists.vue')
+    component: () => import('@/pages/Profile.vue')
   },
   {
-    path: `${RouteNames.MAIN.INSTRUMENTS.name}`,
-    name: RouteNames.MAIN.INSTRUMENTS.name,
+    path: RouteNames.INSTRUMENTS,
+    name: RouteNames.INSTRUMENTS,
     meta: {
-      title: 'Инструменты AI',
+      title: 'Инструменты',
       ...defaultMeta,
     },
     component: () => import('@/pages/Instruments.vue')
   },
   {
-    path: `${RouteNames.MAIN.QUESTIONS.name}`,
-    name: RouteNames.MAIN.QUESTIONS.name,
+    path: RouteNames.QUESTIONS,
+    name: RouteNames.QUESTIONS,
     meta: {
       title: 'Вопросы ассистентов',
       ...defaultMeta,
     },
-    component: () => import('@/pages/Questions.vue')
+    component: () => import('@/pages/QuestionsList.vue')
   },
   {
-    path: `${RouteNames.MAIN.CREATE_ASSISTANT.name}`,
-    name: RouteNames.MAIN.CREATE_ASSISTANT.name,
+    path: RouteNames.PROFILE,
+    name: RouteNames.PROFILE,
     meta: {
-      title: 'Создание ассистента',
-      showFooter: false,
-      showSidebar: true
+      title: 'Профиль',
+      ...defaultMeta,
     },
-    component: () => import('@/pages/CreateAssistant.vue')
+    component: () => import('@/pages/Profile.vue')
+  },
+  {
+    path: RouteNames.CREATE_ASSISTENT,
+    name: RouteNames.CREATE_ASSISTENT,
+    meta: {
+      title: 'Создать ассистента',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/CreateAssistent.vue')
+  },
+  {
+    path: `${RouteNames.ASSISTENT_DETAIL}/:id`,
+    name: RouteNames.ASSISTENT_DETAIL,
+    meta: {
+      title: 'Детали ассистента',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentDetail.vue')
+  },
+  {
+    path: `${RouteNames.QUESTION_DETAIL}/:id`,
+    name: RouteNames.QUESTION_DETAIL,
+    meta: {
+      title: 'Вопросы ассистенту',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/QuestionDetail.vue')
   },
   {
     path: `${RouteNames.NOT_FOUND}`,
