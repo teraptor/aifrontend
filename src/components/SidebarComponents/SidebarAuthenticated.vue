@@ -40,12 +40,6 @@ const logout = () => authStore.logout()
     </div>
     <div class="menu__footer">
       <User />
-      <Button
-        button-type="danger"
-        text="Выйти"
-        @click="logout"
-        size="large"
-      />
     </div>
   </div>
 </template>
@@ -116,13 +110,10 @@ const logout = () => authStore.logout()
   }
 
   &__footer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
     width: 100%;
     padding: 16px;
     margin-top: auto;
+    margin-bottom: 70px;
   }
 }
 </style>

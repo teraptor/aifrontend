@@ -1,25 +1,66 @@
 <script setup lang="ts">
-import { useUserStore } from '@/stores/useUserStore';
-
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'vue-router';
-const router = useRouter();
-const userStore = useUserStore();
+import { computed, ref } from 'vue';
+import { onClickOutside } from '@vueuse/core';
+import { RouteNames } from '@/router/routes/routeNames';
 
-const goToProfile = ():void => {
-  router.push('profile')
-} 
+const router = useRouter();
+const authStore = useAuthStore();
+
+const isMenuOpen = ref<boolean>(false);
+const profileRef = ref<HTMLElement | null>(null);
+
+const currentUser = computed(() => {
+  if (authStore.currentUserId) {
+    return authStore.getUserProfile(authStore.currentUserId.toString());
+  }
+  return null;
+});
+
+const goToProfile = (): void => {
+  router.push(RouteNames.PROFILE);
+  isMenuOpen.value = false;
+};
+
+const logout = (): void => {
+  authStore.logout();
+  isMenuOpen.value = false;
+  router.push(RouteNames.MAIN.name)
+};
+
+const toggleMenu = (): void => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+onClickOutside(profileRef, () => {
+  isMenuOpen.value = false;
+});
 </script>
+
 <template>
-    <div class="profile" @click="goToProfile">
-      <div class="profile__avatar">
-        <span class="profile__avatar-letter">{{userStore.user.name[0]}}</span>
+  <div ref="profileRef" class="profile" @click="toggleMenu">
+    <div class="profile__avatar">
+      {{ currentUser?.email?.charAt(0) }}
+    </div>
+    <div class="profile__info">
+      <div class="profile__info-name">{{ currentUser?.email }}</div>
+      <div class="profile__info-action">{{ currentUser?.role }}</div>
+    </div>
+
+    <div v-if="isMenuOpen" class="profile-menu">
+      <div class="profile-menu__item" @click="goToProfile">
+        <span class="icon icon-user" />
+        Перейти в профиль
       </div>
-      <div class="profile__info">
-        <div class="profile__info-name">{{userStore.user.name}} {{ userStore.user.surname }}</div>
-        <div class="profile__info-action">Перейти в профиль</div>
+      <div class="profile-menu__item profile-menu__item--danger" @click="logout">
+        <span class="icon icon-log-out" />
+        Выйти из системы
       </div>
     </div>
+  </div>
 </template>
+
 <style lang="scss" scoped>
 .profile {
   display: flex;
@@ -29,28 +70,24 @@ const goToProfile = ():void => {
   padding: 8px;
   border-radius: 6px;
   transition: all 0.2s ease;
-  width: 250px;
+  width: 100%;
+  max-width: 250px;
   cursor: pointer;
   background: transparent;
-
-  &:hover {
-    background: $light-grey-color;
-  }
+  position: relative;
 
   &__avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: $teal-color;
+    background: $main-color;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    &-letter {
-      color: $light-color;
-      font-size: 14px;
-      font-weight: 500;
-    }
+    text-transform: uppercase;
+    color: $light-color;
+    font-size: 16px;
+    font-weight: 500;
   }
 
   &__info {
@@ -68,6 +105,57 @@ const goToProfile = ():void => {
     &-action {
       font-size: 12px;
       color: $help-color;
+    }
+  }
+}
+
+.profile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: $light-color;
+  border-top: 1px solid $light-grey-color;
+  z-index: 100;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: $dark-color;
+    font-size: 14px;
+    font-weight: 300;
+    transition: all 0.2s ease;
+
+    .icon {
+      font-size: 16px;
+      color: $help-color;
+    }
+
+    &:hover {
+      background: $light-grey-color;
+    }
+
+    &--danger {
+      color: $danger-color;
+
+      .icon {
+        color: $danger-color;
+      }
+
+      &:hover {
+        background: rgba($danger-color, 0.1);
+      }
     }
   }
 }

@@ -164,12 +164,12 @@ watch(internalValue, newValue => {
 
   .small {
     width: 100px;
-    max-height: 36px;
+    height: 40px;
   }
 
   .medium {
     width: 170px;
-    max-height: 36px;
+    height: 40px;
   }
 
   .big {
