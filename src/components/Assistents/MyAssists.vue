@@ -23,7 +23,6 @@ const showAddModal = ref(false);
 const filterLabels: Record<FilterOption, string> = {
   all: 'Все',
   business: 'Бизнес',
-  my: 'Мои',
 };
 
 const sortLabels: Record<SortOption, string> = {

@@ -62,7 +62,6 @@ const closeAddModal = () => {
 }
 
 const handleAssistantSelect = (assistantId: string) => {
-  // Здесь можно добавить логику добавления ассистента
   console.log('Selected assistant:', assistantId);
 }
 </script>
@@ -79,7 +78,7 @@ const handleAssistantSelect = (assistantId: string) => {
         @update:sort="changeSortOption"
         @update:filter="changeFilter"
       />
-      <div class="assistents__btn-group">
+      <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
         <InputField 
           icon='icon icon-search'
           size="medium"
@@ -93,6 +92,13 @@ const handleAssistantSelect = (assistantId: string) => {
           @click="navigateToCreateAssistent"
         />
       </div>
+      <div class="assistents__input-container" v-else>
+        <InputField 
+          icon='icon icon-search'
+          size="large"
+          placeholder="Найти ассистента"
+        />
+      </div>
     </div>
     <div class="assistents__list">
       <AssistentsCard
@@ -101,7 +107,6 @@ const handleAssistantSelect = (assistantId: string) => {
         :assistents="item"
       />
     </div>
-
     <AddAssistantModal
       :show="showAddModal"
       @close="closeAddModal"
@@ -132,8 +137,12 @@ const handleAssistantSelect = (assistantId: string) => {
     justify-content: flex-end;
     align-items: center;
     gap: 12px;
-    flex: 1;
     min-width: 320px;
+    width: 50%;
+  }
+
+  &__input-container {
+    width: 50%;
   }
 
   &__list {
@@ -143,4 +152,5 @@ const handleAssistantSelect = (assistantId: string) => {
     gap: 24px;
   }
 }
+
 </style>
