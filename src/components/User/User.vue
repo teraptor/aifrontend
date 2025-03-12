@@ -111,10 +111,10 @@ onClickOutside(profileRef, () => {
 
 .profile-menu {
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 8px);
   left: 0;
   background-color: $light-color;
-  border-top: 1px solid $light-grey-color;
+  border-bottom: 1px solid $light-grey-color;
   z-index: 100;
   width: 100%;
   display: flex;
