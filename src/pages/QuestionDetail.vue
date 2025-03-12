@@ -2,12 +2,17 @@
 import { useRoute } from 'vue-router';
 import { useQuestionsStore } from '@/stores/useQuestionsStore';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import TextAreaField from '@/components/ui/TextAreaField.vue';
 import Button from '@/components/ui/Button.vue';
 
 const route = useRoute();
 const questionsStore = useQuestionsStore();
+
+const isHistoryCollapsed = ref<boolean>(true);
+const toggleHistory = () => {
+  isHistoryCollapsed.value = !isHistoryCollapsed.value;
+};
 
 const messageId = computed(() => route.params.id as string);
 const messageDetail = computed(() => questionsStore.getMessageDetailWithName(messageId.value));
@@ -22,6 +27,40 @@ const message =''//для компонента textArea
         subtitle="Как улучшить точность моих ответов на технические вопросы?"
       />
       <div class="dialog-page__container" v-if="messageDetail">
+        <div 
+          class="dialog-page__history"
+          :class="{ 'dialog-page__history--collapsed': isHistoryCollapsed }"
+        >
+          <div 
+            class="dialog-page__history-header"
+            @click="toggleHistory"
+          >
+            <div class="dialog-page__history-title">
+              История диалога
+              <span class="dialog-page__history-arrow">↓</span>
+            </div>
+          </div>
+          <div class="dialog-page__history-date">
+            {{ new Date(messageDetail.messages[0].timestamp).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) }}
+          </div>
+          <div class="dialog-page__history-messages">
+            <div 
+              v-for="msg in messageDetail.messages" 
+              :key="msg.id"
+              class="dialog-page__history-message"
+              :class="{ 'dialog-page__history-message--assistant': msg.sender === 'assistant' }"
+            >
+              <div class="dialog-page__history-message-author">
+                {{ msg.sender === 'assistant' ? `Ассистент ${messageDetail.assistantName}` : 'Пользователь' }}
+              </div>
+              <div class="dialog-page__history-message-text">{{ msg.text }}</div>
+              <div class="dialog-page__history-message-time">
+                {{ new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="dialog-page__messages">
           <div 
             v-for="msg in messageDetail.messages" 
@@ -103,6 +142,97 @@ const message =''//для компонента textArea
     border-radius: 12px;
     padding-bottom: 120px;
     position: relative;
+  }
+
+  &__history {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: $light-blue-color;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &--collapsed {
+      .dialog-page__history-messages,
+      .dialog-page__history-date {
+        display: none;
+      }
+
+      .dialog-page__history-arrow {
+        transform: rotate(-90deg);
+      }
+    }
+  }
+
+  &__history-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__history-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: $dark-secondary-color;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__history-arrow {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  &__history-date {
+    font-size: 16px;
+    color: $help-color;
+    padding-bottom: 16px;
+    border-bottom: 1px solid $light-grey-color;
+  }
+
+  &__history-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__history-message {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: $light-color;
+    border-radius: 12px;
+    width: 50%;
+    align-self: flex-end;
+
+    &--assistant {
+      align-self: flex-start;
+      background: rgba($help-color, 0.1);
+    }
+  }
+
+  &__history-message-author {
+    font-size: 14px;
+    font-weight: 600;
+    color: $help-color;
+  }
+
+  &__history-message-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #374151;
+    white-space: pre-wrap;
+  }
+
+  &__history-message-time {
+    font-size: 12px;
+    color: #9CA3AF;
+    align-self: flex-end;
   }
 
   &__messages {
