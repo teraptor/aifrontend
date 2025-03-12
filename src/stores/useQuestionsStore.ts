@@ -13,6 +13,7 @@ export interface IMessageList {
 export interface IMessageDetail {
   id: string;
   assistantName?: string;
+  assistanImage?: string;
   messages: {
     id: string;
     sender: 'user' | 'assistant';
@@ -102,6 +103,30 @@ export const useQuestionsStore = defineStore('questions', {
       {
         id: '2',
         messages: [
+          {
+            id: '2-1',
+            sender: 'user',
+            text: 'Привет, как дела?2',
+            timestamp: "2024-03-02T18:15:00Z",
+          },
+          {
+            id: '2-2',
+            sender: 'assistant',
+            text: 'Привет! Все отлично, спасибо!2',
+            timestamp: "2024-03-02T18:16:00Z",
+          },
+          {
+            id: '2-1',
+            sender: 'user',
+            text: 'Привет, как дела?2',
+            timestamp: "2024-03-02T18:15:00Z",
+          },
+          {
+            id: '2-2',
+            sender: 'assistant',
+            text: 'Привет! Все отлично, спасибо!2',
+            timestamp: "2024-03-02T18:16:00Z",
+          },
           {
             id: '2-1',
             sender: 'user',
@@ -227,6 +252,7 @@ export const useQuestionsStore = defineStore('questions', {
         return {
           ...detail,
           assistantName: message.name,
+          assistanImage: message.image
         };
       }
 

@@ -31,7 +31,7 @@ const props = defineProps({
     default: '',
   },
   size: {
-    type: String as PropType<'tab' | 'small' | 'medium' | 'big' | 'large'>,
+    type: String as PropType<'tab' | 'small' | 'medium' | 'big' | 'large' | 'message'>,
     default: 'large',
   },
   icon: {
@@ -98,6 +98,11 @@ const image = computed(() => {
   &-big {
     width: 220px;
     height: 48px;
+  }
+
+  &-message {
+    width: 100%;
+    height: 60px;
   }
 
   &-large {
@@ -207,6 +212,23 @@ const image = computed(() => {
   }
 }
 
+.btn-light-danger {
+  background-color: $light-danger-color;
+  color: $light-color;
+
+  &:hover {
+    background-color: color.scale($light-danger-color, $lightness: -5%);
+  }
+
+  &:disabled {
+    background-color: color.scale($light-danger-color, $lightness: 20%);
+  }
+
+  &:active {
+    background-color: color.scale($light-danger-color, $lightness: -10%);
+  }
+}
+
 .btn-success {
   background-color: $success-color;
   color: $light-color;
@@ -227,6 +249,7 @@ const image = computed(() => {
 .btn-light,
 .btn-primary,
 .btn-danger,
+.btn-light-danger,
 .btn-secondary,
 .btn-success {
   .icon-spinner {
