@@ -45,7 +45,7 @@ onClickOutside(profileRef, () => {
     </div>
     <div class="profile__info">
       <div class="profile__info-name">{{ currentUser?.email }}</div>
-      <div class="profile__info-action">{{ currentUser?.role }}</div>
+      <div class="profile__info-balance">Баланс: {{ currentUser?.balance }} ₽</div>
     </div>
 
     <div v-if="isMenuOpen" class="profile-menu">
@@ -102,7 +102,7 @@ onClickOutside(profileRef, () => {
       color: $dark-color;
     }
 
-    &-action {
+    &-balance {
       font-size: 12px;
       color: $help-color;
     }

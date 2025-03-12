@@ -91,6 +91,7 @@ const image = computed(() => {
 
   &-medium {
     min-width: 140px;
+    max-width: 220px;
     height: 40px;
   }
 

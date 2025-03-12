@@ -14,6 +14,7 @@ interface UserProfile {
   id: string;
   email: string;
   role: 'admin' | 'contractor' | 'company';
+  balance: number;
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -30,6 +31,7 @@ export const useAuthStore = defineStore('auth', {
         email: 'admin@example.com',
         role: 'admin',
         company_id: 'company-123',
+        balance: 1000,
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z',
       },
@@ -38,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
         email: 'contractor@example.com',
         role: 'contractor',
         company_id: 'company-456',
+        balance: 1000,
         created_at: '2023-01-02T00:00:00Z',
         updated_at: '2023-01-02T00:00:00Z',
       },
@@ -46,6 +49,7 @@ export const useAuthStore = defineStore('auth', {
         email: 'company@example.com',
         role: 'company',
         company_id: 'company-789',
+        balance: 1000,
         created_at: '2023-01-03T00:00:00Z',
         updated_at: '2023-01-03T00:00:00Z',
       },

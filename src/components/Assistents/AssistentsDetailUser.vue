@@ -53,7 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
 import type { IAssistent } from '@/stores/useAssistentsStore';
 import InputField from '../ui/InputField.vue';
 import SelectField from '../ui/SelectField.vue';
