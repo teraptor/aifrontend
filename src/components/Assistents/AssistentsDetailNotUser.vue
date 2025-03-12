@@ -36,7 +36,7 @@ const { assistent } = props;
   flex-direction: column;
   width: 100%;
   max-width: 48rem;
-  gap: 32px;
+  gap: 16px;
 
   &__container {
     width: 100%;
@@ -47,8 +47,8 @@ const { assistent } = props;
   }
 
   &__image {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
   }
 
@@ -57,17 +57,17 @@ const { assistent } = props;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    gap: 4px;
   }
 
   &__name {
     font-weight: 600;
-    line-height: 1.5;
-    font-size: 24px;
+    font-size: 20px;
   }
 
   &__summary {
     color: $help-color;
-    line-height: 1.2;
+    font-size: 14px;
   }
 
   &__description,

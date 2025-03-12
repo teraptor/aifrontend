@@ -19,6 +19,7 @@
           {'form__group-input--basic': !icon },
           { 'input-error': hasError },
           { 'checkbox-input': type === 'checkbox' },
+          { 'form__group-input--light': variant === 'light' },
         ]"
         @blur="validate"
       />
@@ -39,6 +40,10 @@ const props = defineProps({
   type: {
     type: String,
     default: 'text',
+  },
+  variant: {
+    type: String,
+    default: 'default',
   },
   placeholder: String,
   required: {
@@ -111,11 +116,13 @@ watch(internalValue, newValue => {
 
     .form__group-label {
       margin-bottom: 0;
-      font-weight: 300;
+      font-weight: 500;
+      font-size: 14px;
+      color: $dark-secondary-color;
     }
     .checkbox-input {
-      height: 14px;
-      width: 14px;
+      height: 16px;
+      width: 16px;
     }
   }
 
@@ -159,6 +166,17 @@ watch(internalValue, newValue => {
 
     &.input-error {
       border-color: $danger-color;
+    }
+
+    &--light {
+      background: $light-color;
+      border: 1px solid $light-grey-color;
+      border-radius: 6px;
+
+      &:focus {
+        border-color: $success-color;
+        box-shadow: 0 0 0 2px rgba($success-color, 0.2);
+      }
     }
   }
 

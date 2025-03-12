@@ -13,6 +13,7 @@
           size,
           { 'select__group-selected--active': isDropdownOpen },
           { 'select__group-selected--error': hasError },
+          { 'select__group-selected--light': variant === 'light' },
           { placeholder: !selectedOption },
         ]"
       >
@@ -81,6 +82,10 @@ const props = defineProps({
   enableSearch: {
     type: Boolean,
     default: false,
+  },
+  variant: {
+    type: String,
+    default: 'default',
   },
 })
 
@@ -192,13 +197,26 @@ watch(internalValue, newValue => {
       font-weight: 300;
       color: $help-color;
     }
+
+    &--error {
+      border-color: $danger-color;
+    }
+    &--light {
+      background: $light-color;
+      border: 1px solid $light-grey-color;
+      border-radius: 8px;
+
+      &:focus,
+      &.select__group-selected--active {
+        border-color: $success-color;
+        box-shadow: 0 0 0 2px rgba($success-color, 0.2);
+      }
+    }
+
     &--active {
       background-color: $light-color;
       box-shadow: $box-shadow-large;
       outline: none;
-    }
-    &--error {
-      border-color: $danger-color;
     }
   }
 

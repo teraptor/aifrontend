@@ -1,7 +1,13 @@
 <template>
   <div class="assistent">
-    <span class="icon icon-chevron-left" @click="goBack" />
-    <AssistentsDetailUser v-if="isAuthor && authStore.isAuthenticated" :assistent="assistent" />
+    <div class="assistent__header-wrapper">
+      <div class="assistent__header-back" @click="goBack">
+        <span class="icon icon-arrow-left2" />
+        Назад
+      </div>
+      <TitleWrapper :title="getTitle" />
+    </div>
+    <AssistentsDetailUser v-if="isAuthor" :assistent="assistent" />
     <AssistentsDetailNotUser v-else :assistent="assistent" />
   </div>
 </template>
@@ -10,12 +16,11 @@
 import AssistentsDetailUser from '@/components/Assistents/AssistentsDetailUser.vue';
 import AssistentsDetailNotUser from '@/components/Assistents/AssistentsDetailNotUser.vue';
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter, useRoute } from 'vue-router';
 import { computed } from 'vue';
+import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 
 const assistentsStore = useAssistentsStore();
-const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -26,6 +31,10 @@ const isAuthor = computed(() => {
 });
 
 const goBack = (): void => router.back();
+
+const getTitle = computed(() => {
+  return isAuthor.value ? 'Настройка ассистента' : 'Параметры ассистента'
+})
 </script>
 <style lang="scss" scoped>
 .assistent {
@@ -35,20 +44,24 @@ const goBack = (): void => router.back();
   gap: 24px;
   width: 100%;
 
-  .icon {
-    font-size: 30px;
-    color: $help-color;
-    cursor: pointer;
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    background: $light-grey-color;
+  &__header-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 24px;
+  }
+
+  &__header-back {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: $help-color;
+    cursor: pointer;
+    font-weight: 500;
 
     &:hover {
-      color: $danger-color;
+      color: $dark-secondary-color;
     }
   }
 }

@@ -15,7 +15,6 @@ defineProps<{
 <style scoped lang="scss">
 .title-wrapper {
   width: 100%;
-  margin-bottom: 8px;
 }
 
 .title {
@@ -30,5 +29,6 @@ defineProps<{
   font-size: 14px;
   color: #6B7280;
   margin: 0;
+  margin-top: 8px;
 }
 </style>
