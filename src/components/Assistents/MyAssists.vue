@@ -74,9 +74,11 @@ const handleAssistantSelect = (assistantId: string) => {
       <TitleWrapper title="Мои ассистенты" subtitle="Управляйте своими ассистентами и настройками" />
     </div>
     <div class="my-assistents__list" v-show="isOpenMyAssistents">
-      <div class="add-assistant" @click="openAddModal">
-        <span class="icon icon-plus"></span>
-        <p class="add-assistant__text">Добавить ассистента</p>
+      <div class="add-assistant-wrapper">
+        <div class="add-assistant" @click="openAddModal">
+          <span class="icon icon-plus"></span>
+          <p class="add-assistant__text">Добавить ассистента</p>
+        </div>
       </div>
       <AssistentsCard
         v-for="item in userAssistents"
@@ -94,6 +96,11 @@ const handleAssistantSelect = (assistantId: string) => {
 </template>
 
 <style lang="scss" scoped>
+.add-assistant-wrapper {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
 .add-assistant {
   width: 100%;
   height: 120px;
@@ -154,8 +161,24 @@ const handleAssistantSelect = (assistantId: string) => {
   &__list {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .my-assistents {
+    &__list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .my-assistents {
+    &__list {
+      grid-template-columns: 1fr;
+    }
   }
 }
 </style>

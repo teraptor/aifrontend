@@ -36,7 +36,7 @@ const statusText = computed(() => {
 
 const goToAssistentDetails = () => {
   if (cardClass.value !== 'assistents-card--locked') {
-    router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
+    router.push({ path: `${RouteNames.ASSISTENT_CHAT}/${assistents.id}` });
   }
 };
 </script>

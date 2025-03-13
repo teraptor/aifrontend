@@ -26,6 +26,16 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   },
   
   {
+    path: `${RouteNames.ASSISTENT_CHAT}/:id`,
+    name: 'ASSISTENT_CHAT',
+    meta: {
+      title: 'Чат с ассистентом',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentChat.vue')
+  },
+  
+  {
     path: RouteNames.PROFILE,
     name: RouteNames.PROFILE,
     meta: {
@@ -51,15 +61,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
       ...defaultMeta,
     },
     component: () => import('@/pages/QuestionsList.vue')
-  },
-  {
-    path: RouteNames.PROFILE,
-    name: RouteNames.PROFILE,
-    meta: {
-      title: 'Профиль',
-      ...defaultMeta,
-    },
-    component: () => import('@/pages/Profile.vue')
   },
   {
     path: RouteNames.CREATE_ASSISTENT,

@@ -5,6 +5,7 @@ export const RouteNames = {
   PROFILE: '/profile',
   ASSISTENS: '/my-assistants',
   ASSISTENT_DETAIL: '/assistent',
+  ASSISTENT_CHAT: '/my-assistants',
   CREATE_ASSISTENT: '/create-assistent',
   INSTRUMENTS: '/instruments',
   QUESTIONS: '/questions',

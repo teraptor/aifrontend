@@ -54,7 +54,7 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 
 .footer {
   width: 100%;
-  max-width: 48rem;
+  max-width: 68rem;
 }
 
 .main-content {
@@ -62,6 +62,6 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
   flex-grow: 1;
   display: flex;
   justify-content: center;
-  width: 48rem;
+  width: 68rem;
 }
 </style>
