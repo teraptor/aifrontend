@@ -1,10 +1,13 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { RouteNames } from './routeNames'
+import { ref, onMounted } from 'vue'
 
 const defaultMeta = {
   showFooter: true,
   showSidebar: true
 }
+
+const assistentName = ref('')
 
 export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
@@ -108,3 +111,9 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     },
   },
 ]
+
+onMounted(() => {
+  if (assistent.value) {
+    assistentName.value = assistent.value.name;
+  }
+});

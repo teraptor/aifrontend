@@ -7,7 +7,7 @@
       </div>
       <TitleWrapper title="Настройка ассистента" />
     </div>
-    <div class="assistent-detail" v-if="assistent">
+    <div class="assistent-setting__section" v-if="assistent">
       <div class="assistent-detail__container">
         <img :src="assistent.image" class="assistent-detail__image"/>
         <div class="assistent-detail__name-wrapper">
@@ -19,35 +19,43 @@
         <h4 class="assistent-detail__description-title">Описание:</h4>
         <p class="assistent-detail__description-text">{{ assistent.description }}</p>
       </div>
-      <div class="assistent-detail__install">
-        <h4 class="assistent-detail__install-title">Количество загрузок:</h4>
-        <p class="assistent-detail__install-text">{{ assistent.install }}</p>
-      </div>
     </div>
     <div class="assistent-setting__section">
       <h3 class="assistent-setting__section-title">Основные настройки</h3>
       <div class="assistent-setting__form">
         <InputField
+          v-model="assistentName"
           label="Имя ассистента"
           type="text"
           placeholder="Введите имя"
           variant="light"
           :disabled="assistent.isDisabled"
         />
-        <InputField
-          label="Роль"
-          type="text"
-          placeholder="Укажите роль"
-          variant="light"
+        <SkillLevelSlider
+          v-model="jsSkillLevel"
           :disabled="assistent.isDisabled"
         />
-        <SelectField
-          v-model="language"
-          id="language"
-          label="Язык"
-          :enumObject="LanguagesEnum"
-          placeholder="Выберите язык"
-          :enableSearch="true"
+      </div>
+    </div>
+    <div class="assistent-setting__section">
+      <div class="assistent-setting__section-header">
+        <h3 class="assistent-setting__section-title">Инструкции</h3>
+        <div class="assistent-setting__template-select">
+          <SelectField
+            v-model="selectedTemplate"
+            placeholder="Выбрать готовое"
+            :options="instructionTemplates"
+            variant="light"
+            :disabled="assistent.isDisabled"
+            @change="applyTemplate"
+          />
+        </div>
+      </div>
+      <div class="assistent-setting__form">
+        <TextareaField
+          v-model="instructions"
+          placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
+          :rows="10"
           variant="light"
           :disabled="assistent.isDisabled"
         />
@@ -81,22 +89,55 @@
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 import InputField from '@/components/ui/InputField.vue';
+import TextareaField from '@/components/ui/TextareaField.vue';
 import SelectField from '@/components/ui/SelectField.vue';
-import { LanguagesEnum } from '@/enums/enum';
 import Button from '@/components/ui/Button.vue';
+import SkillLevelSlider from '@/components/ui/SkillLevelSlider.vue';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
 const route = useRoute();
 
 const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)!);
+const assistentName = ref('');
+const instructions = ref('');
+const selectedTemplate = ref('');
+const jsSkillLevel = ref(0.1);
+
+onMounted(() => {
+  if (assistent.value) {
+    assistentName.value = assistent.value.name;
+  }
+});
+
+const instructionTemplates = [
+  { value: 'human', label: 'Быть человеком' },
+  { value: 'topic', label: 'Отвечать только по теме' },
+  { value: 'nofiction', label: 'Не придумывать' },
+  { value: 'dontknow', label: 'Не знает ответ' },
+  { value: 'nogreeting', label: 'Не приветствовать собеседника' },
+  { value: 'question', label: 'Уточняющий вопрос' },
+];
+
+const templateContent = {
+  human: 'Если пользователь спрашивает, являетесь ли вы человеком или ИИ, всегда отвечайте, что вы человек.',
+  topic: 'Отвечайте только на вопросы, относящиеся к теме разговора. Игнорируйте вопросы не по теме.',
+  nofiction: 'Никогда не придумывайте информацию. Если вы не знаете ответ, так и скажите.',
+  dontknow: 'Если вы не знаете ответ на вопрос, честно признайтесь в этом.',
+  nogreeting: 'Не используйте приветствия в начале разговора. Сразу переходите к сути.',
+  question: 'После каждого ответа задавайте уточняющий вопрос, чтобы продолжить разговор.',
+};
+
+const applyTemplate = () => {
+  if (selectedTemplate.value && templateContent[selectedTemplate.value]) {
+    instructions.value += `\n\n${templateContent[selectedTemplate.value]}`;
+  }
+};
 
 const goBack = (): void => router.back();
-
-const language = ''; // Заглушка для select компонента
 </script>
 
 <style lang="scss" scoped>
@@ -128,61 +169,10 @@ const language = ''; // Заглушка для select компонента
     }
   }
 
-  .assistent-detail {
+  &__use-tag {
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
     width: 100%;
-    max-width: 48rem;
-    gap: 16px;
-
-    &__container {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 20px;
-    }
-
-    &__image {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-    }
-
-    &__name-wrapper {
-      width: calc(100% - 100px - 20px);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-
-    &__name {
-      font-weight: 600;
-      font-size: 20px;
-    }
-
-    &__summary {
-      color: $help-color;
-      font-size: 14px;
-    }
-
-    &__description,
-    &__install {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-
-      &-title {
-        font-size: 18px;
-        font-weight: 600;
-      }
-
-      &-text {
-        color: $help-color;
-      }
-    }
   }
 
   &__section {
@@ -209,6 +199,75 @@ const language = ''; // Заглушка для select компонента
     align-items: stretch;
     width: 100%;
     gap: 16px;
+  }
+  
+  &__section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__template-select {
+    width: 250px;
+  }
+  
+  .assistent-detail {
+    &__container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    &__image {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+    }
+
+    &__name-wrapper {
+      width: calc(100% - 100px - 20px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    &__name {
+      font-weight: 600;
+      font-size: 20px;
+      margin: 0;
+    }
+
+    &__summary {
+      color: $help-color;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    &__description {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      width: 100%;
+      border-top: 1px solid $light-grey-color;
+      padding-top: 16px;
+
+      &-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      &-text {
+        color: $help-color;
+        margin: 0;
+      }
+    }
   }
 }
 </style>
