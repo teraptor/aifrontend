@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import Button from '../ui/Button.vue';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
-import { RouteNames } from '@/router/routes/routeNames';
 
 const router = useRouter();
 const route = useRoute();
@@ -20,12 +17,6 @@ const navigateToRoute = (routeName: string):void => {
   <div class="menu">
     <div class="menu__nav">
       <ul class="menu__nav-items">
-        <li class="menu__nav-item" :class="{ 'menu__nav-item--active': route.name === RouteNames.ASSISTENS }" @click="navigateToRoute(RouteNames.ASSISTENS)">
-          <span class="icon icon-users" />
-          <p class="menu__nav-item-name">Мои ассистенты</p>
-          <span class="icon icon-plus" v-if="route.name !== 'my-assistants'" />
-          <span class="icon icon-chevron-right" v-else />
-        </li>
         <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" 
             :class="{ 'menu__nav-item--active': route.name === item.link }"
             @click="navigateToRoute(item.link)">

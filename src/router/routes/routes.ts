@@ -18,6 +18,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   },
   {
     path: RouteNames.ASSISTENS,
+    name: RouteNames.ASSISTENS,
     meta: {
       title: 'Мои ассистенты',
       ...defaultMeta,
@@ -27,7 +28,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   
   {
     path: `${RouteNames.ASSISTENT_CHAT}/:id`,
-    name: 'ASSISTENT_CHAT',
+    name: RouteNames.ASSISTENT_CHAT,
     meta: {
       title: 'Чат с ассистентом',
       ...defaultMeta,
