@@ -31,7 +31,7 @@ const props = defineProps({
     default: '',
   },
   size: {
-    type: String as PropType<'tab' | 'small' | 'medium' | 'big' | 'large' | 'message'>,
+    type: String as PropType<'tab' | 'small' | 'medium' | 'big' | 'large' | 'message' | 'curcle'>,
     default: 'large',
   },
   icon: {
@@ -105,6 +105,12 @@ const image = computed(() => {
     height: 60px;
   }
 
+  &-curcle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
   &-large {
     width: 100%;
     height: 40px;
@@ -132,7 +138,7 @@ const image = computed(() => {
   }
 
   &:disabled {
-    color:  color.scale($main-color, $lightness: 20%);
+    color:  color.scale($main-color, $lightness: 10%);
   }
 
   &.active {
@@ -169,7 +175,7 @@ const image = computed(() => {
   }
 
   &:disabled {
-    background-color: color.scale($main-color, $lightness: 20%);
+    background-color: color.scale($main-color, $lightness: 10%);
   }
 
   &.active {
@@ -187,7 +193,7 @@ const image = computed(() => {
 
   &:disabled {
     background-color: rgba($main-color, 0.05);
-    color: color.scale($main-color, $lightness: 20%);
+    color: color.scale($main-color, $lightness: 10%);
   }
 
   &.active {
@@ -221,7 +227,7 @@ const image = computed(() => {
   }
 
   &:disabled {
-    background-color: color.scale($light-danger-color, $lightness: 20%);
+    background-color: color.scale($light-danger-color, $lightness: 10%);
   }
 
   &:active {
@@ -238,7 +244,7 @@ const image = computed(() => {
   }
 
   &:disabled {
-    background-color: color.scale($success-color, $lightness: 20%);
+    background-color: color.scale($success-color, $lightness: 10%);
   }
 
   &.active {
