@@ -82,6 +82,15 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/AssistentDetail.vue')
   },
   {
+    path: `${RouteNames.ASSISTENT_SETTING}/:id`,
+    name: RouteNames.ASSISTENT_SETTING,
+    meta: {
+      title: 'Настройки ассистента',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentSetting.vue')
+  },
+  {
     path: `${RouteNames.QUESTION_DETAIL}/:id`,
     name: RouteNames.QUESTION_DETAIL,
     meta: {

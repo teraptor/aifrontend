@@ -2,11 +2,13 @@
 import type { IAssistent } from '@/stores/useAssistentsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
+console.log(authStore.users[0].userId)
 
 const props = defineProps({
   assistents: {
@@ -36,12 +38,21 @@ const statusText = computed(() => {
 
 const goToAssistentDetails = () => {
   if (cardClass.value !== 'assistents-card--locked') {
-    router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: assistents.id } });
+    if(route.name === RouteNames.MAIN.name) {
+      router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
+    } else {
+      router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: assistents.id } });
+    }
   }
 };
+const goToSetting = (event: MouseEvent) => {
+  event.stopPropagation();
+  router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistents.id } });
+}
 </script>
 <template>
   <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
+    <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
     <div class="assistents-card__container">
       <img :src="assistents.image" class="assistents-card__image"/>
       <div class="assistents-card__name-wrapper">
@@ -49,16 +60,10 @@ const goToAssistentDetails = () => {
         <p class="assistents-card__summary"> {{ assistents.summary }}</p>
       </div>
     </div>
-    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked'">
-      <div class="assistents-card__footer-status-wrapper">
-        <div :class="['assistents-card__footer-status', statusClass]" v-if="authStore.isAuthenticated && statusClass">
-          {{ statusText }}
-        </div>
+    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked' && statusClass && authStore.isAuthenticated">
+      <div :class="['assistents-card__footer-status', statusClass]">
+        {{ statusText }}
       </div>
-      <p class="assistents-card__footer-install">
-        {{ assistents.install }}
-        <span class="icon icon-arrow-down-outline" />
-      </p>
     </div>
     <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
       <p>Скоро</p>
@@ -68,6 +73,7 @@ const goToAssistentDetails = () => {
 </template>
 <style lang="scss" scoped>
 .assistents-card {
+  position: relative;
   max-width: 350px;
   width: 100%;
   min-height: 120px;
@@ -97,6 +103,20 @@ const goToAssistentDetails = () => {
       border-radius: 12px;
       backdrop-filter: blur(2px);
       cursor: not-allowed;
+    }
+  }
+
+  &__settings-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    color: $help-color;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $main-color;
     }
   }
 
@@ -186,21 +206,6 @@ const goToAssistentDetails = () => {
 
       &--active {
         background-color: $success-color;
-      }
-    }
-
-    &-install {
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 1.4;
-      color: $main-color;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin: 0;
-
-      .icon {
-        font-size: 16px;
       }
     }
   }
