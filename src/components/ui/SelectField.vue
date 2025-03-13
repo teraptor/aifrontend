@@ -8,31 +8,33 @@
       <div
         @blur="validate"
         class="select__group-selected"
-        @click="toggleDropdown"
+        @click="!disabled && toggleDropdown()"
         :class="[
           size,
           { 'select__group-selected--active': isDropdownOpen },
           { 'select__group-selected--error': hasError },
           { 'select__group-selected--light': variant === 'light' },
+          { 'select__group-selected--disabled': disabled },
           { placeholder: !selectedOption },
         ]"
       >
         {{ selectedOption || placeholder }}
-        <span :class=" isDropdownOpen ? 'icon icon-chevron-up' : 'icon icon-chevron-down'"/>
+        <span :class="isDropdownOpen ? 'icon icon-chevron-up' : 'icon icon-chevron-down'" />
       </div>
-      <div v-if="isDropdownOpen" class="select__group-dropdown">
+      <div v-if="isDropdownOpen && !disabled" class="select__group-dropdown">
         <InputField
           v-if="enableSearch"
           v-model="searchQuery"
           type="text"
           id="surname"
           :placeholder="'Поиск...'"
+          :disabled="disabled"
         />
         <div
           v-for="(value, key) in filteredOptions"
           :key="key"
           class="select__group-option"
-          @click="selectOption(value)"
+          @click="!disabled && selectOption(value)"
         >
           {{ value }}
         </div>
@@ -87,6 +89,10 @@ const props = defineProps({
     type: String,
     default: 'default',
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const internalValue = ref<string>(props.modelValue)
@@ -114,6 +120,8 @@ const handleInput = (value: string) => {
 }
 
 const validate = () => {
+  if (props.disabled) return
+
   let validationError: string | false = false
   for (const validator of props.validators) {
     validationError = validator(internalValue.value)
@@ -127,6 +135,7 @@ const validate = () => {
   hasError.value = false
   errorMessage.value = ''
 }
+
 const filteredOptions = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return Object.values(props.enumObject).filter(value =>
@@ -135,12 +144,16 @@ const filteredOptions = computed(() => {
 })
 
 const toggleDropdown = () => {
+  if (props.disabled) return
+
   toggleCount.value++
   isDropdownOpen.value = !isDropdownOpen.value
   if (toggleCount.value >= 2) validate()
 }
 
 const selectOption = (value: string) => {
+  if (props.disabled) return
+
   selectedOption.value = value
   handleInput(value)
   isDropdownOpen.value = false
@@ -201,6 +214,7 @@ watch(internalValue, newValue => {
     &--error {
       border-color: $danger-color;
     }
+
     &--light {
       background: $light-color;
       border: 1px solid $light-grey-color;
@@ -217,6 +231,11 @@ watch(internalValue, newValue => {
       background-color: $light-color;
       box-shadow: $box-shadow-large;
       outline: none;
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   }
 
@@ -272,6 +291,7 @@ watch(internalValue, newValue => {
     width: 100%;
     max-height: 36px;
   }
+
   &-error {
     color: $danger-color;
     font-size: 12px;

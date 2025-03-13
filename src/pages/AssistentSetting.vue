@@ -32,12 +32,14 @@
           type="text"
           placeholder="Введите имя"
           variant="light"
+          :disabled="assistent.isDisabled"
         />
         <InputField
           label="Роль"
           type="text"
           placeholder="Укажите роль"
           variant="light"
+          :disabled="assistent.isDisabled"
         />
         <SelectField
           v-model="language"
@@ -47,6 +49,7 @@
           placeholder="Выберите язык"
           :enableSearch="true"
           variant="light"
+          :disabled="assistent.isDisabled"
         />
       </div>
     </div>
@@ -56,10 +59,12 @@
         <InputField
           label="Получать уведомления"
           type="checkbox"
+          :disabled="assistent.isDisabled"
         />
         <InputField
           label="Автоматические ответы"
           type="checkbox"
+          :disabled="assistent.isDisabled"
         />
       </div>
     </div>
@@ -68,6 +73,7 @@
       button-type="success"
       text="Сохранить изменения"
       size="large"
+      :disabled="assistent.isDisabled"
     />
   </div>
 </template>

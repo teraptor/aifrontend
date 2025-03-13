@@ -14,16 +14,18 @@
         :placeholder="placeholder"
         :required="required"
         :autocomplete="autocomplete"
+        :disabled="disabled"
         :class="[
           size && type !== 'checkbox' ? size : '',
           {'form__group-input--basic': !icon },
           { 'input-error': hasError },
           { 'checkbox-input': type === 'checkbox' },
           { 'form__group-input--light': variant === 'light' },
+          { 'form__group-input--disabled': disabled },
         ]"
         @blur="validate"
       />
-      <span class="form__group-icon" v-if="icon" @click="$emit('icon-click')">
+      <span class="form__group-icon" v-if="icon" @click="!disabled && $emit('icon-click')">
         <span :class="icon"></span>
       </span>
     </div>
@@ -64,6 +66,10 @@ const props = defineProps({
     type: Array as () => Array<(value: any) => string | false>,
     default: () => [],
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const internalValue = ref<string | number | boolean>(props.modelValue)
@@ -73,6 +79,8 @@ const errorMessage = ref<string>('')
 const emit = defineEmits(['update:modelValue', 'icon-click'])
 
 const validate = () => {
+  if (props.disabled) return
+
   let validationError: string | false = false
 
   for (const validator of props.validators) {
@@ -176,6 +184,15 @@ watch(internalValue, newValue => {
       &:focus {
         border-color: $success-color;
         box-shadow: 0 0 0 2px rgba($success-color, 0.2);
+      }
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+
+      &:focus {
+        box-shadow: none;
       }
     }
   }
