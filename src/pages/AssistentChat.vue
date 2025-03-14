@@ -239,11 +239,11 @@ onMounted(() => {
     }
     
     &:hover {
-      background-color: rgba(245, 245, 245, 0.1);
+      background-color: rgba($help-color, 0.05);
     }
     
     &--active {
-      background-color: rgba(0, 123, 255, 0.05);
+      background-color: rgba($secondary-color, 0.05);
     }
     
     &__content {
@@ -394,11 +394,11 @@ onMounted(() => {
       }
       
       &:hover {
-        background-color: rgba(245, 245, 245, 0.5);
+        background-color: rgba($help-color, 0.05);
       }
       
       &--active {
-        background-color: rgba(0, 123, 255, 0.05);
+        background-color: rgba($secondary-color, 0.05);
       }
       
       &-avatar {
