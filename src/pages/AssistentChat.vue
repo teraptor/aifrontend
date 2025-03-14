@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import { useAssistentChatStore } from '@/stores/useAssistentChat';
 import Button from '@/components/ui/Button.vue';
 import InputField from '@/components/ui/InputField.vue';
 
 const route = useRoute();
+const router = useRouter();
 const assistentId = route.params.id as string;
 const assistentsStore = useAssistentsStore();
 const chatStore = useAssistentChatStore();
 
 const newMessage = ref<string>('');
 const chatContainer = ref<HTMLElement | null>(null);
+const assistentMenuTrigger = ref<HTMLElement | null>(null);
+const assistentMenu = ref<HTMLElement | null>(null);
+const isAssistentMenuOpen = ref<boolean>(false);
 
 const assistent = assistentsStore.userAssistents.find(a => a.id === assistentId) || null;
 
@@ -38,8 +42,36 @@ const scrollToBottom = () => {
   }, 100);
 };
 
+const toggleAssistentMenu = () => {
+  isAssistentMenuOpen.value = !isAssistentMenuOpen.value;
+};
+
+const switchAssistent = (id: string) => {
+  if (id !== assistentId) {
+    router.push(`/assistents-chat/${id}`);
+  }
+  isAssistentMenuOpen.value = false;
+};
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (
+    isAssistentMenuOpen.value && 
+    assistentMenu.value && 
+    assistentMenuTrigger.value && 
+    !assistentMenu.value.contains(event.target as Node) && 
+    !assistentMenuTrigger.value.contains(event.target as Node)
+  ) {
+    isAssistentMenuOpen.value = false;
+  }
+};
+
 onMounted(() => {
   scrollToBottom();
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
@@ -78,8 +110,8 @@ onMounted(() => {
             <div class="chat-header__avatar">
               <img :src="assistent.image" alt="Аватар ассистента" />
             </div>
-            <div class="chat-header__info">
-              <h2 class="chat-header__name">{{ assistent.name }}</h2>
+            <div class="chat-header__info" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
+              <h2 class="chat-header__name">{{ assistent.name }} <span class="chat-header__dropdown-icon">▼</span></h2>
               <p class="chat-header__type">{{ assistent.summary || 'Персональный помощник' }}</p>
               <p 
                 class="chat-header__status" 
@@ -87,6 +119,33 @@ onMounted(() => {
               >
                 {{ assistent.isActive ? 'Активный' : 'Заблокирован' }}
               </p>
+              
+              <!-- Выпадающее меню с ассистентами -->
+              <div class="assistent-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
+                <div class="assistent-dropdown__header">Мои ассистенты</div>
+                <div class="assistent-dropdown__list">
+                  <div 
+                    v-for="item in assistentsStore.userAssistents" 
+                    :key="item.id"
+                    :class="['assistent-dropdown__item', { 'assistent-dropdown__item--active': item.id === assistentId }]"
+                    @click="switchAssistent(item.id)"
+                  >
+                    <div class="assistent-dropdown__item-avatar">
+                      <img :src="item.image" alt="Аватар ассистента" />
+                    </div>
+                    <div class="assistent-dropdown__item-info">
+                      <div class="assistent-dropdown__item-name">{{ item.name }}</div>
+                      <div class="assistent-dropdown__item-summary">{{ item.summary }}</div>
+                      <div 
+                        class="assistent-dropdown__item-status"
+                        :class="{ 'assistent-dropdown__item-status--active': item.isActive }"
+                      >
+                        {{ item.isActive ? 'Активный' : 'Заблокирован' }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -140,7 +199,7 @@ onMounted(() => {
     height: 100%;
     display: flex;
     gap: 16px;
-    background-color: $light-grey-color;
+    background-color: #f5f5f5;
     border-radius: 12px;
     overflow: hidden;
     padding: 16px;
@@ -162,26 +221,26 @@ onMounted(() => {
     flex-direction: column;
     gap: 2px;
     border-radius: 12px;
-    background-color: $light-color;
-    border: 1px solid $border-light;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
   }
 
   .session-item {
     width: 100%;
     padding: 12px 16px;
     cursor: pointer;
-    border-bottom: 1px solid $border-light;
+    border-bottom: 1px solid #e0e0e0;
     
     &:last-child {
       border-bottom: none;
     }
     
     &:hover {
-      background-color: rgba($light-grey-color, 0.1);
+      background-color: rgba(245, 245, 245, 0.1);
     }
     
     &--active {
-      background-color: rgba($main-color, 0.05);
+      background-color: rgba(0, 123, 255, 0.05);
     }
     
     &__content {
@@ -193,7 +252,7 @@ onMounted(() => {
     &__title {
       font-size: 14px;
       font-weight: 500;
-      color: $dark-color;
+      color: #333333;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -204,12 +263,12 @@ onMounted(() => {
       align-items: center;
       justify-content: flex-start;
       font-size: 12px;
-      color: $help-color;
+      color: #777777;
     }
     
     &__time {
       font-size: 12px;
-      color: $help-color;
+      color: #777777;
     }
   }
 
@@ -224,10 +283,10 @@ onMounted(() => {
       height: 100%;
       display: flex;
       flex-direction: column;
-      background-color: $light-color;
+      background-color: #ffffff;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: $box-shadow-small;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   }
 
@@ -235,7 +294,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid $border-light;
+    border-bottom: 1px solid #e0e0e0;
     
     &__avatar {
       width: 40px;
@@ -255,27 +314,127 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      position: relative;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      
+      &:hover {
+        background-color: rgba(245, 245, 245, 0.5);
+      }
     }
     
     &__name {
       font-size: 16px;
       font-weight: 600;
       margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    &__dropdown-icon {
+      font-size: 10px;
+      color: #777777;
     }
     
     &__type {
       font-size: 12px;
-      color: $dark-color;
+      color: #333333;
       margin: 0;
     }
     
     &__status {
       font-size: 12px;
-      color: $help-color;
+      color: #777777;
       margin: 0;
       
       &--active {
-        color: $success-color;
+        color: #28a745;
+      }
+    }
+  }
+  
+  .assistent-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 300px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    margin-top: 8px;
+    overflow: hidden;
+    
+    &__header {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    &__list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    &__item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #e0e0e0;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background-color: rgba(245, 245, 245, 0.5);
+      }
+      
+      &--active {
+        background-color: rgba(0, 123, 255, 0.05);
+      }
+      
+      &-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 12px;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+      
+      &-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      
+      &-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      &-summary {
+        font-size: 12px;
+        color: #333333;
+      }
+      
+      &-status {
+        font-size: 10px;
+        color: #777777;
+        
+        &--active {
+          color: #28a745;
+        }
       }
     }
   }
@@ -307,7 +466,7 @@ onMounted(() => {
     
     &__time {
       font-size: 10px;
-      color: $help-color;
+      color: #777777;
       position: absolute;
       bottom: 4px;
       right: 8px;
@@ -317,7 +476,7 @@ onMounted(() => {
       align-self: flex-start;
       
       .message__content {
-        background-color: $light-grey-color;
+        background-color: #f5f5f5;
         border-bottom-left-radius: 4px;
       }
     }
@@ -326,13 +485,13 @@ onMounted(() => {
       align-self: flex-end;
       
       .message__content {
-        background-color: $main-color;
-        color: $light-color;
+        background-color: #007bff;
+        color: #ffffff;
         border-bottom-right-radius: 4px;
       }
       
       .message__time {
-        color: rgba($light-color, 0.8);
+        color: rgba(255, 255, 255, 0.8);
       }
     }
   }
@@ -341,7 +500,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-top: 1px solid $border-light;
+    border-top: 1px solid #e0e0e0;
     gap: 16px;
     
     & > *:first-child {
