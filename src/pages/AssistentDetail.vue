@@ -14,15 +14,31 @@
           <h4 class="assistent-detail__name"> {{ assistent.name }}</h4>
           <p class="assistent-detail__summary"> {{ assistent.summary }}</p>
         </div>
+        <Button
+            button-type="secondary"
+            text="Показать историю"
+            type="button"
+            size="medium"
+            icon="icon icon-arrow-right2"
+          />
       </div>
-      <div class="assistent-detail__description">
-        <h4 class="assistent-detail__description-title">Описание:</h4>
-        <p class="assistent-detail__description-text">{{ assistent.description }}</p>
-      </div>
-      <div class="assistent-detail__install">
-        <h4 class="assistent-detail__install-title">Количество загрузок:</h4>
-        <p class="assistent-detail__install-text">{{ assistent.install }}</p>
-      </div>
+      
+      <Tabs :tabs="tabs" :initialTab="activeTab">
+        <template #description>
+          <div class="assistent-detail__content">
+            <h2 class="assistent-detail__content-title">Пример работы ассистента</h2>
+            <p class="assistent-detail__content-text">Автор не предоставил пример работы @{{ assistent.id }}</p>
+            
+            <h2 class="assistent-detail__content-title">Описание</h2>
+            <p class="assistent-detail__content-text">{{ assistent.description }}</p>
+          </div>
+        </template>
+        <template #comments>
+          <div class="assistent-detail__content">
+            <div>здесь скоро будет контент</div>
+          </div>
+        </template>
+      </Tabs>
     </div>
   </div>
 </template>
@@ -30,8 +46,10 @@
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
+import Button from '@/components/ui/Button.vue';
+import Tabs from '@/components/ui/Tabs.vue';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
@@ -40,6 +58,13 @@ const route = useRoute();
 const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)!);
 
 const goBack = (): void => router.back();
+
+const tabs = ref([
+  { id: 'description', label: 'Описание' },
+  { id: 'comments', label: 'Комментарии' },
+]);
+
+const activeTab = ref(tabs.value[0].id);
 </script>
 
 <style lang="scss" scoped>
@@ -83,7 +108,7 @@ const goBack = (): void => router.back();
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 20px;
   }
 
@@ -94,7 +119,7 @@ const goBack = (): void => router.back();
   }
 
   &__name-wrapper {
-    width: calc(100% - 100px - 20px);
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -110,21 +135,24 @@ const goBack = (): void => router.back();
     color: $help-color;
     font-size: 14px;
   }
-
-  &__description,
-  &__install {
+  
+  &__content {
+    padding: 24px 0;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 16px;
-
+    
     &-title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
+      margin-bottom: 8px;
     }
-
+    
     &-text {
       color: $help-color;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      white-space: pre-line;
     }
   }
 }
