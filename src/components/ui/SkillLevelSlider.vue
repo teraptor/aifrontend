@@ -50,7 +50,7 @@ const props = defineProps({
   },
   labels: {
     type: Array as () => string[],
-    default: () => ['Cтажер', 'Робот', 'Справочник', 'Учебник', 'Отличник', 'Помощник', 'Собеседник', 'Фантазёр', 'Выдумщик', 'Художник', 'Фантаст']
+    default: () => ['Робот', 'Справочник', 'Учебник', 'Отличник', 'Помощник', 'Собеседник', 'Фантазёр', 'Выдумщик', 'Художник', 'Фантаст']
   },
   disabled: {
     type: Boolean,
@@ -70,6 +70,10 @@ const progressWidth = computed(() => {
   return normalizedValue * 100;
 });
 
+const modelValue = computed(() => {
+  return (activeIndex.value + 1) * 0.1;
+});
+
 const { x } = useMouse();
 
 const updateValue = (clientX: number) => {
@@ -83,7 +87,7 @@ const updateValue = (clientX: number) => {
   newIndex = Math.max(0, Math.min(newIndex, totalSteps));
 
   activeIndex.value = newIndex;
-  emit('update:modelValue', newIndex / totalSteps);
+  emit('update:modelValue', (newIndex + 1) * 0.1);
 };
 
 const handleTrackClick = (event: MouseEvent) => {
@@ -99,9 +103,8 @@ const handleTrackClick = (event: MouseEvent) => {
 const setValueByIndex = (index: number) => {
   if (props.disabled) return;
 
-  const totalSteps = props.labels.length - 1;
   activeIndex.value = index;
-  emit('update:modelValue', index / totalSteps);
+  emit('update:modelValue', (index + 1) * 0.1);
 };
 
 const startDrag = (event: MouseEvent) => {
@@ -127,10 +130,9 @@ const stopDrag = () => {
 
 onMounted(() => {
   const totalSteps = props.labels.length - 1;
-  activeIndex.value = Math.round(props.modelValue * totalSteps);
+  activeIndex.value = Math.round((props.modelValue / 0.1) - 1);
 });
 </script>
-
 
 <style lang="scss" scoped>
 .skill-level {
