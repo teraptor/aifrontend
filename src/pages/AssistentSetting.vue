@@ -33,10 +33,7 @@
         />
         <SkillLevelSlider
           v-model="jsSkillLevel"
-          :values="['Робот', 'Справочник', 'Учебник', 'Отличник', 'Помощник', 'Собеседник', 'Фантазёр', 'Выдумщик', 'Художник', 'Фантаст']"
-          title="Креативность"
         />
-        {{ jsSkillLevel }}
       </div>
     </div>
     <div class="assistent-setting__section">

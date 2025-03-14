@@ -71,14 +71,15 @@ const currentUser = computed(() => {
             text="Перейти к настройкам"
             type="button"
             size="medium"
+            :disabled="true"
           />
         </div>
       </div>
 
       <div class="section">
-        <h4 class="section__title">История действий</h4>
+        <h4 class="section__title">История баланса</h4>
         <div class="section__content">
-          <p class="section__content-text">Просмотрите последние действия в вашем аккаунте.</p>
+          <p class="section__content-text">Просмотрите историю пополнения баланса вашего аккаунта.</p>
           <Button
             button-type="secondary"
             text="Показать историю"
