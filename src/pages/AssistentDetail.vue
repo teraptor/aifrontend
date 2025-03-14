@@ -14,49 +14,31 @@
           <h4 class="assistent-detail__name"> {{ assistent.name }}</h4>
           <p class="assistent-detail__summary"> {{ assistent.summary }}</p>
         </div>
-        <button class="assistent-detail__start-button">
-          Попробовать
-          <span class="assistent-detail__start-icon">➔</span>
-        </button>
+        <Button
+            button-type="secondary"
+            text="Показать историю"
+            type="button"
+            size="medium"
+            icon="icon icon-arrow-right2"
+          />
       </div>
       
-      <div class="assistent-detail__tabs">
-        <div 
-          class="assistent-detail__tab assistent-detail__tab--active"
-        >
-          Описание
-        </div>
-      </div>
-      
-      <div class="assistent-detail__content">
-        <h2 class="assistent-detail__content-title">Пример работы ассистента</h2>
-        <p class="assistent-detail__content-text">Автор не предоставил пример работы @{{ assistent.id }}</p>
-        
-        <h2 class="assistent-detail__content-title">Описание</h2>
-        <p class="assistent-detail__content-text">{{ assistent.description }}</p>
-        
-        <p class="assistent-detail__content-text">Ассистент пишет тексты с учетом SEO-оптимизации.</p>
-        
-        <p class="assistent-detail__content-text">Необходимо предоставить ему следующую информацию:</p>
-        
-        <p class="assistent-detail__content-text">Укажите, о чем должен быть текст. И чат придумает тему / заголовок статьи.</p>
-        
-        <p class="assistent-detail__content-text">Целевые ключевые слова: Предоставьте список ключевых слов и фраз, которые необходимо включить в текст. Укажите основное ключевое слово для оптимизации, а также второстепенные и вспомогательные ключевые слова.</p>
-        
-        <p class="assistent-detail__content-text">Статистику по словам можно взять тут https://wordstat.yandex.ru/</p>
-        
-        <p class="assistent-detail__content-text">Тон и стиль: Укажите, какой тон и стиль письма вы предпочитаете (например, формальный, неформальный, убедительный, информативный).</p>
-        
-        <p class="assistent-detail__content-text">Структура статьи: опишите, как должна быть организована статья, включая предпочтительное количество и виды разделов (например, введение, основная часть, подразделы, заключение).</p>
-        
-        <p class="assistent-detail__content-text">Аудитория: Опишите целевую аудиторию, для которой предназначен контент (например, возраст, интересы, уровень знаний по теме).</p>
-        
-        <p class="assistent-detail__content-text">Специфические инструкции: Если есть определенные темы или пункты, которые обязательно должны быть освещены в тексте, озвучьте это.</p>
-        
-        <p class="assistent-detail__content-text">Ограничения или запреты: Укажите, какую информацию избегать или какие ошибки недопустимы при создании контента.</p>
-        
-        <p class="assistent-detail__content-text">Предоставив всю необходимую информацию и инструкции, вы сможете значительно повысить шансы на получение качественного SEO-оптимизированного контента от ассистента.</p>
-      </div>
+      <Tabs :tabs="tabs" :initialTab="activeTab">
+        <template #description>
+          <div class="assistent-detail__content">
+            <h2 class="assistent-detail__content-title">Пример работы ассистента</h2>
+            <p class="assistent-detail__content-text">Автор не предоставил пример работы @{{ assistent.id }}</p>
+            
+            <h2 class="assistent-detail__content-title">Описание</h2>
+            <p class="assistent-detail__content-text">{{ assistent.description }}</p>
+          </div>
+        </template>
+        <template #comments>
+          <div class="assistent-detail__content">
+            <div>здесь скоро будет контент</div>
+          </div>
+        </template>
+      </Tabs>
     </div>
   </div>
 </template>
@@ -64,8 +46,10 @@
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
+import Button from '@/components/ui/Button.vue';
+import Tabs from '@/components/ui/Tabs.vue';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
@@ -74,6 +58,13 @@ const route = useRoute();
 const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)!);
 
 const goBack = (): void => router.back();
+
+const tabs = ref([
+  { id: 'description', label: 'Описание' },
+  { id: 'comments', label: 'Комментарии' },
+]);
+
+const activeTab = ref(tabs.value[0].id);
 </script>
 
 <style lang="scss" scoped>
@@ -145,54 +136,6 @@ const goBack = (): void => router.back();
     font-size: 14px;
   }
   
-  &__start-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background-color: #e6f4f1;
-    color: #0c8599;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: #d0ebea;
-    }
-    
-    &-icon {
-      font-size: 18px;
-      color: #0c8599;
-    }
-  }
-  
-  &__tabs {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    border-bottom: 1px solid #e5e5e5;
-    width: 100%;
-    margin-top: 16px;
-  }
-  
-  &__tab {
-    padding: 8px 16px;
-    cursor: pointer;
-    font-weight: 500;
-    color: $help-color;
-    border-radius: 8px 8px 0 0;
-    
-    &--active {
-      color: $primary-color;
-      background-color: #f5f5f5;
-      font-weight: 600;
-    }
-  }
-  
   &__content {
     padding: 24px 0;
     display: flex;
@@ -209,6 +152,7 @@ const goBack = (): void => router.back();
       color: $help-color;
       line-height: 1.5;
       margin-bottom: 16px;
+      white-space: pre-line;
     }
   }
 }

@@ -111,9 +111,3 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     },
   },
 ]
-
-onMounted(() => {
-  if (assistent.value) {
-    assistentName.value = assistent.value.name;
-  }
-});

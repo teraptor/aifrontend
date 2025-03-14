@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAssistentsStore } from '@/stores/useAssistentsStore';
 import { useAssistentChatStore } from '@/stores/useAssistentChat';
 import Button from '@/components/ui/Button.vue';
 import InputField from '@/components/ui/InputField.vue';
+import { RouteNames } from '@/router/routes/routeNames';
+import { onClickOutside } from '@vueuse/core';
 
 const route = useRoute();
 const router = useRouter();
-const assistentId = route.params.id as string;
 const assistentsStore = useAssistentsStore();
 const chatStore = useAssistentChatStore();
 
@@ -18,15 +19,28 @@ const assistentMenuTrigger = ref<HTMLElement | null>(null);
 const assistentMenu = ref<HTMLElement | null>(null);
 const isAssistentMenuOpen = ref<boolean>(false);
 
-const assistent = assistentsStore.userAssistents.find(a => a.id === assistentId) || null;
+const assistentId = ref<string>(route.params.id as string);
+const assistent = ref(assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null);
+
+const updateAssistent = () => {
+  assistent.value = assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null;
+};
+
+watch(
+  () => route.params.id,
+  (newId) => {
+    assistentId.value = newId as string;
+    updateAssistent();
+  }
+);
 
 const sendMessage = () => {
   if (newMessage.value.trim() === '') return;
-  
+
   chatStore.addMessage(newMessage.value, true);
   const userMessage = newMessage.value;
   newMessage.value = '';
-  
+
   setTimeout(() => {
     chatStore.addMessage(`Я получил ваше сообщение: "${userMessage}". Чем еще могу помочь?`, false);
     scrollToBottom();
@@ -47,31 +61,21 @@ const toggleAssistentMenu = () => {
 };
 
 const switchAssistent = (id: string) => {
-  if (id !== assistentId) {
-    router.push(`/assistents-chat/${id}`);
+  if (id !== assistentId.value) {
+    router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: id } });
   }
   isAssistentMenuOpen.value = false;
 };
 
-const handleClickOutside = (event: MouseEvent) => {
-  if (
-    isAssistentMenuOpen.value && 
-    assistentMenu.value && 
-    assistentMenuTrigger.value && 
-    !assistentMenu.value.contains(event.target as Node) && 
-    !assistentMenuTrigger.value.contains(event.target as Node)
-  ) {
+onClickOutside(assistentMenu, () => {
+  if (isAssistentMenuOpen.value) {
     isAssistentMenuOpen.value = false;
   }
-};
+});
 
 onMounted(() => {
   scrollToBottom();
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  updateAssistent();
 });
 </script>
 
@@ -86,10 +90,10 @@ onUnmounted(() => {
           size="large"
           @click="chatStore.createNewSession"
         />
-        
+
         <div class="assistent-chat__session-list">
-          <div 
-            v-for="session in chatStore.sessions" 
+          <div
+            v-for="session in chatStore.sessions"
             :key="session.id"
             :class="['session-item', { 'session-item--active': session.isActive }]"
             @click="chatStore.selectSession(session.id)"
@@ -103,7 +107,7 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      
+
       <div class="assistent-chat__chat">
         <div class="assistent-chat__chat-container" v-if="assistent">
           <div class="chat-header">
@@ -113,19 +117,18 @@ onUnmounted(() => {
             <div class="chat-header__info" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
               <h2 class="chat-header__name">{{ assistent.name }} <span class="chat-header__dropdown-icon">▼</span></h2>
               <p class="chat-header__type">{{ assistent.summary || 'Персональный помощник' }}</p>
-              <p 
-                class="chat-header__status" 
+              <p
+                class="chat-header__status"
                 :class="{ 'chat-header__status--active': assistent.isActive }"
               >
                 {{ assistent.isActive ? 'Активный' : 'Заблокирован' }}
               </p>
-              
-              <!-- Выпадающее меню с ассистентами -->
+
               <div class="assistent-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
                 <div class="assistent-dropdown__header">Мои ассистенты</div>
                 <div class="assistent-dropdown__list">
-                  <div 
-                    v-for="item in assistentsStore.userAssistents" 
+                  <div
+                    v-for="item in assistentsStore.userAssistents"
                     :key="item.id"
                     :class="['assistent-dropdown__item', { 'assistent-dropdown__item--active': item.id === assistentId }]"
                     @click="switchAssistent(item.id)"
@@ -136,7 +139,7 @@ onUnmounted(() => {
                     <div class="assistent-dropdown__item-info">
                       <div class="assistent-dropdown__item-name">{{ item.name }}</div>
                       <div class="assistent-dropdown__item-summary">{{ item.summary }}</div>
-                      <div 
+                      <div
                         class="assistent-dropdown__item-status"
                         :class="{ 'assistent-dropdown__item-status--active': item.isActive }"
                       >
@@ -148,11 +151,11 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-          
+
           <div class="chat-messages" ref="chatContainer">
-            <div 
-              v-for="message in chatStore.messages" 
-              :key="message.id" 
+            <div
+              v-for="message in chatStore.messages"
+              :key="message.id"
               :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
             >
               <div class="message__content">
@@ -161,10 +164,10 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-          
+
           <div class="chat-input">
             <InputField
-              v-model="newMessage" 
+              v-model="newMessage"
               type="text"
               placeholder="Напишите сообщение..."
               variant="light"
@@ -176,7 +179,7 @@ onUnmounted(() => {
               button-type="primary"
               icon="icon icon-chevron-up"
               size="curcle"
-              @click="sendMessage" 
+              @click="sendMessage"
               :disabled="!newMessage.trim()"
             />
           </div>
@@ -199,7 +202,7 @@ onUnmounted(() => {
     height: 100%;
     display: flex;
     gap: 16px;
-    background-color: #f5f5f5;
+    background-color: $grey-background-color;
     border-radius: 12px;
     overflow: hidden;
     padding: 16px;
@@ -221,15 +224,15 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 2px;
     border-radius: 12px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
+    background-color: $light-color;
+    border: 1px solid rgba($help-color, 0.1);
   }
 
   .session-item {
     width: 100%;
     padding: 12px 16px;
     cursor: pointer;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid rgba($help-color, 0.1);
     
     &:last-child {
       border-bottom: none;
@@ -252,7 +255,7 @@ onUnmounted(() => {
     &__title {
       font-size: 14px;
       font-weight: 500;
-      color: #333333;
+      color: $dark-secondary-color;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -263,12 +266,12 @@ onUnmounted(() => {
       align-items: center;
       justify-content: flex-start;
       font-size: 12px;
-      color: #777777;
+      color: $help-color;
     }
     
     &__time {
       font-size: 12px;
-      color: #777777;
+      color: $help-color;
     }
   }
 
@@ -283,10 +286,10 @@ onUnmounted(() => {
       height: 100%;
       display: flex;
       flex-direction: column;
-      background-color: #ffffff;
+      background-color: $light-color;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: $box-shadow-small;
     }
   }
 
@@ -294,7 +297,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid rgba($help-color, 0.1);
     
     &__avatar {
       width: 40px;
@@ -320,7 +323,7 @@ onUnmounted(() => {
       border-radius: 8px;
       
       &:hover {
-        background-color: rgba(245, 245, 245, 0.5);
+        background-color: rgba($main-color, 0.05);
       }
     }
     
@@ -335,22 +338,22 @@ onUnmounted(() => {
     
     &__dropdown-icon {
       font-size: 10px;
-      color: #777777;
+      color: $help-color;
     }
     
     &__type {
       font-size: 12px;
-      color: #333333;
+      color: $dark-secondary-color;
       margin: 0;
     }
     
     &__status {
       font-size: 12px;
-      color: #777777;
+      color: $help-color;
       margin: 0;
       
       &--active {
-        color: #28a745;
+        color: $success-color;
       }
     }
   }
@@ -360,9 +363,9 @@ onUnmounted(() => {
     top: 100%;
     left: 0;
     width: 300px;
-    background-color: #ffffff;
+    background-color: $light-color;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: $box-shadow-large;
     z-index: 10;
     margin-top: 8px;
     overflow: hidden;
@@ -371,7 +374,7 @@ onUnmounted(() => {
       padding: 12px 16px;
       font-size: 14px;
       font-weight: 600;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid rgba($help-color, 0.1);
     }
     
     &__list {
@@ -384,7 +387,7 @@ onUnmounted(() => {
       align-items: center;
       padding: 12px 16px;
       cursor: pointer;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid rgba($help-color, 0.1);
       
       &:last-child {
         border-bottom: none;
@@ -425,15 +428,15 @@ onUnmounted(() => {
       
       &-summary {
         font-size: 12px;
-        color: #333333;
+        color: $dark-secondary-color;
       }
       
       &-status {
         font-size: 10px;
-        color: #777777;
+        color: $help-color;
         
         &--active {
-          color: #28a745;
+          color: $success-color;
         }
       }
     }
@@ -466,7 +469,7 @@ onUnmounted(() => {
     
     &__time {
       font-size: 10px;
-      color: #777777;
+      color: $help-color;
       position: absolute;
       bottom: 4px;
       right: 8px;
@@ -476,7 +479,7 @@ onUnmounted(() => {
       align-self: flex-start;
       
       .message__content {
-        background-color: #f5f5f5;
+        background-color: $grey-background-color;
         border-bottom-left-radius: 4px;
       }
     }
@@ -485,13 +488,13 @@ onUnmounted(() => {
       align-self: flex-end;
       
       .message__content {
-        background-color: #007bff;
-        color: #ffffff;
+        background-color: $secondary-color;
+        color: $light-color;
         border-bottom-right-radius: 4px;
       }
       
       .message__time {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba($light-color, 0.8);
       }
     }
   }
@@ -500,7 +503,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid rgba($help-color, 0.1);
     gap: 16px;
     
     & > *:first-child {
