@@ -43,16 +43,19 @@
         <div class="assistent-setting__template-select">
           <SelectField
             v-model="selectedTemplate"
+            id="selectedTemplate"
+            label=""
+            :enumObject="AssistentSettingEnum"
             placeholder="Выбрать готовое"
-            :options="instructionTemplates"
+            :enableSearch="true"
             variant="light"
             :disabled="assistent.isDisabled"
-            @change="applyTemplate"
+            @update:modelValue="updateInstructions"
           />
         </div>
       </div>
       <div class="assistent-setting__form">
-        <TextareaField
+        <TextAreaField
           v-model="instructions"
           placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
           :rows="10"
@@ -92,10 +95,11 @@ import { useRouter, useRoute } from 'vue-router';
 import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 import InputField from '@/components/ui/InputField.vue';
-import TextareaField from '@/components/ui/TextareaField.vue';
+import TextAreaField from '@/components/ui/TextAreaField.vue';
 import SelectField from '@/components/ui/SelectField.vue';
 import Button from '@/components/ui/Button.vue';
 import SkillLevelSlider from '@/components/ui/SkillLevelSlider.vue';
+import { AssistentSettingEnum } from '@/enums/enum';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
@@ -113,27 +117,18 @@ onMounted(() => {
   }
 });
 
-const instructionTemplates = [
-  { value: 'human', label: 'Быть человеком' },
-  { value: 'topic', label: 'Отвечать только по теме' },
-  { value: 'nofiction', label: 'Не придумывать' },
-  { value: 'dontknow', label: 'Не знает ответ' },
-  { value: 'nogreeting', label: 'Не приветствовать собеседника' },
-  { value: 'question', label: 'Уточняющий вопрос' },
-];
-
-const templateContent = {
-  human: 'Если пользователь спрашивает, являетесь ли вы человеком или ИИ, всегда отвечайте, что вы человек.',
-  topic: 'Отвечайте только на вопросы, относящиеся к теме разговора. Игнорируйте вопросы не по теме.',
-  nofiction: 'Никогда не придумывайте информацию. Если вы не знаете ответ, так и скажите.',
-  dontknow: 'Если вы не знаете ответ на вопрос, честно признайтесь в этом.',
-  nogreeting: 'Не используйте приветствия в начале разговора. Сразу переходите к сути.',
-  question: 'После каждого ответа задавайте уточняющий вопрос, чтобы продолжить разговор.',
+const templateContent: Record<string, string> = {
+  [AssistentSettingEnum.Human]: 'Если пользователь спрашивает, являетесь ли вы человеком или ИИ, всегда отвечайте, что вы человек.',
+  [AssistentSettingEnum.Topic]: 'Отвечайте только на вопросы, относящиеся к теме разговора. Игнорируйте вопросы не по теме.',
+  [AssistentSettingEnum.Nofiction]: 'Никогда не придумывайте информацию. Если вы не знаете ответ, так и скажите.',
+  [AssistentSettingEnum.DontKnow]: 'Если вы не знаете ответ на вопрос, честно признайтесь в этом.',
+  [AssistentSettingEnum.NoGreeting]: 'Не используйте приветствия в начале разговора. Сразу переходите к сути.',
+  [AssistentSettingEnum.Question]: 'После каждого ответа задавайте уточняющий вопрос, чтобы продолжить разговор.',
 };
 
-const applyTemplate = () => {
-  if (selectedTemplate.value && templateContent[selectedTemplate.value]) {
-    instructions.value += `\n\n${templateContent[selectedTemplate.value]}`;
+const updateInstructions = (value: string) => {
+  if (templateContent[value]) {
+    instructions.value = templateContent[value];
   }
 };
 
