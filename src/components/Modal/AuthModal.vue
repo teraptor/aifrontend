@@ -1,12 +1,11 @@
 <template>
-  <Modal 
+  <Modal
     ref="modal"
     title="Регистрация"
-    help="Никому не сообщайте логин и пароль"
   >
     <form @submit.prevent="submitForm" class="form">
       <InputField
-        v-model="formData.username"
+        v-model="formData.email"
         type="tel"
         id="phone"
         placeholder="Логин"
@@ -29,13 +28,14 @@
         :icon="'icon icon-log-in'"
         type="submit"
         size="big"
+        :class="{'button-disabled': !isFormValid, 'button-enabled': isFormValid}"
       />
     </form>
   </Modal>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Modal from '@/components/ui/Modal.vue';
 import InputField from '../ui/InputField.vue';
 import Button from '../ui/Button.vue';
@@ -46,7 +46,7 @@ const showPassword = ref<boolean>(false);
 const authStore = useAuthStore();
 
 const formData = ref({
-  username: '',
+  email: '',
   password: '',
 });
 
@@ -54,9 +54,20 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 
+const isFormValid = computed(() =>{
+  const isUsernameValid = formData.value.email.trim().length >= 3
+  const isPasswordValid = formData.value.password.trim().length >= 8
+  return isUsernameValid && isPasswordValid
+})
+
 const submitForm = () => {
+  if (!isFormValid.value) {
+    return;
+  }
   authStore.register(formData.value);
-  const userExists = authStore.users.some(user => user.username === formData.value.username);
+  const userExists = authStore.users.some(
+    user => user.email === formData.value.email
+  );
   if(userExists) modal.value?.closeModal();
 };
 
@@ -71,5 +82,11 @@ defineExpose({ openModal: () => modal.value?.openModal() });
   align-items: center;
   width: 80%;
   margin: 0 auto;
+}
+
+.button-disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
 }
 </style>

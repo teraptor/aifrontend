@@ -1,13 +1,19 @@
-import { push } from 'notivue';
+import { notifications } from '@/plugins/notifications';
 import { defineStore } from 'pinia';
+import { authService } from '@/api/services/authService';
 
 interface Credentials {
-  username: string;
+  email: string;
   password: string;
 }
 
 interface User extends Credentials {
   userId: number;
+  username: string;
+  email: string;
+  role: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 interface UserProfile {
@@ -23,6 +29,11 @@ interface UserProfile {
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     isAuthenticated: false,
+    user: null as User | null,
+    token: null as string | null,
+    refreshToken: null as string | null, 
+    isLoading: false as boolean,
+    error: null as string | null,
     currentUserId: null as number | null,
     users: [] as Array<User>,
     userProfiles: [
@@ -56,22 +67,32 @@ export const useAuthStore = defineStore('auth', {
     ] as Array<UserProfile>,
     nextUserId: 1,
   }),
+  getters: {
+    userRole: (state) => state.user?.role
+  },
   actions: {
-    login(credentials: Credentials) {
-      const user = this.users.find(
-        (user) =>
-          user.username === credentials.username &&
-          user.password === credentials.password
-      );
+    async login(credentials: Credentials) {
+      try {
+        this.isLoading = true;
+        this.error = null;
 
-      if (user) {
+        const response = await authService.login(credentials);
+        this.token = response.accessToken;
+        this.refreshToken = response.refreshToken;
         this.isAuthenticated = true;
-        this.currentUserId = user.userId;
-        push.success('Добро пожаловать');
-      } else {
-        this.isAuthenticated = false;
-        this.currentUserId = null;
-        push.error('Неверный логин или пароль');
+        this.currentUserId = parseInt(response.userId);
+
+        localStorage.setItem('accessToken', this.token);
+        localStorage.setItem('refreshToken', this.refreshToken);
+
+        return response.username;
+
+      } catch (error: any) {
+        // this.error = error.message || 'Произошла ошибка';
+        notifications.error(error.message);
+        throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
     logout() {
@@ -80,19 +101,46 @@ export const useAuthStore = defineStore('auth', {
     },
     register(credentials: Credentials) {
       const userExists = this.users.some(
-        (user) => user.username === credentials.username
+        (user) => user.username === credentials.email
       );
 
       if (userExists) {
-        push.error('Пользователь с таким именем уже существует');
+        notifications.error('Пользователь с таким именем уже существует');
       } else {
         const newUser = {
           ...credentials,
           userId: this.nextUserId,
+          username: credentials.email,
+          role: 'company',
+          accessToken: '',
+          refreshToken: '',
         };
         this.users.push(newUser);
+        
+        // Создаем профиль пользователя, если его еще нет
+        const userProfileExists = this.userProfiles.some(
+          (profile) => profile.email === credentials.email
+        );
+        
+        if (!userProfileExists) {
+          const newProfile: UserProfile = {
+            id: this.nextUserId.toString(),
+            email: credentials.email,
+            role: 'company', // Устанавливаем роль по умолчанию
+            balance: 1000, // Начальный баланс
+            company_id: 'company-' + this.nextUserId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          this.userProfiles.push(newProfile);
+        }
+        
+        // Устанавливаем текущего пользователя и статус аутентификации
+        this.currentUserId = this.nextUserId;
+        this.isAuthenticated = true;
+        
         this.nextUserId++;
-        push.success('Регистрация прошла успешно');
+        notifications.success('Регистрация прошла успешно');
       }
     },
     getUserProfile(userId: string): UserProfile | undefined {
@@ -100,6 +148,17 @@ export const useAuthStore = defineStore('auth', {
     },
     addUserProfile(profile: UserProfile) {
       this.userProfiles.push(profile);
+    }, 
+    async init() {
+      try {
+        // await this.fet();
+      } catch (error: any) {
+        this.error = error.message || 'Произошла ошибка';
+        notifications.error(error.message);
+        throw error;
+      } finally {
+        this.isLoading = false;
+      }
     }
   },
   persist: {

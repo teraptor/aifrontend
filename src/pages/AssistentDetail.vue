@@ -16,19 +16,19 @@
         </div>
         <Button
             button-type="secondary"
-            text="Показать историю"
+            text="Попробовать"
             type="button"
             size="medium"
             icon="icon icon-arrow-right2"
           />
       </div>
-      
+
       <Tabs :tabs="tabs" :initialTab="activeTab">
         <template #description>
           <div class="assistent-detail__content">
             <h2 class="assistent-detail__content-title">Пример работы ассистента</h2>
             <p class="assistent-detail__content-text">Автор не предоставил пример работы @{{ assistent.id }}</p>
-            
+
             <h2 class="assistent-detail__content-title">Описание</h2>
             <p class="assistent-detail__content-text">{{ assistent.description }}</p>
           </div>
@@ -135,19 +135,19 @@ const activeTab = ref(tabs.value[0].id);
     color: $help-color;
     font-size: 14px;
   }
-  
+
   &__content {
     padding: 24px 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    
+
     &-title {
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 8px;
     }
-    
+
     &-text {
       color: $help-color;
       line-height: 1.5;

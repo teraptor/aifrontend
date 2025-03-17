@@ -50,6 +50,7 @@ const goToSetting = (event: MouseEvent) => {
   router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistents.id } });
 }
 </script>
+
 <template>
   <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
     <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>

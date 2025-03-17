@@ -46,10 +46,6 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
   &--expanded {
     margin-left: 280px;
   }
-
-  &--right-expanded {
-    margin-right: 280px;
-  }
 }
 
 .footer {

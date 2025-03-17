@@ -25,6 +25,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Мои ассистенты',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/Assists.vue')
   },
@@ -35,6 +36,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Чат с ассистентом',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/AssistentChat.vue')
   },
@@ -45,6 +47,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Профиль',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/Profile.vue')
   },
@@ -54,6 +57,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Инструменты',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/Instruments.vue')
   },
@@ -63,6 +67,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Вопросы ассистентов',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/QuestionsList.vue')
   },
@@ -72,6 +77,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Создать ассистента',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/CreateAssistent.vue')
   },
@@ -90,6 +96,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Настройки ассистента',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/AssistentSetting.vue')
   },
@@ -99,6 +106,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Вопросы ассистенту',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/QuestionDetail.vue')
   },

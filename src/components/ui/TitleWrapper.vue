@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <div class="title-wrapper">
     <h1 class="title">{{ title }}</h1>
-    <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
+    <p class="subtitle" v-html="subtitle"></p>
   </div>
 </template>
 

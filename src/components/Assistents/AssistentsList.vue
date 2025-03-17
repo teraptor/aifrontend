@@ -1,5 +1,54 @@
+<template>
+  <div class="assistents">
+    <TitleWrapper title="Ассистенты" subtitle="Сделано с <span class='icon icon-like'></span> в 2025" />
+    <div class="assistents__nav-group">
+      <SortFiltersTab
+        :sortLabels="sortLabels"
+        :filterLabels="filterLabels"
+        :activeTab="activeTab"
+        :activeFilter="activeFilter"
+        @update:sort="changeSortOption"
+        @update:filter="changeFilter"
+      />
+      <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
+        <InputField
+          icon='icon icon-search'
+          size="medium"
+          placeholder="Найти ассистента"
+        />
+        <Button
+          button-type="secondary"
+          text="Создать ассистента"
+          size="medium"
+          type="button"
+          @click="navigateToCreateAssistent"
+        />
+      </div>
+      <div class="assistents__input-container" v-else>
+        <InputField
+          icon='icon icon-search'
+          size="large"
+          placeholder="Найти ассистента"
+        />
+      </div>
+    </div>
+    <div class="assistents__list">
+      <AssistentsCard
+        v-for="item in filteredAssistents"
+        :key="item.id"
+        :assistents="item"
+      />
+    </div>
+    <AddAssistantModal
+      :show="showAddModal"
+      @close="closeAddModal"
+      @select="handleAssistantSelect"
+    />
+  </div>
+</template>
+
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '../ui/TitleWrapper.vue';
 import AssistentsCard from './AssistentsCard.vue';
 import SortFiltersTab from '../ui/SortFiltersTab.vue';
@@ -64,56 +113,33 @@ const closeAddModal = () => {
 const handleAssistantSelect = (assistantId: string) => {
   console.log('Selected assistant:', assistantId);
 }
-</script>
 
-<template>
-  <div class="assistents">
-    <TitleWrapper title="Ассистенты" subtitle="Prompts & Plugins GPTs" />
-    <div class="assistents__nav-group">
-      <SortFiltersTab
-        :sortLabels="sortLabels"
-        :filterLabels="filterLabels"
-        :activeTab="activeTab"
-        :activeFilter="activeFilter"
-        @update:sort="changeSortOption"
-        @update:filter="changeFilter"
-      />
-      <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
-        <InputField 
-          icon='icon icon-search'
-          size="medium"
-          placeholder="Найти ассистента"
-        />
-        <Button
-          button-type="secondary"
-          text="Создать ассистента"
-          size="medium"
-          type="button"
-          @click="navigateToCreateAssistent"
-        />
-      </div>
-      <div class="assistents__input-container" v-else>
-        <InputField 
-          icon='icon icon-search'
-          size="large"
-          placeholder="Найти ассистента"
-        />
-      </div>
-    </div>
-    <div class="assistents__list">
-      <AssistentsCard
-        v-for="item in filteredAssistents"
-        :key="item.id"
-        :assistents="item"
-      />
-    </div>
-    <AddAssistantModal
-      :show="showAddModal"
-      @close="closeAddModal"
-      @select="handleAssistantSelect"
-    />
-  </div>
-</template>
+const isLoading = computed(() => assistentsStore.isLoading)
+const err = computed(() => assistentsStore.err)
+async function loadAgents() {
+  try {
+    isLoading.value = true;
+    err.value = null;
+    console.log("aaaa")
+    await assistentsStore.fetchAssitantents();
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'ошибка при загрузке списка ассистентов';
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  try {
+    console.log('onMounted сработал!');
+    loadAgents();
+  } catch (error) {
+    console.error('Ошибка в onMounted:', error);
+  }
+})
+
+
+</script>
 
 <style lang="scss" scoped>
 .assistents {

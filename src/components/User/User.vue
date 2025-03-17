@@ -1,3 +1,27 @@
+
+<template>
+  <div ref="profileRef" class="profile" @click="toggleMenu">
+    <div class="profile__avatar">
+      {{ currentUser?.email?.charAt(0) }}
+    </div>
+    <div class="profile__info">
+      <div class="profile__info-name">{{ currentUser?.email }}</div>
+      <div class="profile__info-balance">Баланс: {{ currentUser?.balance }} ₽</div>
+    </div>
+
+    <div v-if="isMenuOpen" class="profile-menu">
+      <div class="profile-menu__item" @click="goToProfile">
+        <span class="icon icon-user" />
+        Перейти в профиль
+      </div>
+      <div class="profile-menu__item profile-menu__item--danger" @click="logout">
+        <span class="icon icon-log-out" />
+        Выйти из системы
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'vue-router';
@@ -38,28 +62,6 @@ onClickOutside(profileRef, () => {
 });
 </script>
 
-<template>
-  <div ref="profileRef" class="profile" @click="toggleMenu">
-    <div class="profile__avatar">
-      {{ currentUser?.email?.charAt(0) }}
-    </div>
-    <div class="profile__info">
-      <div class="profile__info-name">{{ currentUser?.email }}</div>
-      <div class="profile__info-balance">Баланс: {{ currentUser?.balance }} ₽</div>
-    </div>
-
-    <div v-if="isMenuOpen" class="profile-menu">
-      <div class="profile-menu__item" @click="goToProfile">
-        <span class="icon icon-user" />
-        Перейти в профиль
-      </div>
-      <div class="profile-menu__item profile-menu__item--danger" @click="logout">
-        <span class="icon icon-log-out" />
-        Выйти из системы
-      </div>
-    </div>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 .profile {

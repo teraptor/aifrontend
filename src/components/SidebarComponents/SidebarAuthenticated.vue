@@ -3,11 +3,36 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
+import { computed } from 'vue';
+import { RouteNames } from '@/router/routes/routeNames';
 
 const router = useRouter();
 const route = useRoute();
 
 const layoutStore = useLayoutStore()
+
+// Функция для проверки активного пункта меню
+const isActiveRoute = (link: string): boolean => {
+  // Точное совпадение имени маршрута
+  if (typeof route.name === 'string' && route.name === link) {
+    return true;
+  }
+  
+  // Специальная обработка для маршрутов ассистентов
+  if (link === RouteNames.ASSISTENS) {
+    // Проверяем, содержит ли текущий путь '/assistent/'
+    return route.path.includes('/assistent/');
+  }
+  
+  // Специальная обработка для корневого маршрута
+  if (link === RouteNames.MAIN.name) {
+    // Корневой маршрут активен только если мы находимся на главной странице
+    return route.path === '/' || route.path === RouteNames.MAIN.name;
+  }
+  
+  // Для остальных маршрутов проверяем, начинается ли текущий путь с пути пункта меню
+  return route.path.startsWith(link);
+}
 
 const navigateToRoute = (routeName: string):void => {
   router.push(routeName)
@@ -18,11 +43,11 @@ const navigateToRoute = (routeName: string):void => {
     <div class="menu__nav">
       <ul class="menu__nav-items">
         <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" 
-            :class="{ 'menu__nav-item--active': route.name === item.link }"
+            :class="{ 'menu__nav-item--active': isActiveRoute(item.link) }"
             @click="navigateToRoute(item.link)">
           <span :class="item.icon"/>
           <p class="menu__nav-item-name">{{ item.link_name }}</p>
-          <span class="icon icon-plus" v-if="route.name !== item.link" />
+          <span class="icon icon-plus" v-if="!isActiveRoute(item.link)" />
           <span class="icon icon-chevron-right" v-else />
         </li>
       </ul>
