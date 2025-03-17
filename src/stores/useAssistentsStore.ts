@@ -4,6 +4,36 @@ import avatarImage from '@/assets/cl1_45.png';
 import { useAuthStore } from './useAuthStore';
 import { agentService } from '@/api/services/agentService';
 
+// Интерфейс для ответа API
+interface ApiAssistant {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  isLocked?: boolean;
+  isActive?: boolean;
+  isDisabled?: boolean;
+  created_at?: string;
+  business?: boolean;
+  author_id?: string;
+}
+
+// Интерфейс для ответа API с массивом ассистентов
+interface MyAgentsResponse {
+  assistants: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    image?: string;
+    isLocked?: boolean;
+    isActive?: boolean;
+    isDisabled?: boolean;
+    created_at?: string;
+    business?: boolean;
+    author_id?: string;
+  }>;
+}
+
 export interface IAssistent {
   id: string;
   name: string;
@@ -33,6 +63,7 @@ export const useAssistentsStore = defineStore('assistents', {
   }),
 
   actions: {
+    // получение шаблонов ассистентов
     async fetchAssitantents() {
       try {
         this.isLoading = true;
@@ -74,6 +105,46 @@ export const useAssistentsStore = defineStore('assistents', {
         console.error('Error fetching assistents:', error);
         this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке ассистентов';
         throw error;
+      }
+    },
+
+    // получение ассистентов пользователя
+    async getMyAssistents() {
+      try {
+        this.isLoading = true;
+        const response = await agentService.getMyAgents();
+        
+        console.log('response getMyAssistents:', response.assistants);
+
+        if (!response.assistants || !Array.isArray(response.assistants)) {
+          console.warn('No assistants received from API or invalid format');
+          this.assistants = [];
+          return [];
+        }
+
+        // Преобразуем массив ассистентов из API в наш формат
+        this.assistants = response.assistants.map(assistant => ({
+          id: assistant.id || '',
+          name: assistant.name || '',
+          description: assistant.description || '',
+          summary: assistant.description ? assistant.description.substring(0, 50) + '...' : '',
+          image: assistant.image || avatarImage,
+          call_name: assistant.name || '',
+          isLocked: assistant.isLocked || false,
+          isActive: assistant.isActive || false,
+          isDisabled: assistant.isDisabled || false,
+          created_at: assistant.created_at || new Date().toISOString(),
+          business: assistant.business || false,
+          author_id: assistant.author_id || '1'
+        }));
+        
+        return this.assistants;
+      } catch(error) {
+        console.error('Error loading assistants:', error);
+        this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке ассистентов';
+        throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
 

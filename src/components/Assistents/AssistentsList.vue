@@ -3,8 +3,6 @@
     <TitleWrapper title="Ассистенты" subtitle="Сделано с <span class='icon icon-like'></span> в 2025" />
     <div class="assistents__nav-group">
       <SortFiltersTab
-        :sortLabels="sortLabels"
-        :filterLabels="filterLabels"
         :activeTab="activeTab"
         :activeFilter="activeFilter"
         @update:sort="changeSortOption"
@@ -33,11 +31,16 @@
       </div>
     </div>
     <div class="assistents__list">
-      <AssistentsCard
-        v-for="item in filteredAssistents"
-        :key="item.id"
-        :assistents="item"
-      />
+      <template v-if="filteredAssistents.length">
+        <AssistentsCard
+          v-for="item in filteredAssistents"
+          :key="item.id"
+          :assistents="item"
+        />
+      </template>
+      <div v-else class="assistents__empty">
+        <p>Ассистенты не найдены</p>
+      </div>
     </div>
     <AddAssistantModal
       :show="showAddModal"
@@ -120,7 +123,6 @@ async function loadAgents() {
   try {
     isLoading.value = true;
     err.value = null;
-    console.log("aaaa")
     await assistentsStore.fetchAssitantents();
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'ошибка при загрузке списка ассистентов';
@@ -131,7 +133,6 @@ async function loadAgents() {
 
 onMounted(() => {
   try {
-    console.log('onMounted сработал!');
     loadAgents();
   } catch (error) {
     console.error('Ошибка в onMounted:', error);

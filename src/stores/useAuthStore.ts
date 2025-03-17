@@ -68,7 +68,13 @@ export const useAuthStore = defineStore('auth', {
     nextUserId: 1,
   }),
   getters: {
-    userRole: (state) => state.user?.role
+    userRole: (state) => state.user?.role,
+    currentUserProfile(state): UserProfile | null {
+      if (!this.currentUserId) return null;
+      return this.userProfiles.find(
+        profile => profile.id === this.currentUserId?.toString()
+      ) || null;
+    },
   },
   actions: {
     async login(credentials: Credentials) {
@@ -77,15 +83,22 @@ export const useAuthStore = defineStore('auth', {
         this.error = null;
 
         const response = await authService.login(credentials);
-        this.token = response.accessToken;
-        this.refreshToken = response.refreshToken;
+        this.token = response.access_token;
+        this.refreshToken = response.refresh_token;
         this.isAuthenticated = true;
-        this.currentUserId = parseInt(response.userId);
+        this.currentUserId = parseInt(response.user_id);
 
         localStorage.setItem('accessToken', this.token);
         localStorage.setItem('refreshToken', this.refreshToken);
 
-        return response.username;
+
+        const userProfile = this.userProfiles.find(
+          profile => profile.email = credentials.email
+        );
+        if (userProfile) {
+          this.currentUserId = parseInt(userProfile.id);
+        }
+        return response.email;
 
       } catch (error: any) {
         // this.error = error.message || 'Произошла ошибка';

@@ -2,7 +2,6 @@
   <Modal
     ref="modal"
     title="Авторизация"
-    help="Для получения логина и пароля обратитесь к вашему администратору"
   >
     <form @submit.prevent="submitForm" class="form">
       <InputField

@@ -1,72 +1,3 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue';
-import TitleWrapper from '../ui/TitleWrapper.vue';
-import AssistentsCard from './AssistentsCard.vue';
-import SortFiltersTab from '../ui/SortFiltersTab.vue';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
-import { useAuthStore } from '@/stores/useAuthStore';
-import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
-import InputField from '../ui/InputField.vue';
-import Button from '../ui/Button.vue';
-import { useRouter } from 'vue-router';
-import { RouteNames } from '@/router/routes/routeNames';
-import AddAssistantModal from '../Modal/AddAssistantModal.vue';
-
-const assistentsStore = useAssistentsStore();
-const authStore = useAuthStore();
-const activeTab = ref<SortOption>(assistentsStore.sortOption);
-const activeFilter = ref<FilterOption>('all');
-const isOpenMyAssistents = ref<boolean>(true);
-const router = useRouter();
-const showAddModal = ref(false);
-
-const filterLabels: Record<FilterOption, string> = {
-  all: 'Все',
-  business: 'Бизнес',
-};
-
-const sortLabels: Record<SortOption, string> = {
-  popular: 'Популярные',
-  new: 'Новые',
-};
-
-const changeSortOption = (option: string) => {
-  const sortOption = option as SortOption;
-  assistentsStore.setSortOption(sortOption);
-  activeTab.value = sortOption;
-};
-
-const changeFilter = (filter: string) => {
-  const filterOption = filter as FilterOption;
-  activeFilter.value = filterOption;
-  assistentsStore.setActiveFilter(filterOption);
-};
-
-const toogleMyAssistents = (): void => {
-  isOpenMyAssistents.value = !isOpenMyAssistents.value
-}
-
-const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
-const userAssistents = computed(() => assistentsStore.userAssistents);
-
-const navigateToCreateAssistent = ():void => {
-  router.push(RouteNames.CREATE_ASSISTENT)
-}
-
-const openAddModal = () => {
-  showAddModal.value = true;
-}
-
-const closeAddModal = () => {
-  showAddModal.value = false;
-}
-
-const handleAssistantSelect = (assistantId: string) => {
-  // Здесь можно добавить логику добавления ассистента
-  console.log('Selected assistant:', assistantId);
-}
-</script>
-
 <template>
   <div class="my-assistents" v-if="authStore.isAuthenticated">
     <div class="my-assistents__collapse-toogle">
@@ -80,11 +11,23 @@ const handleAssistantSelect = (assistantId: string) => {
           <p class="add-assistant__text">Добавить ассистента</p>
         </div>
       </div>
-      <AssistentsCard
-        v-for="item in userAssistents"
-        :key="item.id"
-        :assistents="item"
-      />
+      
+      <div v-if="isLoading" class="loading-wrapper">
+        <span class="icon icon-loader"></span>
+        <p>Загрузка ассистентов...</p>
+      </div>
+
+      <div v-else-if="userAssistents.length === 0" class="no-assistants">
+        <p>У вас пока нет ассистентов</p>
+      </div>
+
+      <template v-else>
+        <AssistentsCard
+          v-for="item in userAssistents"
+          :key="item.id"
+          :assistents="item"
+        />
+      </template>
     </div>
 
     <AddAssistantModal
@@ -94,6 +37,90 @@ const handleAssistantSelect = (assistantId: string) => {
     />
   </div>
 </template>
+  <script setup lang="ts">
+  import { computed, ref, onMounted } from 'vue';
+  import TitleWrapper from '../ui/TitleWrapper.vue';
+  import AssistentsCard from './AssistentsCard.vue';
+  import SortFiltersTab from '../ui/SortFiltersTab.vue';
+  import { useAssistentsStore } from '@/stores/useAssistentsStore';
+  import { useAuthStore } from '@/stores/useAuthStore';
+  import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
+  import InputField from '../ui/InputField.vue';
+  import Button from '../ui/Button.vue';
+  import { useRouter } from 'vue-router';
+  import { RouteNames } from '@/router/routes/routeNames';
+  import AddAssistantModal from '../Modal/AddAssistantModal.vue';
+
+  const assistentsStore = useAssistentsStore();
+  const authStore = useAuthStore();
+  const activeTab = ref<SortOption>(assistentsStore.sortOption);
+  const activeFilter = ref<FilterOption>('all');
+  const isOpenMyAssistents = ref<boolean>(true);
+  const router = useRouter();
+  const showAddModal = ref(false);
+
+  const filterLabels: Record<FilterOption, string> = {
+    all: 'Все',
+    business: 'Бизнес',
+  };
+
+  const sortLabels: Record<SortOption, string> = {
+    popular: 'Популярные',
+    new: 'Новые',
+  };
+
+  const changeSortOption = (option: string) => {
+    const sortOption = option as SortOption;
+    assistentsStore.setSortOption(sortOption);
+    activeTab.value = sortOption;
+  };
+
+  const changeFilter = (filter: string) => {
+    const filterOption = filter as FilterOption;
+    activeFilter.value = filterOption;
+    assistentsStore.setActiveFilter(filterOption);
+  };
+
+  const toogleMyAssistents = (): void => {
+    isOpenMyAssistents.value = !isOpenMyAssistents.value
+  }
+
+  const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
+  const userAssistents = computed(() => {
+    return assistentsStore.userAssistents;
+  });
+
+  const isLoading = computed(() => assistentsStore.isLoading);
+
+  const loadAssistents = async () => {
+    try {
+      await assistentsStore.getMyAssistents();
+    } catch (error) {
+      console.error('Ошибка при загрузке ассистентов:', error);
+    }
+  };
+
+  onMounted(() => {
+    loadAssistents();
+  });
+
+  const navigateToCreateAssistent = ():void => {
+    router.push(RouteNames.CREATE_ASSISTENT)
+  }
+
+  const openAddModal = () => {
+    showAddModal.value = true;
+  }
+
+  const closeAddModal = () => {
+    showAddModal.value = false;
+  }
+
+  const handleAssistantSelect = (assistantId: string) => {
+    // Здесь можно добавить логику добавления ассистента
+    console.log('Selected assistant:', assistantId);
+  }
+</script>
 
 <style lang="scss" scoped>
 .add-assistant-wrapper {
@@ -179,6 +206,44 @@ const handleAssistantSelect = (assistantId: string) => {
     &__list {
       grid-template-columns: 1fr;
     }
+  }
+}
+
+.loading-wrapper {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+
+  .icon-loader {
+    font-size: 24px;
+    color: $help-color;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: $help-color;
+    font-size: 14px;
+  }
+}
+
+.no-assistants {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px;
+  color: $help-color;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

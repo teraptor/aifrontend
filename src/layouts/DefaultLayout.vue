@@ -56,7 +56,7 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 .main-content {
   margin-top: 40px;
   flex-grow: 1;
-  display: flex;
+  // display: flex;
   justify-content: center;
   width: 68rem;
 }

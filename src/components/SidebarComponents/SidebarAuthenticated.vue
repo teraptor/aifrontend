@@ -1,3 +1,23 @@
+<template>
+  <div class="menu">
+    <div class="menu__nav">
+      <ul class="menu__nav-items">
+        <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" 
+            :class="{ 'menu__nav-item--active': isActiveRoute(item.link) }"
+            @click="navigateToRoute(item.link)">
+          <span :class="item.icon"/>
+          <p class="menu__nav-item-name">{{ item.link_name }}</p>
+          <span class="icon icon-plus" v-if="!isActiveRoute(item.link)" />
+          <span class="icon icon-chevron-right" v-else />
+        </li>
+      </ul>
+    </div>
+    <div class="menu__footer">
+      <User />
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
@@ -38,25 +58,6 @@ const navigateToRoute = (routeName: string):void => {
   router.push(routeName)
 }
 </script>
-<template>
-  <div class="menu">
-    <div class="menu__nav">
-      <ul class="menu__nav-items">
-        <li class="menu__nav-item" v-for="item in layoutStore.sidebarAuthNav" :key="item.id" 
-            :class="{ 'menu__nav-item--active': isActiveRoute(item.link) }"
-            @click="navigateToRoute(item.link)">
-          <span :class="item.icon"/>
-          <p class="menu__nav-item-name">{{ item.link_name }}</p>
-          <span class="icon icon-plus" v-if="!isActiveRoute(item.link)" />
-          <span class="icon icon-chevron-right" v-else />
-        </li>
-      </ul>
-    </div>
-    <div class="menu__footer">
-      <User />
-    </div>
-  </div>
-</template>
 <style lang="scss" scoped>
 .menu {
   display: flex;

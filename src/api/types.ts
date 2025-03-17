@@ -42,9 +42,25 @@ export interface CreateAgentRespose {
 // Новый агент (для совместимости)
 export interface NewAgentRespose {
     id: string,
-    AgentID: string,
-    Cost: number,
-    CreatedAt: Date,
+    agent_id: string,
+    status: string,
+    description: string,
+}
+
+// Ответ со списком моих агентов
+export interface MyAgentsResponse {
+  assistants: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    image?: string;
+    isLocked?: boolean;
+    isActive?: boolean;
+    isDisabled?: boolean;
+    created_at?: string;
+    business?: boolean;
+    author_id?: string;
+  }>;
 }
 
 // ответ профиля
@@ -52,5 +68,6 @@ export interface ProfileUserResponse {
     data: {
       email: string,
       user_id: string;
+      balance: number;
     };
 }

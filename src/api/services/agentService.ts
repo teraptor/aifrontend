@@ -5,6 +5,7 @@ import type {
   GetAgentTemplateListResponse, 
   CreateAgentRespose,
   NewAgentRespose,
+  MyAgentsResponse,
 } from "../types";
 
 const API_BASE = '/v1'
@@ -83,11 +84,12 @@ export const agentService = {
     }
   }, 
 
-  // открыть агента
+  // получить мои агенты
   // GET /v1/agents/my
-  async getMyAgents(): Promise<NewAgentRespose> {
+  async getMyAgents(): Promise<MyAgentsResponse> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/agents/my`);
+      const response = await apiClient.get<MyAgentsResponse>(`${API_BASE}/agents/my`);
+      console.log('My agents response:', response.data);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'getMyAgents');

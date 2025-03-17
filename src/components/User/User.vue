@@ -1,4 +1,3 @@
-
 <template>
   <div ref="profileRef" class="profile" @click="toggleMenu">
     <div class="profile__avatar">
@@ -31,15 +30,26 @@ import { RouteNames } from '@/router/routes/routeNames';
 
 const router = useRouter();
 const authStore = useAuthStore();
-
 const isMenuOpen = ref<boolean>(false);
 const profileRef = ref<HTMLElement | null>(null);
 
+// вычисление профиля пользователя
 const currentUser = computed(() => {
   if (authStore.currentUserId) {
     return authStore.getUserProfile(authStore.currentUserId.toString());
   }
   return null;
+});
+
+// вычисление первой буквы имени пользователя
+const userInitial = computed<string>(() => {
+ return currentUserProfie.value?.email.charAt(0).toUpperCase() || '';
+});
+
+// проверка авторизации
+const isAuthenticated = computed<boolean>(() => {
+  console.log(authStore.isAuthenticated);
+  return authStore.isAuthenticated;
 });
 
 const goToProfile = (): void => {

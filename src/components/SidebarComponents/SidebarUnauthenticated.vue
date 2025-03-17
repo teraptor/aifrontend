@@ -2,12 +2,10 @@
   <LoginModal 
     ref="loginModal" 
     title="Войти"
-    help="Для получения логина и пароля обратитесь к вашему администратору"
   />
   <AuthModal 
     ref="authModal" 
     title="Регистрация"
-    help="Никому не сообщайте логин и пароль"
   />
   <div class="auth-variants">
     <div class="auth-variants__title-wrapper">
@@ -18,38 +16,10 @@
       <Button
         type="button"
         button-type="light"
-        text="Войти через Yandex"
-        size="big"
-        image="yandex.svg"
-      />
-
-      <Button
-        type="button"
-        button-type="light"
-        text="Войти через Google"
-        size="big"
-        image="google.svg"
-      />
-    </div>
-
-    <div class="auth-variants__divider">
-      <span>или</span>
-    </div>
-
-    <div class="auth-variants__buttons-group">
-      <Button
-        type="button"
-        button-type="light"
-        text="Войти через почту"
-        size="big"
-        image="email.svg"
-      />
-      <Button
-        type="button"
-        @click="openLoginModal"
-        button-type="light"
         text="У меня есть логин/пароль"
         size="big"
+        image="email.svg"
+        @click="openLoginModal"
       />
       <Button
         type="button"
