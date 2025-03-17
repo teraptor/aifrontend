@@ -4,8 +4,8 @@ import { ApiErrorHandler } from "../errrorHandler";
 import type { 
   GetAgentTemplateListResponse, 
   CreateAgentRespose,
-  NewAgentRespose,
   MyAgentsResponse,
+  Message
 } from "../types";
 
 const API_BASE = '/v1'
@@ -42,13 +42,13 @@ export const agentService = {
 
   // создание агента
   // GET /v1/agents/create
-  async createAgent(): Promise<NewAgentRespose> {
+  async createAgent(): Promise<CreateAgentRespose> {
     const cacheKey = 'createAgent';
     return CacheManager.getOrFetch (
       cacheKey,
       async () => {
         try {
-          const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/agents/create`);
+          const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/create`);
           return response.data;
         } catch (error) {
           ApiErrorHandler.handleError(error, 'createAgent');
@@ -61,9 +61,9 @@ export const agentService = {
 
   // установка из предустановленных
   // GET /v1/agents/{templateID}/workflow
-  async createAgentFromTemplate(templateId: string): Promise<NewAgentRespose> {
+  async createAgentFromTemplate(templateId: string): Promise<CreateAgentRespose> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/agents/${templateId}/workflow`);
+      const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/${templateId}/workflow`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'createAgentFromTemplate');
@@ -74,9 +74,9 @@ export const agentService = {
 
   // открыть агента
   // GET /v1/agents/{agentID}
-  async openAgent(agentId: string): Promise<NewAgentRespose> {
+  async openAgent(agentId: string): Promise<CreateAgentRespose> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/agents/${agentId}`);
+      const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/${agentId}`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'openAgent');
@@ -99,9 +99,9 @@ export const agentService = {
   
   // удалить ассистента
   // DELETE /v1/agents/{agentID}
-  async deleteAgent(agentId: string): Promise<NewAgentRespose> {
+  async deleteAgent(agentId: string): Promise<CreateAgentRespose> {
     try {
-      const response = await apiClient.delete<NewAgentRespose>(`${API_BASE}/agents/${agentId}`);
+      const response = await apiClient.delete<CreateAgentRespose>(`${API_BASE}/agents/${agentId}`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'deleteAgent');
@@ -111,9 +111,9 @@ export const agentService = {
 
   // создание нового диалога
   // GET /v1/conversation/{agentID}/new"
-  async createDialog(agentId: string): Promise<NewAgentRespose> {
+  async createDialog(agentId: string): Promise<any> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/conversation/${agentId}/new`);
+      const response = await apiClient.get<any>(`${API_BASE}/conversation/${agentId}/new`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'createDialog');
@@ -123,22 +123,23 @@ export const agentService = {
 
   // получение диалога
   // GET /v1/conversation/{agentID}/dialog/{conversationID}/messages
-  async getDialog(dialogId: string, conversationID: string): Promise<NewAgentRespose> {
+  async getDialog(dialogId: string, conversationID: string): Promise<any> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(`${API_BASE}/conversation/${dialogId}/dialog/${conversationID}/messages`);
+      const response = await apiClient.get<any>(`${API_BASE}/conversation/${dialogId}/dialog/${conversationID}/messages`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'getDialog');
       throw error;
     }
   },
+  
   // добавление сообщения в диалог
   // POST /v1/conversation/{agentID}/{conversationID}/reply
-  async addMessageToDialog(dialogId: string, conversationID: string, data: null): Promise<NewAgentRespose> {
+  async addMessageToDialog(dialogId: string, conversationID: string, data: any = {}): Promise<Message> {
     try {
-      const response = await apiClient.get<NewAgentRespose>(
+      const response = await apiClient.post<Message>(
         `${API_BASE}/conversation/${dialogId}/${conversationID}/reply`,
-         data || {}
+         data
       );
       return response.data;
     } catch (error) {

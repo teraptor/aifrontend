@@ -40,11 +40,20 @@ export interface CreateAgentRespose {
 }
 
 // Новый агент (для совместимости)
-export interface NewAgentRespose {
+export interface CreateAgentRespose {
     id: string,
     agent_id: string,
     status: string,
     description: string,
+}
+
+export interface Message {
+    ID: string,
+    Content: string,
+    conversation_id: boolean,
+    ReplyID: string,
+    Role: string,
+    CreatedAt: string,
 }
 
 // Ответ со списком моих агентов

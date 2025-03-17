@@ -1,84 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
-import { useAssistentChatStore } from '@/stores/useAssistentChat';
-import Button from '@/components/ui/Button.vue';
-import InputField from '@/components/ui/InputField.vue';
-import { RouteNames } from '@/router/routes/routeNames';
-import { onClickOutside } from '@vueuse/core';
-
-const route = useRoute();
-const router = useRouter();
-const assistentsStore = useAssistentsStore();
-const chatStore = useAssistentChatStore();
-
-const newMessage = ref<string>('');
-const chatContainer = ref<HTMLElement | null>(null);
-const assistentMenuTrigger = ref<HTMLElement | null>(null);
-const assistentMenu = ref<HTMLElement | null>(null);
-const isAssistentMenuOpen = ref<boolean>(false);
-
-const assistentId = ref<string>(route.params.id as string);
-const assistent = ref(assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null);
-
-const updateAssistent = () => {
-  assistent.value = assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null;
-};
-
-watch(
-  () => route.params.id,
-  (newId) => {
-    assistentId.value = newId as string;
-    updateAssistent();
-  }
-);
-
-const sendMessage = () => {
-  if (newMessage.value.trim() === '') return;
-
-  chatStore.addMessage(newMessage.value, true);
-  const userMessage = newMessage.value;
-  newMessage.value = '';
-
-  setTimeout(() => {
-    chatStore.addMessage(`Я получил ваше сообщение: "${userMessage}". Чем еще могу помочь?`, false);
-    scrollToBottom();
-  }, 1000);
-};
-
-const scrollToBottom = () => {
-  setTimeout(() => {
-    if (chatContainer.value) {
-      const container = chatContainer.value;
-      container.scrollTop = container.scrollHeight;
-    }
-  }, 100);
-};
-
-const toggleAssistentMenu = () => {
-  isAssistentMenuOpen.value = !isAssistentMenuOpen.value;
-};
-
-const switchAssistent = (id: string) => {
-  if (id !== assistentId.value) {
-    router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: id } });
-  }
-  isAssistentMenuOpen.value = false;
-};
-
-onClickOutside(assistentMenu, () => {
-  if (isAssistentMenuOpen.value) {
-    isAssistentMenuOpen.value = false;
-  }
-});
-
-onMounted(() => {
-  scrollToBottom();
-  updateAssistent();
-});
-</script>
-
 <template>
   <div class="assistent-chat">
     <div class="assistent-chat__container">
@@ -88,7 +7,7 @@ onMounted(() => {
           button-type="light"
           text="Новое задание/вопрос"
           size="large"
-          @click="chatStore.createNewSession"
+          @click="createNewDialog"
         />
 
         <div class="assistent-chat__session-list">
@@ -96,12 +15,12 @@ onMounted(() => {
             v-for="session in chatStore.sessions"
             :key="session.id"
             :class="['session-item', { 'session-item--active': session.isActive }]"
-            @click="chatStore.selectSession(session.id)"
+            @click="selectSession(session.id)"
           >
             <div class="session-item__content">
               <div class="session-item__title">{{ session.title }}</div>
               <div class="session-item__meta">
-                <span class="session-item__time">{{ session.timestamp }}</span>
+                <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
               </div>
             </div>
           </div>
@@ -154,13 +73,25 @@ onMounted(() => {
 
           <div class="chat-messages" ref="chatContainer">
             <div
-              v-for="message in chatStore.messages"
+              v-for="message in chatStore.sessionMessages"
               :key="message.id"
               :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
             >
               <div class="message__content">
                 <p class="message__text">{{ message.text }}</p>
                 <span class="message__time">{{ new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+              </div>
+            </div>
+            
+            <!-- Индикатор "печатает ответ" -->
+            <div v-if="chatStore.isLoading" class="message message--assistant message--typing">
+              <div class="message__content">
+                <div class="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p class="message__text typing-text">Печатает ответ...</p>
               </div>
             </div>
           </div>
@@ -171,8 +102,9 @@ onMounted(() => {
               type="text"
               placeholder="Напишите сообщение..."
               variant="light"
-              @keyup.enter="sendMessage"
+              @keyup.enter="!chatStore.isLoading && sendMessage()"
               size="large"
+              :disabled="chatStore.isLoading"
             />
             <Button
               type="button"
@@ -180,7 +112,7 @@ onMounted(() => {
               icon="icon icon-chevron-up"
               size="curcle"
               @click="sendMessage"
-              :disabled="!newMessage.trim()"
+              :disabled="!newMessage.trim() || chatStore.isLoading"
             />
           </div>
         </div>
@@ -188,6 +120,124 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { useAssistentChatStore } from '@/stores/useAssistentChat';
+import Button from '@/components/ui/Button.vue';
+import InputField from '@/components/ui/InputField.vue';
+import { RouteNames } from '@/router/routes/routeNames';
+import { onClickOutside } from '@vueuse/core';
+
+const route = useRoute();
+const router = useRouter();
+const assistentsStore = useAssistentsStore();
+const chatStore = useAssistentChatStore();
+
+const newMessage = ref<string>('');
+const chatContainer = ref<HTMLElement | null>(null);
+const assistentMenuTrigger = ref<HTMLElement | null>(null);
+const assistentMenu = ref<HTMLElement | null>(null);
+const isAssistentMenuOpen = ref<boolean>(false);
+
+const assistentId = ref<string>(route.params.id as string);
+const assistent = ref(assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null);
+
+const updateAssistent = () => {
+  assistent.value = assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null;
+};
+
+// Следим за новыми сообщениями
+watch(
+  () => route.params.id,
+  (newId) => {
+    assistentId.value = newId as string;
+    updateAssistent();
+  }
+);
+
+// Отдельный watch для новых сообщений
+watch(
+  () => chatStore.newMessageReceived,
+  (newValue) => {
+    if (newValue) {
+      scrollToBottom();
+      chatStore.resetNewMessageFlag();
+    }
+  }
+);
+
+const sendMessage = async () => {
+  if (newMessage.value.trim() === '' || chatStore.isLoading) return;
+
+  await chatStore.addMessage(newMessage.value, true);
+  newMessage.value = '';
+  scrollToBottom();
+};
+
+const scrollToBottom = () => {
+  setTimeout(() => {
+    if (chatContainer.value) {
+      const container = chatContainer.value;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, 100);
+};
+
+const toggleAssistentMenu = () => {
+  isAssistentMenuOpen.value = !isAssistentMenuOpen.value;
+};
+
+const switchAssistent = (id: string) => {
+  if (id !== assistentId.value) {
+    router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: id } });
+  }
+  isAssistentMenuOpen.value = false;
+};
+
+const createNewDialog = () => {
+  if (assistentId.value) {
+    chatStore.createNewSession(assistentId.value);
+  }
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+};
+
+const selectSession = (sessionId: string) => {
+  chatStore.selectSession(sessionId);
+  scrollToBottom();
+};
+
+onClickOutside(assistentMenu, () => {
+  if (isAssistentMenuOpen.value) {
+    isAssistentMenuOpen.value = false;
+  }
+});
+
+onMounted(() => {
+  scrollToBottom();
+  updateAssistent();
+  
+  if (assistentId.value) {
+    if (!chatStore.sessions || chatStore.sessions.length === 0) {
+      createNewDialog();
+    } else if (!chatStore.activeSessionId) {
+      // Если есть сессии, но нет активной, выбираем первую
+      selectSession(chatStore.sessions[0].id);
+    } else {
+      // Если есть активная сессия, прокручиваем к последнему сообщению
+      scrollToBottom();
+    }
+  }
+});
+
+</script>
 
 <style lang="scss" scoped>
 .assistent-chat {
@@ -497,6 +547,14 @@ onMounted(() => {
         color: rgba($light-color, 0.8);
       }
     }
+    
+    &--typing {
+      opacity: 0.7;
+      
+      .message__content {
+        padding-bottom: 16px;
+      }
+    }
   }
 
   .chat-input {
@@ -509,6 +567,52 @@ onMounted(() => {
     & > *:first-child {
       flex-basis: 90%;
     }
+  }
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  
+  span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: $help-color;
+    border-radius: 50%;
+    animation: typing 1s infinite ease-in-out;
+    
+    &:nth-child(1) {
+      animation-delay: 0s;
+    }
+    
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+}
+
+.typing-text {
+  font-size: 12px;
+  color: $help-color;
+  margin-top: 4px;
+}
+
+@keyframes typing {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 </style>

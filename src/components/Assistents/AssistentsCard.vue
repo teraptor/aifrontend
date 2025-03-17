@@ -8,7 +8,6 @@ import { RouteNames } from '@/router/routes/routeNames';
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-console.log(authStore.users[0].userId)
 
 const props = defineProps({
   assistents: {
