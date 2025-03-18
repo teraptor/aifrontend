@@ -42,9 +42,9 @@
   import TitleWrapper from '../ui/TitleWrapper.vue';
   import AssistentsCard from './AssistentsCard.vue';
   import SortFiltersTab from '../ui/SortFiltersTab.vue';
-  import { useAssistentsStore } from '@/stores/useAssistentsStore';
+  import { useAssistentsStore } from '@/stores/useAssistantsStore';
   import { useAuthStore } from '@/stores/useAuthStore';
-  import type { SortOption, FilterOption } from '@/stores/useAssistentsStore';
+  import type { SortOption, FilterOption } from '@/stores/useAssistantsStore';
   import InputField from '../ui/InputField.vue';
   import Button from '../ui/Button.vue';
   import { useRouter } from 'vue-router';
@@ -246,4 +246,4 @@
     transform: rotate(360deg);
   }
 }
-</style>
+</style>@/stores/useAssistantsStore@/stores/useAssistantsStore

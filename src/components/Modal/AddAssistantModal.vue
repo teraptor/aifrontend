@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import Button from '../ui/Button.vue';
 
 const props = defineProps<{
@@ -147,4 +147,4 @@ const selectAssistant = (id: string) => {
     margin: 4px 0 0;
   }
 }
-</style> 
+</style> @/stores/useAssistantsStore

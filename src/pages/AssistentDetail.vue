@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
 import { computed, ref } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
@@ -157,3 +157,4 @@ const activeTab = ref(tabs.value[0].id);
   }
 }
 </style>
+@/stores/useAssistantsStore

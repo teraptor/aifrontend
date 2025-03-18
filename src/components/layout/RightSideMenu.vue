@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/useLayoutStore';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useSkillsStore } from '@/stores/useSkillsStore';
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -213,4 +213,4 @@ const toggleSkills = (): void => {
     }
   }
 }
-</style>
+</style>@/stores/useAssistantsStore

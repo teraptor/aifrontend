@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
+import { useAssistantsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
 import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
@@ -264,4 +264,4 @@ const goBack = (): void => router.back();
     }
   }
 }
-</style>
+</style>@/stores/useAssistantsStore

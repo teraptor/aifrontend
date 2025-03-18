@@ -27,6 +27,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
   }),
 
   actions: {
+    // добавление сообщения в диалог
     async addMessage(text: string, isUser: boolean) {
       if (!this.activeSessionId) return;
       
@@ -84,6 +85,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       return message;
     },
 
+    // создание нового диалога
     async createNewSession(agentId: string) {
       try {
         const response = await agentService.createDialog(agentId);
@@ -111,6 +113,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       }
     },
 
+    // выбор диалога
     selectSession(sessionId: string) {
       console.log('Selecting session:', sessionId);
       console.log('Sessions:', this.sessions);
@@ -133,6 +136,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       }
     },
 
+    // загрузка сообщений диалога
     async loadDialogMessages(agentId: string, conversationId: string) {
       try {
         // Проверяем, есть ли уже сообщения для этого диалога
@@ -171,20 +175,24 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       }
     },
 
+    // сброс флага нового сообщения
     resetNewMessageFlag() {
       this.newMessageReceived = false;
     }
   },
 
   getters: {
+    // получение активной сессии
     activeSession: (state) => {
       return state.sessions.find(session => session.id === state.activeSessionId);
     },
     
+    // получение сообщений активной сессии
     sessionMessages: (state) => {
       return state.messages.filter(message => message.sessionId === state.activeSessionId);
     },
-    
+
+    // получение последнего сообщения активной сессии
     lastMessage: (state) => {
       const sessionMessages = state.messages.filter(message => message.sessionId === state.activeSessionId);
       return sessionMessages.length > 0 ? sessionMessages[sessionMessages.length - 1] : null;

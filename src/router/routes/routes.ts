@@ -20,6 +20,15 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Index.vue')
   },
   {
+    path: RouteNames.Chats,
+    name: RouteNames.Chats,
+    meta: {
+      title: 'Чаты',
+      ...defaultMeta,
+    },
+    component: () => import('@/pages/AssistentChats.vue')
+  },
+  {
     path: RouteNames.ASSISTENS,
     name: RouteNames.ASSISTENS,
     meta: {

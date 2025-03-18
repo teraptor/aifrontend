@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IAssistent } from '@/stores/useAssistentsStore';
+import type { IAssistent } from '@/stores/useAssistantsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -211,3 +211,4 @@ const goToSetting = (event: MouseEvent) => {
   }
 }
 </style>
+@/stores/useAssistantsStore

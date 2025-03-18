@@ -44,6 +44,19 @@
               </p>
 
               <div class="assistent-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
+                <div class="assistent-dropdown__header">Действия</div>
+                <div class="assistent-dropdown__actions">
+                  <div 
+                    v-for="item in menuItems" 
+                    :key="item.id"
+                    class="assistent-dropdown__action"
+                    @click="item.action"
+                  >
+                    <span :class="['icon', item.icon]"></span>
+                    <span class="assistent-dropdown__action-title">{{ item.title }}</span>
+                  </div>
+                </div>
+                
                 <div class="assistent-dropdown__header">Мои ассистенты</div>
                 <div class="assistent-dropdown__list">
                   <div
@@ -125,12 +138,19 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAssistentsStore } from '@/stores/useAssistentsStore';
-import { useAssistentChatStore } from '@/stores/useAssistentChat';
+import { useAssistentsStore } from '@/stores/useAssistantsStore';
+import { useAssistentChatStore } from '@/stores/useAssistantChatStore';
 import Button from '@/components/ui/Button.vue';
 import InputField from '@/components/ui/InputField.vue';
 import { RouteNames } from '@/router/routes/routeNames';
 import { onClickOutside } from '@vueuse/core';
+
+interface MenuItem {
+  id: string;
+  title: string;
+  icon?: string;
+  action: () => void;
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -145,6 +165,44 @@ const isAssistentMenuOpen = ref<boolean>(false);
 
 const assistentId = ref<string>(route.params.id as string);
 const assistent = ref(assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null);
+
+// Создаем меню действий
+const menuItems = ref<MenuItem[]>([
+  {
+    id: 'new-dialog',
+    title: 'Новый диалог',
+    icon: 'icon-plus',
+    action: () => {
+      createNewDialog();
+      isAssistentMenuOpen.value = false;
+    }
+  },
+  {
+    id: 'settings',
+    title: 'Настройки ассистента',
+    icon: 'icon-cog',
+    action: () => {
+      if (assistent.value) {
+        router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistentId.value } });
+      }
+      isAssistentMenuOpen.value = false;
+    }
+  },
+  {
+    id: 'clear-chat',
+    title: 'Очистить историю',
+    icon: 'icon-trash',
+    action: () => {
+      if (chatStore.activeSessionId) {
+        if (confirm('Вы действительно хотите очистить историю чата?')) {
+          chatStore.clearSessionMessages();
+          scrollToBottom();
+        }
+      }
+      isAssistentMenuOpen.value = false;
+    }
+  }
+]);
 
 const updateAssistent = () => {
   assistent.value = assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null;
@@ -427,6 +485,34 @@ onMounted(() => {
       border-bottom: 1px solid rgba($help-color, 0.1);
     }
     
+    &__actions {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba($help-color, 0.1);
+    }
+    
+    &__action {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: rgba($help-color, 0.05);
+      }
+      
+      .icon {
+        margin-right: 10px;
+        font-size: 16px;
+        color: $help-color;
+      }
+      
+      &-title {
+        font-size: 14px;
+        color: $dark-color;
+      }
+    }
+    
     &__list {
       max-height: 300px;
       overflow-y: auto;
@@ -615,4 +701,4 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
-</style>
+</style>@/stores/useAssistantsStore
