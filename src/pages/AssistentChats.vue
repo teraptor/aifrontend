@@ -151,14 +151,15 @@
           </div>
 
           <div class="chat-input">
-            <input 
+            <textarea 
               ref="messageInput"
               v-model="newMessage" 
-              type="text"
               placeholder="Напишите сообщение..." 
-              @keyup.enter="sendMessage"
+              @keyup.enter.exact="sendMessage"
+              @input="autoGrow"
               :disabled="chatStore.isLoading"
-            />
+              rows="1"
+            ></textarea>
             <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
               <span class="arrow-icon">↑</span>
             </button>
@@ -415,6 +416,18 @@ onMounted(async () => {
     selectAssistant(assistants.value[0])
   }
 })
+
+// Функция для автоматического увеличения высоты текстового поля
+const autoGrow = () => {
+  if (!messageInput.value) return
+  
+  // Сбрасываем высоту для корректного расчета
+  messageInput.value.style.height = 'auto'
+  
+  // Устанавливаем высоту на основе содержимого, но не более 150px
+  const newHeight = Math.min(messageInput.value.scrollHeight, 150)
+  messageInput.value.style.height = `${newHeight}px`
+}
 </script>
 
 <style lang="scss" scoped>
@@ -831,19 +844,23 @@ onMounted(async () => {
 
   .chat-input {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     padding: 16px;
     border-top: 1px solid rgba(#999, 0.1);
     
-    input {
+    textarea {
       flex: 1;
       padding: 12px 16px;
       border: none;
-      border-radius: 30px;
+      border-radius: 20px;
       background-color: #f5f7fa;
       font-family: inherit;
       font-size: 14px;
-      height: 44px;
+      min-height: 44px;
+      max-height: 150px;
+      resize: none;
+      overflow-y: auto;
+      line-height: 1.5;
       
       &:focus {
         outline: none;
@@ -852,6 +869,20 @@ onMounted(async () => {
       
       &::placeholder {
         color: #999;
+      }
+      
+      // Стили для скроллбара
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background-color: #c0c0c0;
+        border-radius: 2px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background-color: transparent;
       }
     }
     
