@@ -3,16 +3,22 @@
     <TitleWrapper title="Ассистенты" subtitle="Сделано с <span class='icon icon-like'></span> в 2025" />
     <div class="assistents__nav-group">
       <SortFiltersTab
-        :activeTab="activeTab"
-        :activeFilter="activeFilter"
-        @update:sort="changeSortOption"
-        @update:filter="changeFilter"
+        :activeTab="assistentsStore.sortOption"
+        :activeFilter="assistentsStore.activeFilter"
+        :filterLabels="{
+          all: 'Все',
+          business: 'Бизнес'
+        }"
+        @update:filter="assistentsStore.setActiveFilter"
+        @update:sort="assistentsStore.setSortOption"
       />
       <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
         <InputField
           icon='icon icon-search'
           size="medium"
           placeholder="Найти ассистента"
+          v-model="searchQuery"
+          @input="handleSearch"
         />
         <Button
           button-type="secondary"
@@ -27,6 +33,8 @@
           icon='icon icon-search'
           size="large"
           placeholder="Найти ассистента"
+          v-model="searchQuery"
+          @input="handleSearch"
         />
       </div>
     </div>
@@ -66,37 +74,15 @@ import AddAssistantModal from '../Modal/AddAssistantModal.vue';
 
 const assistentsStore = useAssistentsStore();
 const authStore = useAuthStore();
-const activeTab = ref<SortOption>(assistentsStore.sortOption);
-const activeFilter = ref<FilterOption>('all');
 const isOpenMyAssistents = ref<boolean>(true);
 const router = useRouter();
 const showAddModal = ref(false);
+const searchQuery = ref('');
 
-const filterLabels: Record<FilterOption, string> = {
-  all: 'Все',
-  business: 'Бизнес'
+const handleSearch = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  assistentsStore.setSearchQuery(target.value);
 };
-
-const sortLabels: Record<SortOption, string> = {
-  popular: 'Популярные',
-  new: 'Новые'
-};
-
-const changeSortOption = (option: string) => {
-  const sortOption = option as SortOption;
-  assistentsStore.setSortOption(sortOption);
-  activeTab.value = sortOption;
-};
-
-const changeFilter = (filter: string) => {
-  const filterOption = filter as FilterOption;
-  activeFilter.value = filterOption;
-  assistentsStore.setActiveFilter(filterOption);
-};
-
-const toogleMyAssistents = (): void => {
-  isOpenMyAssistents.value = !isOpenMyAssistents.value
-}
 
 const filteredAssistents = computed(() => assistentsStore.sortedAssistents);
 const userAssistents = computed(() => assistentsStore.userAssistents);
@@ -113,33 +99,30 @@ const closeAddModal = () => {
   showAddModal.value = false;
 }
 
+// TODO: добавить выбор ассистента
 const handleAssistantSelect = (assistantId: string) => {
   console.log('Selected assistant:', assistantId);
 }
 
-const isLoading = computed(() => assistentsStore.isLoading)
-const err = computed(() => assistentsStore.err)
-async function loadAgents() {
+const isLoading = computed(() => assistentsStore.isLoading);
+const error = computed(() => assistentsStore.error);
+
+// загрузка ассистентов
+const loadAssistents = async () => {
   try {
-    isLoading.value = true;
-    err.value = null;
     await assistentsStore.fetchAssitantents();
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'ошибка при загрузке списка ассистентов';
-  } finally {
-    isLoading.value = false;
+    console.error('Ошибка при загрузке ассистентов:', e);
   }
-}
+};
 
 onMounted(() => {
   try {
-    loadAgents();
+    loadAssistents();
   } catch (error) {
     console.error('Ошибка в onMounted:', error);
   }
 })
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -181,4 +164,3 @@ onMounted(() => {
 }
 
 </style>
-@/stores/useAssistantsStore@/stores/useAssistantsStore

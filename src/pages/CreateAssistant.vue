@@ -191,7 +191,7 @@ const selectedComponents = ref<any[]>([]);
 const connectingFrom = ref<any>(null);
 const movingComponent = ref<any>(null);
 const startDragPosition = ref({ x: 0, y: 0 });
-const mousePosition = ref(null);
+const mousePosition = ref<{ x: number; y: number } | null>(null);
 const contextMenu = ref({
   visible: false,
   x: 0,
@@ -389,7 +389,7 @@ const hasCircularConnection = (fromComponent: any, toComponent: any, visited = n
 const removeConnection = (fromComponentId: string, toComponentId: string) => {
   const fromComponent = selectedComponents.value.find(c => c.id === fromComponentId);
   if (fromComponent && fromComponent.connections) {
-    fromComponent.connections = fromComponent.connections.filter(id => id !== toComponentId);
+    fromComponent.connections = fromComponent.connections.filter((id: string | number) => id !== toComponentId);
   }
 };
 

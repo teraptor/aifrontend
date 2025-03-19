@@ -25,6 +25,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Чаты',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/AssistentChats.vue')
   },

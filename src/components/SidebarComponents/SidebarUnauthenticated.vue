@@ -6,6 +6,7 @@
   <AuthModal 
     ref="authModal" 
     title="Регистрация"
+    @switch-to-login="handleSwitchToLogin"
   />
   <div class="auth-variants">
     <div class="auth-variants__title-wrapper">
@@ -47,6 +48,19 @@ const openLoginModal = () => {
 
 const openAuthModal = () => {
   authModal.value?.openModal();
+};
+
+// Обработчик события переключения на форму авторизации
+const handleSwitchToLogin = (email?: string) => {
+  // Небольшая задержка для анимации закрытия предыдущего модального окна
+  setTimeout(() => {
+    // Если передан email, предзаполняем поле в форме авторизации
+    if (email) {
+      loginModal.value?.openModal({ email });
+    } else {
+      loginModal.value?.openModal();
+    }
+  }, 100);
 };
 
 </script>

@@ -77,6 +77,7 @@ export const useAuthStore = defineStore('auth', {
     },
   },
   actions: {
+    // Вход в систему
     async login(credentials: Credentials) {
       try {
         this.isLoading = true;
@@ -108,63 +109,44 @@ export const useAuthStore = defineStore('auth', {
         this.isLoading = false;
       }
     },
+
+    // Выход из системы
     logout() {
       this.isAuthenticated = false;
       this.currentUserId = null;
     },
-    register(credentials: Credentials) {
-      const userExists = this.users.some(
-        (user) => user.username === credentials.email
-      );
-
-      if (userExists) {
-        notifications.error('Пользователь с таким именем уже существует');
-      } else {
-        const newUser = {
-          ...credentials,
-          userId: this.nextUserId,
-          username: credentials.email,
-          role: 'company',
-          accessToken: '',
-          refreshToken: '',
-        };
-        this.users.push(newUser);
-        
-        // Создаем профиль пользователя, если его еще нет
-        const userProfileExists = this.userProfiles.some(
-          (profile) => profile.email === credentials.email
-        );
-        
-        if (!userProfileExists) {
-          const newProfile: UserProfile = {
-            id: this.nextUserId.toString(),
-            email: credentials.email,
-            role: 'company', // Устанавливаем роль по умолчанию
-            balance: 1000, // Начальный баланс
-            company_id: 'company-' + this.nextUserId,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          this.userProfiles.push(newProfile);
-        }
-        
-        // Устанавливаем текущего пользователя и статус аутентификации
-        this.currentUserId = this.nextUserId;
-        this.isAuthenticated = true;
-        
-        this.nextUserId++;
+    
+    // Регистрация пользователя
+    async register(credentials: Credentials) {
+      try {
+        this.isLoading = true;
+        this.error = null;
+        const response = await authService.register(credentials);
         notifications.success('Регистрация прошла успешно');
+        
+        // Возвращаем true, чтобы сигнализировать об успешной регистрации
+        return true;
+      } catch (error: any) {
+        notifications.error(error.message);
+        throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
+
+    // Получение профиля пользователя
     getUserProfile(userId: string): UserProfile | undefined {
       return this.userProfiles.find(profile => profile.id === userId);
     },
+
+    // Добавление профиля пользователя
     addUserProfile(profile: UserProfile) {
       this.userProfiles.push(profile);
     }, 
+
+    // Инициализация хранилища
     async init() {
       try {
-        // await this.fet();
       } catch (error: any) {
         this.error = error.message || 'Произошла ошибка';
         notifications.error(error.message);
@@ -174,6 +156,7 @@ export const useAuthStore = defineStore('auth', {
       }
     }
   },
+
   persist: {
     key: 'auth-store',
     storage: localStorage,

@@ -1,9 +1,9 @@
 import apiClient from "../apiClient";
 import { CacheManager } from "../cacheManager";
-import { ApiErrorHandler } from "../errrorHandler";
+import { ApiErrorHandler } from "../errorHandler";
 import type { 
   GetAgentTemplateListResponse, 
-  CreateAgentRespose,
+  CreateAgentResponse,
   MyAgentsResponse,
   Message
 } from "../types";
@@ -20,12 +20,9 @@ export const agentService = {
         cacheKey,
         async () => {
           try {
-            console.log('Fetching agent templates from API...');
             const response = await apiClient.get<GetAgentTemplateListResponse>(`${API_BASE}/agents/templates`);
-            console.log('API response:', response.data);
             return response.data;
           } catch (error) {
-            console.error('Error in fetchAgentsTemplates inner function:', error);
             ApiErrorHandler.handleError(error, 'fetchAgentsTemplates');
             // Возвращаем пустой массив вместо выброса исключения
             return { data: [] };
@@ -34,7 +31,6 @@ export const agentService = {
         { ttl: 3600000, staleWhileRevalidate: true }
       );
     } catch (error) {
-      console.error('Error in fetchAgentsTemplates outer function:', error);
       // Возвращаем пустой массив вместо выброса исключения
       return { data: [] };
     }
@@ -42,13 +38,13 @@ export const agentService = {
 
   // создание агента
   // GET /v1/agents/create
-  async createAgent(): Promise<CreateAgentRespose> {
+  async createAgent(): Promise<CreateAgentResponse> {
     const cacheKey = 'createAgent';
     return CacheManager.getOrFetch (
       cacheKey,
       async () => {
         try {
-          const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/create`);
+          const response = await apiClient.get<CreateAgentResponse>(`${API_BASE}/agents/create`);
           return response.data;
         } catch (error) {
           ApiErrorHandler.handleError(error, 'createAgent');
@@ -61,22 +57,21 @@ export const agentService = {
 
   // установка из предустановленных
   // GET /v1/agents/{templateID}/workflow
-  async createAgentFromTemplate(templateId: string): Promise<CreateAgentRespose> {
+  async createAgentFromTemplate(templateId: string): Promise<CreateAgentResponse> {
     try {
-      const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/${templateId}/workflow`);
+      const response = await apiClient.get<CreateAgentResponse>(`${API_BASE}/agents/${templateId}/workflow`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'createAgentFromTemplate');
       throw error;
     }
-
   },
 
   // открыть агента
   // GET /v1/agents/{agentID}
-  async openAgent(agentId: string): Promise<CreateAgentRespose> {
+  async openAgent(agentId: string): Promise<CreateAgentResponse> {
     try {
-      const response = await apiClient.get<CreateAgentRespose>(`${API_BASE}/agents/${agentId}`);
+      const response = await apiClient.get<CreateAgentResponse>(`${API_BASE}/agents/${agentId}`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'openAgent');
@@ -99,9 +94,9 @@ export const agentService = {
   
   // удалить ассистента
   // DELETE /v1/agents/{agentID}
-  async deleteAgent(agentId: string): Promise<CreateAgentRespose> {
+  async deleteAgent(agentId: string): Promise<CreateAgentResponse> {
     try {
-      const response = await apiClient.delete<CreateAgentRespose>(`${API_BASE}/agents/${agentId}`);
+      const response = await apiClient.delete<CreateAgentResponse>(`${API_BASE}/agents/${agentId}`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'deleteAgent');

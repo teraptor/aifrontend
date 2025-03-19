@@ -14,7 +14,7 @@ export const authService = {
         const response = await apiClient.post<AuthUserResponse>('/v1/auth/register', credentials);
         return response.data;
     },
-    // cltkfnm логаут
+    // сделать логаут
     async logout(): Promise<void> {
         await apiClient.post('/auth/logout');
     },
@@ -24,8 +24,8 @@ export const authService = {
         return response.data;
     },
     // получить пользовательские данные
-    async getCurrentUser(): Promise<AuthUserResponse['username']> {
-        const response = await apiClient.get<AuthUserResponse['username']>('/v1/auth/me');
+    async getCurrentUser(): Promise<AuthUserResponse['email']> {
+        const response = await apiClient.get<AuthUserResponse['email']>('/v1/auth/me');
         return response.data;
     }
 }

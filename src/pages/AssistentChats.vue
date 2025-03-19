@@ -178,7 +178,7 @@ import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
-import { IAssistent } from '@/stores/useAssistantsStore'
+import type { IAssistent } from '@/stores/useAssistantsStore'
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -194,7 +194,7 @@ const chatStore = useAssistentChatStore()
 
 // Локальные переменные для UI
 const newMessage = ref('')
-const messageInput = ref<HTMLInputElement | null>(null)
+const messageInput = ref<HTMLTextAreaElement | null>(null)
 const chatContainer = ref<HTMLElement | null>(null)
 const isAssistentMenuOpen = ref(false)
 const assistentMenuTrigger = ref<HTMLElement | null>(null)
@@ -284,10 +284,16 @@ const createNewDialog = async () => {
 const sendMessage = async () => {
   if (!newMessage.value.trim() || chatStore.isLoading || !chatStore.activeSessionId) return
   
-  await chatStore.addMessage(newMessage.value, true)
+  // Сохраняем текст сообщения в переменную
+  const messageText = newMessage.value
+  
+  // Очищаем поле ввода сразу
   newMessage.value = ''
   
-  // Фокус на поле ввода
+  // Отправляем сообщение на сервер
+  await chatStore.addMessage(messageText, true)
+  
+  // Фокус на поле ввода и прокрутка вниз
   nextTick(() => {
     if (messageInput.value) {
       messageInput.value.focus()

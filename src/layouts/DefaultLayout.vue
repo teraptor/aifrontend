@@ -44,7 +44,7 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
   transition: margin-left 0.3s ease, margin-right 0.3s ease;
 
   &--expanded {
-    // margin-left: 280px;
+    margin-left: 280px;
   }
 }
 

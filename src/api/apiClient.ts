@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { notifications } from '@/plugins/notifications';
+import router from '@/router';
+import { RouteNames } from '@/router/routes/routeNames';
 
 // базовый axios
 const apiClient = axios.create({
@@ -23,13 +25,45 @@ apiClient.interceptors.request.use(
     }
 )
 
+// Добавляем индикатор, чтобы избежать множественных уведомлений
+let isRefreshing = false;
+
 apiClient.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response) {
             switch (error.response.status) {
                 case 401:
-                    notifications.error('Логин или пароль неверный');
+                    // Если это ошибка авторизации при обычном запросе
+                    if (!isRefreshing) {
+                        isRefreshing = true;
+                        try {
+                            // Проверяем, не делаем ли мы уже запрос на refresh
+                            const isRefreshRequest = error.config.url.includes('/v1/auth/refresh');
+                            const isLoginRequest = error.config.url.includes('/v1/auth/login');
+                            
+                            // Если это не запрос на refresh и не запрос на логин, то это значит токен истек
+                            if (!isRefreshRequest && !isLoginRequest) {
+                                notifications.error('Сессия истекла, войдите снова');
+                                
+                                // Разлогиниваем пользователя
+                                localStorage.removeItem('accessToken');
+                                localStorage.removeItem('refreshToken');
+                                
+                                // Получаем хранилище auth через динамический импорт для избежания циклической зависимости
+                                const { useAuthStore } = await import('@/stores/useAuthStore');
+                                const authStore = useAuthStore();
+                                authStore.logout();
+                                
+                                // Перенаправляем на главную страницу
+                                router.push(RouteNames.MAIN.name);
+                            } else {
+                                notifications.error('Логин или пароль неверный');
+                            }
+                        } finally {
+                            isRefreshing = false;
+                        }
+                    }
                     break;
                 case 403:
                     notifications.error('Доступ запрещен');

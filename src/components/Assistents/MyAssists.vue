@@ -37,7 +37,8 @@
     />
   </div>
 </template>
-  <script setup lang="ts">
+
+<script setup lang="ts">
   import { computed, ref, onMounted } from 'vue';
   import TitleWrapper from '../ui/TitleWrapper.vue';
   import AssistentsCard from './AssistentsCard.vue';

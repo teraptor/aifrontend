@@ -193,13 +193,7 @@ const menuItems = ref<MenuItem[]>([
     title: 'Очистить историю',
     icon: 'icon-trash',
     action: () => {
-      if (chatStore.activeSessionId) {
-        if (confirm('Вы действительно хотите очистить историю чата?')) {
-          chatStore.clearSessionMessages();
-          scrollToBottom();
-        }
-      }
-      isAssistentMenuOpen.value = false;
+      clearChat();
     }
   }
 ]);
@@ -231,8 +225,14 @@ watch(
 const sendMessage = async () => {
   if (newMessage.value.trim() === '' || chatStore.isLoading) return;
 
-  await chatStore.addMessage(newMessage.value, true);
+  // Сохраняем текст сообщения в переменную
+  const messageText = newMessage.value;
+  
+  // Очищаем поле ввода сразу
   newMessage.value = '';
+  
+  // Отправляем сообщение на сервер
+  await chatStore.addMessage(messageText, true);
   scrollToBottom();
 };
 
@@ -270,6 +270,19 @@ const formatDate = (dateString: string) => {
 const selectSession = (sessionId: string) => {
   chatStore.selectSession(sessionId);
   scrollToBottom();
+};
+
+const clearChat = () => {
+  if (chatStore.activeSessionId) {
+    if (confirm('Вы действительно хотите очистить историю чата?')) {
+      // Фильтруем сообщения, удаляя все, которые принадлежат текущей сессии
+      chatStore.messages = chatStore.messages.filter(
+        (message) => message.sessionId !== chatStore.activeSessionId
+      );
+      scrollToBottom();
+    }
+  }
+  isAssistentMenuOpen.value = false;
 };
 
 onClickOutside(assistentMenu, () => {
@@ -701,4 +714,4 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
-</style>@/stores/useAssistantsStore
+</style>

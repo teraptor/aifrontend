@@ -63,21 +63,6 @@
         />
       </div>
     </div>
-    <div class="assistent-setting__section">
-      <h3 class="assistent-setting__section-title">Дополнительные настройки</h3>
-      <div class="assistent-setting__form">
-        <InputField
-          label="Получать уведомления"
-          type="checkbox"
-          :disabled="assistent.isDisabled"
-        />
-        <InputField
-          label="Автоматические ответы"
-          type="checkbox"
-          :disabled="assistent.isDisabled"
-        />
-      </div>
-    </div>
     <Button
       type="submit"
       button-type="success"
@@ -89,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAssistantsStore } from '@/stores/useAssistantsStore';
+import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
 import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';

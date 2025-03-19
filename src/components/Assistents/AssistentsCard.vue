@@ -1,3 +1,26 @@
+<template>
+  <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
+    <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
+    <div class="assistents-card__container">
+      <img :src="assistents.image" class="assistents-card__image"/>
+      <div class="assistents-card__name-wrapper">
+        <h4 class="assistents-card__name"> {{ assistents.name }}</h4>
+        <p class="assistents-card__summary"> {{ assistents.summary }}</p>
+      </div>
+    </div>
+    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked' && statusClass && authStore.isAuthenticated">
+      <div :class="['assistents-card__footer-status', statusClass]">
+        {{ statusText }}
+      </div>
+    </div>
+    <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
+      <p>Скоро</p>
+      <span class="icon icon-lock"/>
+    </div>
+  </div>
+</template>
+
+
 <script setup lang="ts">
 import type { IAssistent } from '@/stores/useAssistantsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -32,6 +55,7 @@ const statusClass = computed(() => {
 
 const statusText = computed(() => {
   if (!assistents) return '';
+  console.log('assistents', assistents);
   return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : '';
 });
 
@@ -50,27 +74,6 @@ const goToSetting = (event: MouseEvent) => {
 }
 </script>
 
-<template>
-  <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
-    <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
-    <div class="assistents-card__container">
-      <img :src="assistents.image" class="assistents-card__image"/>
-      <div class="assistents-card__name-wrapper">
-        <h4 class="assistents-card__name"> {{ assistents.name }}</h4>
-        <p class="assistents-card__summary"> {{ assistents.summary }}</p>
-      </div>
-    </div>
-    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked' && statusClass && authStore.isAuthenticated">
-      <div :class="['assistents-card__footer-status', statusClass]">
-        {{ statusText }}
-      </div>
-    </div>
-    <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
-      <p>Скоро</p>
-      <span class="icon icon-lock"/>
-    </div>
-  </div>
-</template>
 <style lang="scss" scoped>
 .assistents-card {
   position: relative;

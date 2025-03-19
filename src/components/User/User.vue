@@ -43,7 +43,7 @@ const currentUser = computed(() => {
 
 // вычисление первой буквы имени пользователя
 const userInitial = computed<string>(() => {
- return currentUserProfie.value?.email.charAt(0).toUpperCase() || '';
+ return currentUser.value?.email.charAt(0).toUpperCase() || '';
 });
 
 // проверка авторизации

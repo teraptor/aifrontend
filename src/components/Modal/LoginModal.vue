@@ -71,7 +71,20 @@ const submitForm = () => {
   }
 };
 
-defineExpose({ openModal: () => modal.value?.openModal() });
+// Метод для предзаполнения поля email
+const prefillEmail = (email: string) => {
+  formData.value.email = email;
+};
+
+// Изменим метод openModal для возможности передачи email
+const openModal = (prefillData?: { email?: string }) => {
+  if (prefillData?.email) {
+    formData.value.email = prefillData.email;
+  }
+  modal.value?.openModal();
+};
+
+defineExpose({ openModal, prefillEmail });
 </script>
 
 <style scoped>

@@ -32,15 +32,15 @@ export interface AgentTemplate {
 }
   
 // созданеи нового агента
-export interface CreateAgentRespose {
+export interface CreateAgentResponse {
     id: string,
     name: string,
     status: number,
     description: string,
 }
 
-// Новый агент (для совместимости)
-export interface CreateAgentRespose {
+// Новый агент (альтернативный формат ответа)
+export interface CreateAgentV2Response {
     id: string,
     agent_id: string,
     status: string,

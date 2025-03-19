@@ -60,6 +60,7 @@ export const useAssistentsStore = defineStore('assistents', {
     error: null as string | null,
     sortOption: 'popular' as SortOption,
     activeFilter: 'all' as FilterOption,
+    searchQuery: '',
   }),
 
   actions: {
@@ -68,24 +69,20 @@ export const useAssistentsStore = defineStore('assistents', {
       try {
         this.isLoading = true;
         const response = await agentService.fetchAgentsTemplates();
-        
-        // Проверяем, является ли response объектом с полем data или массивом
+
+        // Проверяем, является ли response объектом с полем assistants или массивом
         const templates = Array.isArray(response) ? response : 
-                         (response && response.data ? response.data : []);
-        
-        // Логируем для отладки
-        console.log('Received templates:', templates);
+                         (response && 'assistants' in response ? response.assistants : []) as Array<any>;
         
         if (!templates || templates.length === 0) {
-          console.warn('No templates received from API');
           this.assistants = [];
           return [];
         }
         
         // Преобразуем AgentTemplate[] в IAssistent[]
         this.assistants = templates
-          .filter(template => template && template.id && template.name) // Проверяем валидность элементов
-          .map(template => ({
+          .filter((template: any) => template && template.id && template.name) // Проверяем валидность элементов
+          .map((template: any) => ({
             id: template.id,
             name: template.name,
             description: template.description || '',
@@ -93,16 +90,15 @@ export const useAssistentsStore = defineStore('assistents', {
             image: avatarImage,
             call_name: template.name,
             isLocked: false,
-            isActive: false,
+            isActive: template.status,
             isDisabled: false,
             created_at: new Date().toISOString(),
             business: false,
             author_id: '1'
           }));
-        
+        console.log('templates', this.assistants);
         return templates;
       } catch(error){
-        console.error('Error fetching assistents:', error);
         this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке ассистентов';
         throw error;
       }
@@ -140,7 +136,6 @@ export const useAssistentsStore = defineStore('assistents', {
         
         return this.assistants;
       } catch(error) {
-        console.error('Error loading assistants:', error);
         this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке ассистентов';
         throw error;
       } finally {
@@ -155,6 +150,10 @@ export const useAssistentsStore = defineStore('assistents', {
     setActiveFilter(filter: FilterOption) {
       this.activeFilter = filter;
     },
+
+    setSearchQuery(query: string) {
+      this.searchQuery = query;
+    },
   },
 
   getters: {
@@ -164,7 +163,18 @@ export const useAssistentsStore = defineStore('assistents', {
         business: (item) => item.business
       };
 
-      return state.assistants.filter(filterMap[state.activeFilter]);
+      const filtered = state.assistants.filter(filterMap[state.activeFilter]);
+      
+      // Если есть поисковый запрос, дополнительно фильтруем по нему
+      if (state.searchQuery.trim()) {
+        const searchLower = state.searchQuery.toLowerCase();
+        return filtered.filter(assistant => 
+          assistant.name.toLowerCase().includes(searchLower) ||
+          assistant.description.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return filtered;
     },
 
     sortedAssistents(state): IAssistent[] {
