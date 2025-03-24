@@ -182,6 +182,8 @@ const saveChanges = async () => {
       instructions: instructions.value,
     };
     
+    console.log('Отправляемые данные для сохранения:', updateData);
+    
     // Проверяем, что поле инструкций не пустое
     if (!updateData.instructions.trim()) {
       notifications.error('Поле инструкций не может быть пустым');
@@ -243,10 +245,24 @@ onMounted(async () => {
   // Обновляем assistent после загрузки данных
   if (assistent.value) {
     assistentName.value = assistent.value.name;
-    instructions.value = assistent.value.instructions || '';
     description.value = assistent.value.description || '';
     summaryText.value = assistent.value.summary || '';
     jsSkillLevel.value = assistent.value.skillLevel || 0.1;
+    
+    // Получаем полные данные ассистента через API для получения instructions
+    try {
+      const agentData = await assistentsStore.fetchAssistentById(assistent.value.id);
+      if (agentData && agentData.instructions) {
+        instructions.value = agentData.instructions;
+        // Обновляем значение в объекте ассистента
+        assistent.value.instructions = agentData.instructions;
+      } else {
+        instructions.value = assistent.value.instructions || '';
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке инструкций ассистента:', error);
+      instructions.value = assistent.value.instructions || '';
+    }
     
     // Сохраняем изначальные данные для отслеживания изменений
     updateOriginalData();
@@ -273,6 +289,8 @@ const updateInstructions = (value: string) => {
     if (confirm('Вы хотите использовать выбранный шаблон?')) {
       instructions.value = templateContent[value];
       hasChanges.value = true;
+      
+      console.log('Применен шаблон инструкций:', instructions.value);
       
       // Добавляем автоматическое сохранение при выборе шаблона
       if (assistent.value && !assistent.value.isDisabled) {
