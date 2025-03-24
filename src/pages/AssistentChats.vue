@@ -718,9 +718,9 @@ const getAssistantById = (assistantId: string) => {
     height: 100%;
     display: flex;
     gap: 16px;
-    background-color: #f5f7fa;
+    // background-color: #f5f7fa;
     overflow: hidden;
-    padding: 16px;
+    padding: 5px;
     border-radius: 12px;
   }
 
