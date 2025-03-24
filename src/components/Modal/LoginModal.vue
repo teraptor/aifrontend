@@ -8,7 +8,7 @@
         v-model="formData.email"
         type="tel"
         id="phone"
-        placeholder="Логин"
+        placeholder="test@mail.com"
         autocomplete="phone"
         size="big"
       />
