@@ -1,89 +1,6 @@
 <template>
   <div class="assistent-chat">
     <div class="assistent-chat__container">
-      <div class="assistent-chat__sessions" :class="{ 'collapsed': isSessionsCollapsed }">
-        <div class="sessions-header">
-          <h2>Ассистенты</h2>
-        </div>
-        <div class="assistent-chat__session-list">
-          <div 
-            v-for="assistant in assistants" 
-            :key="assistant.id" 
-            :class="['session-item', { 'session-item--active': selectedAssistant?.id === assistant.id }, { 'session-item--collapsed': isSessionsCollapsed }]"
-            @click="selectAssistant(assistant)"
-          >
-            <div class="session-item__avatar">
-              <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
-              <span v-if="getAssistantUnreadCount(assistant.id) > 0" class="assistant-unread-badge">
-                {{ getAssistantUnreadCount(assistant.id) }}
-              </span>
-            </div>
-            <div class="session-item__content" v-show="!isSessionsCollapsed">
-              <div class="session-item__title">{{ assistant.name }}</div>
-              <div class="session-item__meta">
-                <span class="session-item__description">{{ assistant.description }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button class="collapse-button" @click="toggleSessionsCollapse">
-          <span class="collapse-icon">{{ isSessionsCollapsed ? '→' : '←' }}</span>
-        </button>
-      </div>
-
-      <div class="assistent-chat__dialogs" v-if="selectedAssistant">
-        <div class="dialogs-header">
-          <div class="new-dialog-button" @click="createNewDialog">
-            <span>+ Диалог</span>
-          </div>
-        </div>
-        <div class="assistent-chat__session-list">
-          <div 
-            v-for="session in sortedSessions" 
-            :key="session.id" 
-            :class="['session-item', { 'session-item--active': chatStore.activeSessionId === session.id }]"
-            @click="selectSession(session.id)"
-          >
-            <div class="session-item__content">
-              <div class="session-item__title-container">
-                <div v-if="editingDialogId === session.id" class="edit-title-container" @click.stop>
-                  <input 
-                    ref="editTitleInput"
-                    v-model="editedDialogTitle" 
-                    type="text"
-                    @keyup.enter="saveDialogTitle()"
-                    @keyup.esc="cancelEditingTitle()"
-                    @blur="saveDialogTitle()"
-                  />
-                </div>
-                <div v-else class="session-item__title">{{ session.title }}</div>
-                <div class="session-item__menu-icon" @click.stop="toggleDialogMenu(session, $event)">
-                  <span class="dots-icon">⋮</span>
-                </div>
-              </div>
-              
-              <!-- Выпадающее меню для диалога -->
-              <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
-                <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
-                  <span class="dialog-dropdown__action-icon">✏️</span>
-                  <span class="dialog-dropdown__action-title">Изменить название</span>
-                </div>
-                <div class="dialog-dropdown__action" @click="deleteDialog(session)">
-                  <span class="dialog-dropdown__action-icon">🗑️</span>
-                  <span class="dialog-dropdown__action-title">Удалить диалог</span>
-                </div>
-              </div>
-              <div class="session-item__meta">
-                <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
-                <span v-if="session.unreadCount > 0" class="session-item__unread-badge">
-                  {{ session.unreadCount }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="assistent-chat__chat">
         <div class="assistent-chat__chat-container" v-if="selectedAssistant && chatStore.activeSessionId">
           <div class="chat-header">
@@ -166,6 +83,134 @@
           <p>Выберите ассистента и диалог или создайте новый</p>
         </div>
       </div>
+
+      <div class="assistent-chat__dialogs" v-if="selectedAssistant">
+        <div class="dialogs-header">
+          <div class="notification-bell-container">
+            <div class="notification-bell" :class="{ 'has-notifications': totalUnreadMessages > 0 }" @click="toggleNotificationsMenu" ref="notificationBellTrigger">
+              <span class="notification-bell__icon">🔔</span>
+              <span v-if="totalUnreadMessages > 0" class="notification-bell__badge">{{ totalUnreadMessages }}</span>
+            </div>
+            
+            <!-- Выпадающий список непрочитанных диалогов -->
+            <div class="notifications-dropdown" v-if="isNotificationsMenuOpen" ref="notificationsDropdown">
+              <div class="notifications-dropdown__header">
+                Непрочитанные сообщения ({{ totalUnreadMessages }})
+              </div>
+              <div class="notifications-dropdown__list" v-if="unreadDialogs.length > 0">
+                <div 
+                  v-for="dialog in unreadDialogs" 
+                  :key="dialog.id" 
+                  class="notifications-dropdown__item"
+                  @click="goToUnreadDialog(dialog)"
+                >
+                  <div class="notifications-dropdown__item-avatar">
+                    <div class="assistant-avatar" v-if="getAssistantById(dialog.agentId)">
+                      {{ getAssistantById(dialog.agentId)?.name.charAt(0) }}
+                    </div>
+                  </div>
+                  <div class="notifications-dropdown__item-info">
+                    <div class="notifications-dropdown__item-title">
+                      {{ dialog.title }}
+                    </div>
+                    <div class="notifications-dropdown__item-assistant" v-if="getAssistantById(dialog.agentId)">
+                      {{ getAssistantById(dialog.agentId)?.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="notifications-dropdown__empty" v-else>
+                Нет непрочитанных сообщений
+              </div>
+            </div>
+          </div>
+          
+          <div class="assistant-selector" ref="assistantSelectorTrigger" @click="toggleAssistantSelector">
+            <div class="assistant-selector__avatar">
+              <div class="assistant-avatar" v-if="selectedAssistant">
+                {{ selectedAssistant.name.charAt(0) }}
+              </div>
+              <span v-if="selectedAssistant && getAssistantUnreadCount(selectedAssistant.id) > 0" class="assistant-selector__unread-badge">
+                {{ getAssistantUnreadCount(selectedAssistant.id) }}
+              </span>
+            </div>
+            <div class="assistant-selector__name">
+              {{ selectedAssistant.name }}
+            </div>
+            <span class="assistant-selector__dropdown-icon">▼</span>
+          </div>
+          
+          <!-- Выпадающий список ассистентов -->
+          <div class="assistant-selector-dropdown" v-if="isAssistantSelectorOpen" ref="assistantSelectorDropdown">
+            <div class="assistant-selector-dropdown__header">Ассистенты</div>
+            <div class="assistant-selector-dropdown__list">
+              <div 
+                v-for="assistant in assistants" 
+                :key="assistant.id" 
+                :class="['assistant-selector-dropdown__item', { 'assistant-selector-dropdown__item--active': selectedAssistant?.id === assistant.id }]"
+                @click="selectAssistant(assistant); isAssistantSelectorOpen = false"
+              >
+                <div class="assistant-selector-dropdown__item-avatar">
+                  <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
+                </div>
+                <div class="assistant-selector-dropdown__item-info">
+                  <div class="assistant-selector-dropdown__item-name">{{ assistant.name }}</div>
+                  <div class="assistant-selector-dropdown__item-description">{{ assistant.description }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="new-dialog-button" @click="createNewDialog">
+            <span>+ Диалог</span>
+          </div>
+        </div>
+        <div class="assistent-chat__session-list">
+          <div 
+            v-for="session in sortedSessions" 
+            :key="session.id" 
+            :class="['session-item', { 'session-item--active': chatStore.activeSessionId === session.id }]"
+            @click="selectSession(session.id)"
+          >
+            <div class="session-item__content">
+              <div class="session-item__title-container">
+                <div v-if="editingDialogId === session.id" class="edit-title-container" @click.stop>
+                  <input 
+                    ref="editTitleInput"
+                    v-model="editedDialogTitle" 
+                    type="text"
+                    @keyup.enter="saveDialogTitle()"
+                    @keyup.esc="cancelEditingTitle()"
+                    @blur="saveDialogTitle()"
+                  />
+                </div>
+                <div v-else class="session-item__title">{{ session.title }}</div>
+                <div class="session-item__menu-icon" @click.stop="toggleDialogMenu(session, $event)">
+                  <span class="dots-icon">⋮</span>
+                </div>
+              </div>
+              
+              <!-- Выпадающее меню для диалога -->
+              <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
+                <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
+                  <span class="dialog-dropdown__action-icon">✏️</span>
+                  <span class="dialog-dropdown__action-title">Изменить название</span>
+                </div>
+                <div class="dialog-dropdown__action" @click="deleteDialog(session)">
+                  <span class="dialog-dropdown__action-icon">🗑️</span>
+                  <span class="dialog-dropdown__action-title">Удалить диалог</span>
+                </div>
+              </div>
+              <div class="session-item__meta">
+                <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
+                <span v-if="session.unreadCount > 0" class="session-item__unread-badge">
+                  {{ session.unreadCount }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -200,9 +245,14 @@ const editingDialogId = ref<string | null>(null)
 const editedDialogTitle = ref('')
 const editTitleInput = ref<HTMLInputElement | null>(null)
 const selectedAssistant = ref<IAssistent | null>(null)
-const isSessionsCollapsed = ref(true)
 const dialogMenuOpen = ref<string | null>(null)
 const dialogMenu = ref<HTMLElement | null>(null)
+const isAssistantSelectorOpen = ref(false)
+const assistantSelectorTrigger = ref<HTMLElement | null>(null)
+const assistantSelectorDropdown = ref<HTMLElement | null>(null)
+const isNotificationsMenuOpen = ref(false)
+const notificationBellTrigger = ref<HTMLElement | null>(null)
+const notificationsDropdown = ref<HTMLElement | null>(null)
 
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
@@ -244,10 +294,33 @@ const sortedSessions = computed(() => {
     })
 })
 
+// Переход к непрочитанному диалогу
+const goToUnreadDialog = (dialog: any) => {
+  // Определить ассистента для этого диалога
+  const assistantId = dialog.agentId
+  const targetAssistant = assistants.value.find(a => a.id === assistantId)
+  
+  if (targetAssistant && targetAssistant.id !== selectedAssistant.value?.id) {
+    // Если требуется сменить ассистента
+    selectAssistant(targetAssistant, dialog.id)
+  } else {
+    // Если ассистент уже выбран, просто переключаем диалог
+    selectSession(dialog.id)
+  }
+  
+  isNotificationsMenuOpen.value = false
+}
+
 // Выбор ассистента
-const selectAssistant = (assistant: IAssistent) => {
+const selectAssistant = (assistant: IAssistent, sessionIdToSelect?: string) => {
   selectedAssistant.value = assistant
-  console.log('selectedAssistant', selectedAssistant.value)
+  
+  // Если передан конкретный ID сессии, выбираем её
+  if (sessionIdToSelect) {
+    selectSession(sessionIdToSelect)
+    return
+  }
+  
   // Проверяем, есть ли сессии для этого ассистента
   const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistant.id)
   
@@ -442,7 +515,7 @@ const notificationSound = ref<HTMLAudioElement | null>(null)
 // Функция для создания звукового уведомления
 const createNotificationSound = () => {
   notificationSound.value = new Audio()
-  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
+  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
   notificationSound.value.load()
 }
 
@@ -481,7 +554,7 @@ watch(
   }
 )
 
-// Функция для автоматического увеличения высоты текстового поля
+// Автоматически увеличиваем высоту поля ввода сообщения
 const autoGrow = () => {
   if (!messageInput.value) return
   
@@ -493,20 +566,10 @@ const autoGrow = () => {
   messageInput.value.style.height = `${newHeight}px`
 }
 
-// Переключение состояния сворачивания колонки ассистентов
-const toggleSessionsCollapse = () => {
-  isSessionsCollapsed.value = !isSessionsCollapsed.value
-}
-
 // Получение общего количества непрочитанных сообщений
 const totalUnreadMessages = computed(() => {
   return chatStore.totalUnreadCount;
 });
-
-// Получение количества непрочитанных сообщений для ассистента
-const getAssistantUnreadCount = (assistantId: string) => {
-  return chatStore.getUnreadCountByAssistantId(assistantId)
-}
 
 // Убираем автоматический выбор диалогов с непрочитанными сообщениями при смене ассистента
 watch(
@@ -599,6 +662,46 @@ watch(
     }
   }
 )
+
+// Переключение выпадающего списка ассистентов
+const toggleAssistantSelector = () => {
+  isAssistantSelectorOpen.value = !isAssistantSelectorOpen.value
+}
+
+// Закрытие выпадающего списка ассистентов при клике вне его
+onClickOutside(assistantSelectorDropdown, (event) => {
+  if (assistantSelectorTrigger.value && !assistantSelectorTrigger.value.contains(event.target as Node)) {
+    isAssistantSelectorOpen.value = false
+  }
+})
+
+// Получение количества непрочитанных сообщений для конкретного ассистента
+const getAssistantUnreadCount = (assistantId: string) => {
+  const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistantId)
+  return assistantSessions.reduce((count, session) => count + session.unreadCount, 0)
+}
+
+// Переключение меню уведомлений
+const toggleNotificationsMenu = () => {
+  isNotificationsMenuOpen.value = !isNotificationsMenuOpen.value
+}
+
+// Закрытие выпадающего списка уведомлений при клике вне его
+onClickOutside(notificationsDropdown, (event) => {
+  if (notificationBellTrigger.value && !notificationBellTrigger.value.contains(event.target as Node)) {
+    isNotificationsMenuOpen.value = false
+  }
+})
+
+// Выпадающий список непрочитанных диалогов
+const unreadDialogs = computed(() => {
+  return chatStore.sessions.filter(s => s.unreadCount > 0)
+})
+
+// Получение ассистента по ID
+const getAssistantById = (assistantId: string) => {
+  return assistants.value.find(a => a.id === assistantId)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -619,125 +722,17 @@ watch(
     overflow: hidden;
     padding: 16px;
     border-radius: 12px;
-    
-    .collapsed + .assistent-chat__dialogs {
-      width: calc(35% - 80px);
-    }
-    
-    .collapsed ~ .assistent-chat__chat {
-      width: calc(65%);
-    }
   }
 
-  &__sessions {
-    width: 25%;
+  &__chat {
+    width: 65%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    overflow: hidden;
-    transition: width 0.3s ease;
-    position: relative;
-    
-    &.collapsed {
-      width: 80px;
-      min-width: 80px;
-      
-      .sessions-header h2 {
-        display: none;
-      }
-      
-      .assistent-chat__session-list {
-        padding: 8px 0;
-      }
-    }
-
-    .sessions-header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0;
-      padding: 0 0 12px 0;
-      height: 45px;
-      position: relative;
-    }
-
-    h2 {
-      margin: 0;
-      padding: 0;
-      font-size: 18px;
-      font-weight: 600;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .collapse-button {
-      position: absolute;
-      right: -7px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      border-radius: 50%;
-      background-color: #ffffff;
-      border: 1px solid rgba(#999, 0.1);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
-      z-index: 10;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      
-      &:hover {
-        background-color: #f5f7fa;
-      }
-      
-      .collapse-icon {
-        font-size: 14px;
-        color: #999;
-      }
-    }
-
-    .total-unread-counter {
-      position: absolute;
-      right: 10px;
-      top: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 24px;
-      height: 24px;
-      background-color: #ff4d4f;
-      color: white;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 0 6px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-      }
-      50% {
-        transform: scale(1.1);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-      100% {
-        transform: scale(1);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-      }
-    }
   }
 
   &__dialogs {
-    width: 25%;
+    width: 35%;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -865,7 +860,6 @@ watch(
       font-weight: bold;
       margin-left: 8px;
       padding: 0 6px;
-      animation: pulse 1.5s infinite;
     }
 
     &__description {
@@ -875,7 +869,7 @@ watch(
   }
 
   &__chat {
-    width: 50%;
+    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -1056,11 +1050,6 @@ watch(
         font-size: 12px;
         color: #666;
       }
-      
-      &-status {
-        font-size: 10px;
-        color: #999;
-      }
     }
   }
 
@@ -1238,21 +1227,20 @@ watch(
 }
 
 .new-dialog-button {
-  flex: 1;
-  padding: 12px;
+  padding: 4px 12px;
   text-align: center;
   background-color: #40c4dd;
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   color: #ffffff;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
-  height: 45px; /* Фиксированная высота, чтобы соответствовать заголовку в левой колонке */
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px;
+  white-space: nowrap;
   
   &:hover {
     background-color: #33b5ce;
@@ -1350,13 +1338,11 @@ watch(
       padding: 8px;
     }
 
-    &__sessions, 
     &__dialogs, 
     &__chat {
       width: 100%;
     }
     
-    &__sessions,
     &__dialogs {
       height: auto;
     }
@@ -1388,6 +1374,135 @@ watch(
   height: 45px;
   position: relative;
   margin-bottom: 16px;
+  gap: 12px;
+}
+
+.assistant-selector {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: rgba(#1890ff, 0.05);
+  border: 1px solid rgba(#999, 0.1);
+  flex-grow: 1;
+  
+  &:hover {
+    background-color: rgba(#1890ff, 0.1);
+  }
+  
+  &__avatar {
+    margin-right: 8px;
+    position: relative;
+    
+    .assistant-avatar {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      font-size: 14px;
+    }
+  }
+  
+  &__unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background-color: #ff4d4f;
+    color: white;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 0 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    animation: pulse 1.5s infinite;
+  }
+  
+  &__name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+  
+  &__dropdown-icon {
+    font-size: 10px;
+    color: #999;
+    margin-left: 4px;
+  }
+}
+
+.assistant-selector-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 16px;
+  width: 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  margin-top: 8px;
+  overflow: hidden;
+  
+  &__header {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    border-bottom: 1px solid rgba(#999, 0.1);
+  }
+  
+  &__list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  &__item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(#999, 0.1);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background-color: rgba(#999, 0.05);
+    }
+    
+    &--active {
+      background-color: rgba(#1890ff, 0.05);
+    }
+    
+    &-avatar {
+      margin-right: 12px;
+      position: relative;
+    }
+    
+    &-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    &-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    &-description {
+      font-size: 12px;
+      color: #666;
+    }
+  }
 }
 
 .assistant-dialogs-counter {
@@ -1440,6 +1555,161 @@ watch(
     &-title {
       font-size: 14px;
     }
+  }
+}
+
+.notification-bell-container {
+  position: relative;
+}
+
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(#1890ff, 0.05);
+  border: 1px solid rgba(#999, 0.1);
+  border-radius: 6px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: rgba(#1890ff, 0.1);
+  }
+  
+  &__icon {
+    font-size: 18px;
+  }
+  
+  &.has-notifications &__icon {
+    animation: bell-shake 2s infinite;
+  }
+  
+  &__badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background-color: #ff4d4f;
+    color: white;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 0 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    animation: pulse 1.5s infinite;
+  }
+}
+
+@keyframes bell-shake {
+  0% { transform: rotate(0); }
+  2% { transform: rotate(10deg); }
+  4% { transform: rotate(-10deg); }
+  6% { transform: rotate(10deg); }
+  8% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  width: 300px;
+  min-width: 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  
+  &__header {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    border-bottom: 1px solid rgba(#999, 0.1);
+  }
+  
+  &__list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  &__item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(#999, 0.1);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background-color: rgba(#999, 0.05);
+    }
+    
+    &-avatar {
+      margin-right: 12px;
+      
+      .assistant-avatar {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        font-size: 14px;
+      }
+    }
+    
+    &-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0; /* Это нужно для корректной работы text-overflow */
+    }
+    
+    &-title {
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    &-assistant {
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      
+      &::before {
+        content: "👤";
+        margin-right: 4px;
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+    }
+  }
+  
+  &__empty {
+    padding: 16px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
   }
 }
 </style>
