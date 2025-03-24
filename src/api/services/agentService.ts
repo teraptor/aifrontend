@@ -55,6 +55,19 @@ export const agentService = {
     );
   },
 
+  // получение ассистента по id
+  // GET /v1/agents/{agentID}
+  async getAgentById(agentId: string): Promise<CreateAgentResponse> {
+    try {
+      const response = await apiClient.get<CreateAgentResponse>(`${API_BASE}/agents/${agentId}`);
+      console.log("response getAgentById:", response.data);
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'getAgentById');
+      throw error;
+    }
+  },
+
   // установка из предустановленных
   // GET /v1/agents/{templateID}/workflow
   async createAgentFromTemplate(templateId: string): Promise<CreateAgentResponse> {
@@ -139,6 +152,19 @@ export const agentService = {
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'addMessageToDialog');
+      throw error;
+    }
+  },
+
+  // обновление ассистента
+  // PUT /v1/agents/{agentID}
+  async updateAgent(agentId: string, data: any): Promise<any> {
+    try {
+      console.log("data", data);
+      const response = await apiClient.post<any>(`${API_BASE}/agents/${agentId}`, data);
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'updateAgent');
       throw error;
     }
   }

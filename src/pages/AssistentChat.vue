@@ -1,28 +1,52 @@
 <template>
   <div class="assistent-chat">
     <div class="assistent-chat__container">
-      <div class="assistent-chat__sessions">
-        <Button
-          type="button"
-          button-type="light"
-          text="Новое задание/вопрос"
-          size="large"
-          @click="createNewDialog"
-        />
-
-        <div class="assistent-chat__session-list">
-          <div
-            v-for="session in chatStore.sessions"
-            :key="session.id"
-            :class="['session-item', { 'session-item--active': session.isActive }]"
-            @click="selectSession(session.id)"
-          >
-            <div class="session-item__content">
-              <div class="session-item__title">{{ session.title }}</div>
-              <div class="session-item__meta">
-                <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
+      <div class="assistent-chat__config">
+        <h2 class="config-header">Настройка ассистента</h2>
+        <div class="config-chat">
+          <div class="config-messages" ref="configChatContainer">
+            <div
+              v-for="(message, index) in configMessages"
+              :key="index"
+              :class="['config-message', message.isUser ? 'config-message--user' : 'config-message--system']"
+            >
+              <div class="config-message__content">
+                <p class="config-message__text">{{ message.text }}</p>
+                <span class="config-message__time">{{ new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
               </div>
             </div>
+            
+            <!-- Индикатор "печатает ответ" -->
+            <div v-if="isConfigLoading" class="config-message config-message--system config-message--typing">
+              <div class="config-message__content">
+                <div class="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p class="config-message__text typing-text">Печатает ответ...</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-input">
+            <InputField
+              v-model="configMessageText"
+              type="text"
+              placeholder="Опишите, каким должен быть ваш ассистент..."
+              variant="light"
+              @keyup.enter="!isConfigLoading && sendConfigMessage()"
+              size="large"
+              :disabled="isConfigLoading"
+            />
+            <Button
+              type="button"
+              button-type="secondary"
+              icon="icon icon-chevron-up"
+              size="curcle"
+              @click="sendConfigMessage"
+              :disabled="!configMessageText.trim() || isConfigLoading"
+            />
           </div>
         </div>
       </div>
@@ -33,8 +57,8 @@
             <div class="chat-header__avatar">
               <img :src="assistent.image" alt="Аватар ассистента" />
             </div>
-            <div class="chat-header__info" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
-              <h2 class="chat-header__name">{{ assistent.name }} <span class="chat-header__dropdown-icon">▼</span></h2>
+            <div class="chat-header__info">
+              <h2 class="chat-header__name">{{ assistent.name }}</h2>
               <p class="chat-header__type">{{ assistent.summary || 'Персональный помощник' }}</p>
               <p
                 class="chat-header__status"
@@ -42,45 +66,6 @@
               >
                 {{ assistent.isActive ? 'Активный' : 'Заблокирован' }}
               </p>
-
-              <div class="assistent-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
-                <div class="assistent-dropdown__header">Действия</div>
-                <div class="assistent-dropdown__actions">
-                  <div 
-                    v-for="item in menuItems" 
-                    :key="item.id"
-                    class="assistent-dropdown__action"
-                    @click="item.action"
-                  >
-                    <span :class="['icon', item.icon]"></span>
-                    <span class="assistent-dropdown__action-title">{{ item.title }}</span>
-                  </div>
-                </div>
-                
-                <div class="assistent-dropdown__header">Мои ассистенты</div>
-                <div class="assistent-dropdown__list">
-                  <div
-                    v-for="item in assistentsStore.userAssistents"
-                    :key="item.id"
-                    :class="['assistent-dropdown__item', { 'assistent-dropdown__item--active': item.id === assistentId }]"
-                    @click="switchAssistent(item.id)"
-                  >
-                    <div class="assistent-dropdown__item-avatar">
-                      <img :src="item.image" alt="Аватар ассистента" />
-                    </div>
-                    <div class="assistent-dropdown__item-info">
-                      <div class="assistent-dropdown__item-name">{{ item.name }}</div>
-                      <div class="assistent-dropdown__item-summary">{{ item.summary }}</div>
-                      <div
-                        class="assistent-dropdown__item-status"
-                        :class="{ 'assistent-dropdown__item-status--active': item.isActive }"
-                      >
-                        {{ item.isActive ? 'Активный' : 'Заблокирован' }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -136,21 +121,13 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore';
 import Button from '@/components/ui/Button.vue';
 import InputField from '@/components/ui/InputField.vue';
 import { RouteNames } from '@/router/routes/routeNames';
-import { onClickOutside } from '@vueuse/core';
-
-interface MenuItem {
-  id: string;
-  title: string;
-  icon?: string;
-  action: () => void;
-}
 
 const route = useRoute();
 const router = useRouter();
@@ -159,47 +136,179 @@ const chatStore = useAssistentChatStore();
 
 const newMessage = ref<string>('');
 const chatContainer = ref<HTMLElement | null>(null);
-const assistentMenuTrigger = ref<HTMLElement | null>(null);
-const assistentMenu = ref<HTMLElement | null>(null);
-const isAssistentMenuOpen = ref<boolean>(false);
-
+const configChatContainer = ref<HTMLElement | null>(null);
 const assistentId = ref<string>(route.params.id as string);
 const assistent = ref(assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null);
 
-// Создаем меню действий
-const menuItems = ref<MenuItem[]>([
+// Конфигурация ассистента для LLM-настройки
+const assistentConfig = reactive({
+  name: assistent.value?.name || 'Новый ассистент',
+  summary: assistent.value?.summary || '',
+  systemPrompt: assistent.value?.instructions || '',
+  model: assistent.value?.call_name || 'gpt-3.5-turbo',
+});
+
+// Чат для настройки ассистента
+interface ConfigMessage {
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
+
+const configMessageText = ref<string>('');
+const isConfigLoading = ref<boolean>(false);
+const configMessages = ref<ConfigMessage[]>([
   {
-    id: 'new-dialog',
-    title: 'Новый диалог',
-    icon: 'icon-plus',
-    action: () => {
-      createNewDialog();
-      isAssistentMenuOpen.value = false;
-    }
-  },
-  {
-    id: 'settings',
-    title: 'Настройки ассистента',
-    icon: 'icon-cog',
-    action: () => {
-      if (assistent.value) {
-        router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistentId.value } });
-      }
-      isAssistentMenuOpen.value = false;
-    }
-  },
-  {
-    id: 'clear-chat',
-    title: 'Очистить историю',
-    icon: 'icon-trash',
-    action: () => {
-      clearChat();
-    }
+    text: 'Привет! Я помогу вам настроить вашего ассистента. Расскажите, каким вы хотите его видеть и какие задачи он должен выполнять?',
+    isUser: false,
+    timestamp: new Date()
   }
 ]);
 
+const sendConfigMessage = async () => {
+  if (configMessageText.value.trim() === '' || isConfigLoading.value) return;
+  
+  // Сохраняем текст сообщения в переменную
+  const messageText = configMessageText.value;
+  
+  // Очищаем поле ввода сразу
+  configMessageText.value = '';
+  
+  // Добавляем сообщение пользователя
+  configMessages.value.push({
+    text: messageText,
+    isUser: true,
+    timestamp: new Date()
+  });
+  
+  scrollConfigToBottom();
+  
+  // Имитируем загрузку ответа
+  isConfigLoading.value = true;
+  
+  setTimeout(() => {
+    // Анализируем сообщение и обновляем конфигурацию ассистента
+    updateAssistentConfigFromMessage(messageText);
+    
+    // Формируем ответ в зависимости от содержания сообщения
+    let responseText = '';
+    
+    if (messageText.toLowerCase().includes('имя') || messageText.toLowerCase().includes('назван')) {
+      responseText = `Отлично! Я установил имя ассистента: "${assistentConfig.name}". Что ещё вы хотели бы настроить? Может быть, опишите, какие задачи он должен выполнять?`;
+    } else if (messageText.toLowerCase().includes('задач') || messageText.toLowerCase().includes('умеет') || messageText.toLowerCase().includes('делает')) {
+      responseText = `Я обновил описание вашего ассистента. Теперь он будет специализироваться на задачах, которые вы указали. Хотите настроить системный промпт для более точной работы?`;
+    } else if (messageText.toLowerCase().includes('промпт') || messageText.toLowerCase().includes('инструкц')) {
+      responseText = `Системный промпт обновлен! Это поможет ассистенту лучше понимать ваши запросы. Хотите выбрать модель для вашего ассистента? Доступны GPT-4, GPT-3.5 Turbo и Claude 3.`;
+    } else if (messageText.toLowerCase().includes('модель') || messageText.toLowerCase().includes('gpt') || messageText.toLowerCase().includes('claude')) {
+      responseText = `Модель успешно выбрана! Ваш ассистент настроен и готов к работе. Вы можете продолжить настройку или посмотреть, как он будет работать, в окне справа.`;
+    } else {
+      responseText = `Я обновил настройки вашего ассистента на основе ваших пожеланий. Что бы вы хотели настроить ещё? Вы можете указать имя, описание задач, системный промпт или выбрать модель.`;
+    }
+    
+    // Добавляем ответ системы
+    configMessages.value.push({
+      text: responseText,
+      isUser: false,
+      timestamp: new Date()
+    });
+    
+    isConfigLoading.value = false;
+    scrollConfigToBottom();
+    
+    // Применяем изменения к ассистенту
+    applyConfig();
+  }, 1500);
+};
+
+const updateAssistentConfigFromMessage = (message: string) => {
+  // Простой алгоритм извлечения информации из сообщения пользователя
+  
+  // Обновляем имя, если в сообщении есть ключевые слова об имени
+  if (message.toLowerCase().includes('имя') || message.toLowerCase().includes('назван')) {
+    const nameMatch = message.match(/["']([^"']+)["']/);
+    if (nameMatch && nameMatch[1]) {
+      assistentConfig.name = nameMatch[1];
+    } else {
+      // Если нет явного указания имени в кавычках, пробуем извлечь имя после ключевых слов
+      const words = message.split(' ');
+      const nameIndex = words.findIndex(word => 
+        word.toLowerCase().includes('имя') || 
+        word.toLowerCase().includes('назван') || 
+        word.toLowerCase().includes('зовут')
+      );
+      
+      if (nameIndex >= 0 && words[nameIndex + 1]) {
+        assistentConfig.name = words.slice(nameIndex + 1, nameIndex + 3).join(' ');
+      }
+    }
+  }
+  
+  // Обновляем описание, если сообщение о задачах
+  if (message.toLowerCase().includes('задач') || message.toLowerCase().includes('умеет') || message.toLowerCase().includes('делает')) {
+    assistentConfig.summary = message;
+  }
+  
+  // Обновляем системный промпт
+  if (message.toLowerCase().includes('промпт') || message.toLowerCase().includes('инструкц')) {
+    assistentConfig.systemPrompt = message;
+  }
+  
+  // Обновляем модель
+  if (message.toLowerCase().includes('gpt-4')) {
+    assistentConfig.model = 'gpt-4';
+  } else if (message.toLowerCase().includes('gpt-3') || message.toLowerCase().includes('gpt3')) {
+    assistentConfig.model = 'gpt-3.5-turbo';
+  } else if (message.toLowerCase().includes('claude')) {
+    assistentConfig.model = 'claude-3';
+  }
+};
+
+const scrollConfigToBottom = () => {
+  setTimeout(() => {
+    if (configChatContainer.value) {
+      const container = configChatContainer.value;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, 100);
+};
+
+const applyConfig = () => {
+  // Здесь будет код для применения настроек к ассистенту
+  if (assistent.value) {
+    // Обновляем настройки ассистента
+    assistentsStore.updateAssistent(assistent.value.id, {
+      ...assistent.value,
+      name: assistentConfig.name,
+      summary: assistentConfig.summary,
+      systemPrompt: assistentConfig.systemPrompt,
+      model: assistentConfig.model
+    });
+    
+    // Обновляем локальный объект ассистента
+    updateAssistent();
+  }
+};
+
+const resetConfig = () => {
+  // Сбрасываем настройки к исходным значениям
+  if (assistent.value) {
+    assistentConfig.name = assistent.value.name;
+    assistentConfig.summary = assistent.value.summary || '';
+    assistentConfig.systemPrompt = assistent.value.instructions || '';
+    assistentConfig.model = assistent.value.call_name || 'gpt-3.5-turbo';
+  }
+};
+
 const updateAssistent = () => {
   assistent.value = assistentsStore.userAssistents.find(a => a.id === assistentId.value) || null;
+  
+  // Обновляем конфигурацию при смене ассистента
+  if (assistent.value) {
+    assistentConfig.name = assistent.value.name;
+    assistentConfig.summary = assistent.value.summary || '';
+    assistentConfig.systemPrompt = assistent.value.instructions || '';
+    assistentConfig.model = assistent.value.call_name || 'gpt-3.5-turbo';
+  }
 };
 
 // Следим за новыми сообщениями
@@ -231,7 +340,7 @@ const sendMessage = async () => {
   // Очищаем поле ввода сразу
   newMessage.value = '';
   
-  // Отправляем сообщение на сервер
+  // Отправляем сообщение
   await chatStore.addMessage(messageText, true);
   scrollToBottom();
 };
@@ -245,62 +354,17 @@ const scrollToBottom = () => {
   }, 100);
 };
 
-const toggleAssistentMenu = () => {
-  isAssistentMenuOpen.value = !isAssistentMenuOpen.value;
-};
-
-const switchAssistent = (id: string) => {
-  if (id !== assistentId.value) {
-    router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: id } });
-  }
-  isAssistentMenuOpen.value = false;
-};
-
-const createNewDialog = () => {
-  if (assistentId.value) {
-    chatStore.createNewSession(assistentId.value);
-  }
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-};
-
-const selectSession = (sessionId: string) => {
-  chatStore.selectSession(sessionId);
-  scrollToBottom();
-};
-
-const clearChat = () => {
-  if (chatStore.activeSessionId) {
-    if (confirm('Вы действительно хотите очистить историю чата?')) {
-      // Фильтруем сообщения, удаляя все, которые принадлежат текущей сессии
-      chatStore.messages = chatStore.messages.filter(
-        (message) => message.sessionId !== chatStore.activeSessionId
-      );
-      scrollToBottom();
-    }
-  }
-  isAssistentMenuOpen.value = false;
-};
-
-onClickOutside(assistentMenu, () => {
-  if (isAssistentMenuOpen.value) {
-    isAssistentMenuOpen.value = false;
-  }
-});
-
 onMounted(() => {
   scrollToBottom();
+  scrollConfigToBottom();
   updateAssistent();
   
   if (assistentId.value) {
     if (!chatStore.sessions || chatStore.sessions.length === 0) {
-      createNewDialog();
+      chatStore.createNewSession(assistentId.value);
     } else if (!chatStore.activeSessionId) {
       // Если есть сессии, но нет активной, выбираем первую
-      selectSession(chatStore.sessions[0].id);
+      chatStore.selectSession(chatStore.sessions[0].id);
     } else {
       // Если есть активная сессия, прокручиваем к последнему сообщению
       scrollToBottom();
@@ -329,75 +393,111 @@ onMounted(() => {
     padding: 16px;
   }
 
-  &__sessions {
-    width: 30%;
+  &__config {
+    width: 40%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    background-color: $light-color;
+    border-radius: 12px;
+    box-shadow: $box-shadow-small;
     overflow: hidden;
   }
 
-  &__session-list {
+  .config-header {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    padding: 16px;
+    border-bottom: 1px solid rgba($help-color, 0.1);
+  }
+
+  .config-chat {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 60px);
+  }
+
+  .config-messages {
+    flex: 1;
+    padding: 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    border-radius: 12px;
-    background-color: $light-color;
-    border: 1px solid rgba($help-color, 0.1);
+    gap: 16px;
   }
 
-  .session-item {
-    width: 100%;
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba($help-color, 0.1);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-    
-    &:hover {
-      background-color: rgba($help-color, 0.05);
-    }
-    
-    &--active {
-      background-color: rgba($secondary-color, 0.05);
-    }
+  .config-message {
+    display: flex;
+    max-width: 85%;
     
     &__content {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      position: relative;
     }
     
-    &__title {
+    &__text {
+      margin: 0;
       font-size: 14px;
-      font-weight: 500;
-      color: $dark-secondary-color;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    &__meta {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      font-size: 12px;
-      color: $help-color;
+      line-height: 1.5;
     }
     
     &__time {
-      font-size: 12px;
+      font-size: 10px;
       color: $help-color;
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+    }
+    
+    &--system {
+      align-self: flex-start;
+      
+      .config-message__content {
+        background-color: $grey-background-color;
+        border-bottom-left-radius: 4px;
+      }
+    }
+    
+    &--user {
+      align-self: flex-end;
+      
+      .config-message__content {
+        background-color: $main-color;
+        color: $light-color;
+        border-bottom-right-radius: 4px;
+      }
+      
+      .config-message__time {
+        color: rgba($light-color, 0.8);
+      }
+    }
+    
+    &--typing {
+      opacity: 0.7;
+      
+      .config-message__content {
+        padding-bottom: 16px;
+      }
+    }
+  }
+
+  .config-input {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-top: 1px solid rgba($help-color, 0.1);
+    gap: 16px;
+    
+    & > *:first-child {
+      flex-basis: 90%;
     }
   }
 
   &__chat {
-    width: 70%;
+    width: 60%;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -438,14 +538,6 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      position: relative;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 8px;
-      
-      &:hover {
-        background-color: rgba($main-color, 0.05);
-      }
     }
     
     &__name {
@@ -455,11 +547,6 @@ onMounted(() => {
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-    
-    &__dropdown-icon {
-      font-size: 10px;
-      color: $help-color;
     }
     
     &__type {
@@ -475,118 +562,6 @@ onMounted(() => {
       
       &--active {
         color: $success-color;
-      }
-    }
-  }
-  
-  .assistent-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 300px;
-    background-color: $light-color;
-    border-radius: 8px;
-    box-shadow: $box-shadow-large;
-    z-index: 10;
-    margin-top: 8px;
-    overflow: hidden;
-    
-    &__header {
-      padding: 12px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      border-bottom: 1px solid rgba($help-color, 0.1);
-    }
-    
-    &__actions {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba($help-color, 0.1);
-    }
-    
-    &__action {
-      display: flex;
-      align-items: center;
-      padding: 10px 16px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      
-      &:hover {
-        background-color: rgba($help-color, 0.05);
-      }
-      
-      .icon {
-        margin-right: 10px;
-        font-size: 16px;
-        color: $help-color;
-      }
-      
-      &-title {
-        font-size: 14px;
-        color: $dark-color;
-      }
-    }
-    
-    &__list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    &__item {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba($help-color, 0.1);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      &:hover {
-        background-color: rgba($help-color, 0.05);
-      }
-      
-      &--active {
-        background-color: rgba($secondary-color, 0.05);
-      }
-      
-      &-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin-right: 12px;
-        
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-      
-      &-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      
-      &-name {
-        font-size: 14px;
-        font-weight: 500;
-      }
-      
-      &-summary {
-        font-size: 12px;
-        color: $dark-secondary-color;
-      }
-      
-      &-status {
-        font-size: 10px;
-        color: $help-color;
-        
-        &--active {
-          color: $success-color;
-        }
       }
     }
   }

@@ -13,4 +13,5 @@ export const RouteNames = {
   QUESTIONS: '/questions',
   QUESTION_DETAIL: '/question',
   NOT_FOUND: '/:pathMatch(.*)',
+  CHAT: '/chat',
 }

@@ -16,7 +16,7 @@ const toggleHistory = () => {
 
 const messageId = computed(() => route.params.id as string);
 const messageDetail = computed(() => questionsStore.getMessageDetailWithName(messageId.value));
-const message =''//для компонента textArea
+const message = ref('');//изменяем на ref для обновления значения
 </script>
 
 <template>

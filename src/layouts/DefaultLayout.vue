@@ -9,7 +9,6 @@
       <main class="main-content">
         <slot />
       </main>
-      <!-- <Footer class="footer" v-if="route.meta.showFooter"/> -->
     </div>
   </div>
 </template>
@@ -46,11 +45,6 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
   &--expanded {
     margin-left: 280px;
   }
-}
-
-.footer {
-  width: 100%;
-  max-width: 68rem;
 }
 
 .main-content {

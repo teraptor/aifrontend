@@ -9,8 +9,8 @@
           all: 'Все',
           business: 'Бизнес'
         }"
-        @update:filter="assistentsStore.setActiveFilter"
-        @update:sort="assistentsStore.setSortOption"
+        @update:filter="(value: string) => assistentsStore.setActiveFilter(value as FilterOption)"
+        @update:sort="(value: string) => assistentsStore.setSortOption(value as SortOption)"
       />
       <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
         <InputField
@@ -106,6 +106,24 @@ const handleAssistantSelect = (assistantId: string) => {
 
 const isLoading = computed(() => assistentsStore.isLoading);
 const error = computed(() => assistentsStore.error);
+
+const statusClass = computed(() => {
+  return (item: any) => {
+    if (!item) return '';
+    return item.isDisabled ? 'assistents-card__footer-status--disabled' : 
+           item.isActive ? 'assistents-card__footer-status--active' : 
+           'assistents-card__footer-status--inactive';  // Добавлен класс для неактивных
+  };
+});
+
+const statusText = computed(() => {
+  return (item: any) => {
+    if (!item) return '';
+    return item.isDisabled ? 'Заблокирован' : 
+           item.isActive ? 'Активный' : 
+           'Неактивный';  // Добавлен текст для неактивных
+  };
+});
 
 // загрузка ассистентов
 const loadAssistents = async () => {

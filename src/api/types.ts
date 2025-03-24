@@ -37,6 +37,7 @@ export interface CreateAgentResponse {
     name: string,
     status: number,
     description: string,
+    instructions: string,
 }
 
 // Новый агент (альтернативный формат ответа)

@@ -395,8 +395,9 @@ const removeConnection = (fromComponentId: string, toComponentId: string) => {
 
 const connections = computed(() => {
   const result = [];
+  
   for (const component of selectedComponents.value) {
-    for (const connectionId of component.connections) {
+    for (const connectionId of component.connections || []) {
       const targetComponent = selectedComponents.value.find(c => c.id === connectionId);
       if (targetComponent) {
         result.push({
@@ -406,7 +407,7 @@ const connections = computed(() => {
           endX: targetComponent.position.x,
           endY: targetComponent.position.y,
           showArrow: true,
-          active: connectingFrom?.id === component.id
+          active: connectingFrom.value && connectingFrom.value.id === component.id
         });
       }
     }

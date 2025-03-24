@@ -16,10 +16,11 @@
         </div>
         <Button
             button-type="secondary"
-            text="Попробовать"
+            text="Установить"
             type="button"
             size="medium"
             icon="icon icon-arrow-right2"
+            @click="installAssistentWithRedirect(assistent.id)"
           />
       </div>
 
@@ -46,16 +47,17 @@
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 import Button from '@/components/ui/Button.vue';
 import Tabs from '@/components/ui/Tabs.vue';
+import { notifications } from '@/plugins/notifications';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
 const route = useRoute();
 
-const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)!);
+const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)); 
 
 const goBack = (): void => router.back();
 
@@ -65,6 +67,41 @@ const tabs = ref([
 ]);
 
 const activeTab = ref(tabs.value[0].id);
+
+// Функция для установки ассистента с редиректом
+const installAssistentWithRedirect = async (id: string) => {
+  try {
+    await assistentsStore.installAssistent(id);
+    // После успешной установки перенаправляем на страницу /my
+    router.push({ path: '/my' });
+    notifications.success('Ассистент установлен');
+  } catch (error) {
+    console.error('Ошибка при установке ассистента:', error);
+    notifications.error('Ошибка при установке ассистента');
+  }
+};
+
+// Загрузка данных ассистентов при монтировании компонента
+onMounted(async () => {
+  // Проверяем, есть ли ассистенты в хранилище
+  if (!assistentsStore.assistants || assistentsStore.assistants.length === 0) {
+    try {
+      await assistentsStore.fetchAssitantents();
+    } catch (error) {
+      console.error('Ошибка при загрузке ассистентов:', error);
+    }
+  }
+  
+  // Если ассистент не найден по ID, попробуем загрузить его отдельно
+  if (!assistent.value) {
+    try {
+      await assistentsStore.fetchAssistentById(route.params.id as string);
+    } catch (error) {
+      console.error('Ошибка при загрузке ассистента:', error);
+      notifications.error('Не удалось загрузить данные ассистента');
+    }
+  }
+});
 </script>
 
 <style lang="scss" scoped>

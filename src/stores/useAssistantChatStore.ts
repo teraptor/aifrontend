@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { agentService } from '@/api/services/agentService';
+import { notifications } from '@/plugins/notifications';
 
 interface Session {
   id: string;
@@ -7,6 +8,7 @@ interface Session {
   timestamp: string;
   isActive: boolean;
   agentId: string;
+  unreadCount: number;
 }
 
 interface Message {
@@ -24,14 +26,17 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     activeSessionId: null as string | null,
     newMessageReceived: false,
     isLoading: false,
+    lastReceivedMessageSessionId: null as string | null,
+    pendingResponses: [] as {sessionId: string, agentId: string}[]
   }),
 
   actions: {
     // добавление сообщения в диалог
-    async addMessage(text: string, isUser: boolean) {
-      if (!this.activeSessionId) return;
+    async addMessage(text: string, isUser: boolean, targetSessionId: string | null = null) {
+      const sessionId = targetSessionId || this.activeSessionId;
+      if (!sessionId) return;
       
-      const session = this.sessions.find(s => s.id === this.activeSessionId);
+      const session = this.sessions.find(s => s.id === sessionId);
       if (!session) return;
       
       // Создаем сообщение
@@ -40,11 +45,31 @@ export const useAssistentChatStore = defineStore('assistentChat', {
         text,
         isUser,
         timestamp: new Date().toISOString(),
-        sessionId: this.activeSessionId
+        sessionId: sessionId
       };
       
       // Добавляем сообщение в локальный массив
       this.messages.push(message);
+      
+      // Обновляем счетчик непрочитанных сообщений, если сообщение не от пользователя
+      // и это не активный диалог или пользователь переключился на другой диалог
+      if (!isUser && sessionId !== this.activeSessionId) {
+        session.unreadCount = (session.unreadCount || 0) + 1;
+        
+        // Показываем уведомление о новом сообщении
+        this.showNewMessageNotification(session.title, text);
+      }
+      
+      // Сохраняем ID сессии и ID ассистента, куда должен прийти ответ
+      if (isUser) {
+        this.lastReceivedMessageSessionId = sessionId;
+        
+        // Добавляем ожидающий ответ в список
+        this.pendingResponses.push({
+          sessionId: sessionId,
+          agentId: session.agentId
+        });
+      }
       
       // Если это сообщение от пользователя, отправляем его на сервер
       if (isUser) {
@@ -53,31 +78,51 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           this.isLoading = true;
           
           // Отправляем сообщение через API
-          console.log('Sending message to dialog:', session.agentId, this.activeSessionId, text);
+          console.log('Sending message to dialog:', session.agentId, sessionId, text);
+          
+          // Сохраняем ID сессии для ответа в локальной переменной
+          const targetSession = sessionId;
+          const targetAgentId = session.agentId;
+          
           const response = await agentService.addMessageToDialog(
             session.agentId,
-            this.activeSessionId,
+            sessionId,
             { message: text }
           );
           
           // Если есть ответ от сервера, добавляем его как сообщение от ассистента
           if (response) {
-            // Здесь можно добавить обработку ответа от сервера
-            // Например, если сервер возвращает текст ответа в поле response.text
-            // this.addMessage(response.text, false);
-            
-            // Пока просто добавим заглушку для демонстрации
+            // Используем замыкание, чтобы сохранить правильный ID сессии для ответа
             setTimeout(() => {
               console.log('Response from server:', response);
-              this.addMessage(`${response.Content}`, false);
-              // Сбрасываем состояние загрузки
-              this.isLoading = false;
+              console.log('Sending response to session:', targetSession);
+              
+              // Отправляем ответ в тот же диалог, из которого пришло сообщение
+              this.addMessage(`${response.Content}`, false, targetSession);
+              
+              // Удаляем запрос из списка ожидающих ответов
+              this.pendingResponses = this.pendingResponses.filter(
+                pr => !(pr.sessionId === targetSession && pr.agentId === targetAgentId)
+              );
+              
+              // Сбрасываем состояние загрузки только если нет других ожидающих ответов
+              if (this.pendingResponses.length === 0) {
+                this.isLoading = false;
+              }
             }, 1000);
           }
         } catch (error) {
           console.error('Ошибка при отправке сообщения:', error);
-          // Сбрасываем состояние загрузки в случае ошибки
-          this.isLoading = false;
+          
+          // Удаляем запрос из списка ожидающих ответов в случае ошибки
+          this.pendingResponses = this.pendingResponses.filter(
+            pr => !(pr.sessionId === sessionId && pr.agentId === session.agentId)
+          );
+          
+          // Сбрасываем состояние загрузки в случае ошибки, только если нет других ожидающих ответов
+          if (this.pendingResponses.length === 0) {
+            this.isLoading = false;
+          }
         }
       }
 
@@ -96,7 +141,8 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           title: `Новый диалог ${this.sessions.length + 1}`,
           timestamp: new Date().toISOString(),
           isActive: true,
-          agentId
+          agentId,
+          unreadCount: 0
         };
         
         console.log('New session:', newSession);
@@ -131,8 +177,37 @@ export const useAssistentChatStore = defineStore('assistentChat', {
         session.isActive = true;
         this.activeSessionId = sessionId;
         
+        // Сбрасываем счетчик непрочитанных сообщений при открытии диалога
+        session.unreadCount = 0;
+        
         // Загружаем сообщения диалога, если их нет
         this.loadDialogMessages(session.agentId, sessionId);
+      }
+    },
+
+    // выбор или переключение на ассистента без сброса счетчика непрочитанных сообщений
+    selectAssistantActiveSessions(agentId: string) {
+      // Деактивируем все сессии
+      this.sessions.forEach(session => {
+        session.isActive = false;
+      });
+      
+      // Находим сессии данного ассистента
+      const assistantSessions = this.sessions.filter(s => s.agentId === agentId);
+      
+      // Если есть сессии, выбираем одну из них без сброса счетчика непрочитанных сообщений
+      if (assistantSessions.length > 0) {
+        // Найдем последнюю активную или последнюю по времени
+        const activeSession = assistantSessions.find(s => s.id === this.activeSessionId) || 
+                              assistantSessions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        
+        activeSession.isActive = true;
+        this.activeSessionId = activeSession.id;
+        
+        // Загружаем сообщения диалога, если их нет
+        this.loadDialogMessages(activeSession.agentId, activeSession.id);
+      } else {
+        this.activeSessionId = null;
       }
     },
 
@@ -178,6 +253,15 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     // сброс флага нового сообщения
     resetNewMessageFlag() {
       this.newMessageReceived = false;
+    },
+
+    // Показ уведомления о новом сообщении
+    showNewMessageNotification(dialogTitle: string, messageText: string) {
+      const shortMessage = messageText.length > 50 
+        ? messageText.substring(0, 50) + '...' 
+        : messageText;
+        
+      notifications.info(`Новое сообщение в "${dialogTitle}": ${shortMessage}`);
     }
   },
 
@@ -196,6 +280,17 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     lastMessage: (state) => {
       const sessionMessages = state.messages.filter(message => message.sessionId === state.activeSessionId);
       return sessionMessages.length > 0 ? sessionMessages[sessionMessages.length - 1] : null;
+    },
+    
+    // получение количества непрочитанных сообщений для ассистента
+    getUnreadCountByAssistantId: (state) => (assistantId: string) => {
+      const assistantSessions = state.sessions.filter(session => session.agentId === assistantId);
+      return assistantSessions.reduce((total, session) => total + (session.unreadCount || 0), 0);
+    },
+    
+    // получение общего количества непрочитанных сообщений во всех диалогах
+    totalUnreadCount: (state) => {
+      return state.sessions.reduce((total, session) => total + (session.unreadCount || 0), 0);
     }
   },
   

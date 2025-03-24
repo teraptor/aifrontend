@@ -89,7 +89,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
       ...defaultMeta,
       requiresAuth: true,
     },
-    component: () => import('@/pages/CreateAssistent.vue')
+    component: () => import('@/pages/CreateAssistant.vue')
   },
   {
     path: `${RouteNames.ASSISTENT_DETAIL}/:id`,
@@ -127,5 +127,17 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: '404',
     },
+  },
+  {
+    path: `${RouteNames.CHAT}/:id`,
+    name: RouteNames.CHAT,
+    component: () => import('@/pages/ChatHook.vue'),
+    meta: {
+      title: 'диалог',
+    },
+  },
+  {
+    path: RouteNames.CHAT,
+    redirect: RouteNames.MAIN.name,
   },
 ]

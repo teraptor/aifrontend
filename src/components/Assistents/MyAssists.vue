@@ -32,6 +32,7 @@
 
     <AddAssistantModal
       :show="showAddModal"
+      :installing-id="installingAssistantId"
       @close="closeAddModal"
       @select="handleAssistantSelect"
     />
@@ -51,6 +52,7 @@
   import { useRouter } from 'vue-router';
   import { RouteNames } from '@/router/routes/routeNames';
   import AddAssistantModal from '../Modal/AddAssistantModal.vue';
+  import { notifications } from '@/plugins/notifications';
 
   const assistentsStore = useAssistentsStore();
   const authStore = useAuthStore();
@@ -59,6 +61,8 @@
   const isOpenMyAssistents = ref<boolean>(true);
   const router = useRouter();
   const showAddModal = ref(false);
+  const isInstallingAssistant = ref(false);
+  const installingAssistantId = ref<string | undefined>(undefined);
 
   const filterLabels: Record<FilterOption, string> = {
     all: 'Все',
@@ -117,9 +121,33 @@
     showAddModal.value = false;
   }
 
-  const handleAssistantSelect = (assistantId: string) => {
-    // Здесь можно добавить логику добавления ассистента
-    console.log('Selected assistant:', assistantId);
+  const handleAssistantSelect = async (assistantId: string) => {
+    try {
+      // Отображаем индикатор загрузки для установки
+      isInstallingAssistant.value = true;
+      installingAssistantId.value = assistantId;
+      
+      // Вызываем метод установки ассистента
+      await assistentsStore.installAssistent(assistantId);
+      
+      // После успешной установки обновляем список ассистентов
+      await loadAssistents();
+      
+      // Закрываем модальное окно
+      closeAddModal();
+      
+      // Уведомление об успешной установке (если не реализовано в store)
+      notifications.success('Ассистент успешно установлен');
+    } catch (error) {
+      console.error('Ошибка при установке ассистента:', error);
+      
+      // Уведомление об ошибке (если не реализовано в store)
+      notifications.error('Ошибка при установке ассистента');
+    } finally {
+      // Сбрасываем индикатор загрузки для установки
+      isInstallingAssistant.value = false;
+      installingAssistantId.value = undefined;
+    }
   }
 </script>
 

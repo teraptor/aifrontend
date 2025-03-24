@@ -1,0 +1,75 @@
+name: Deploy with Docker Compose
+
+on:
+  push:
+    branches:
+      - main # Для продакшена, можно добавить другие ветки для разработки
+      - dev # Ветка для разработки
+
+jobs:
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Build Docker image for dev
+      run: |
+        docker build --target production_stage -t eltanweb/airfrontend:dev .
+        
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image for dev
+      run: |
+        docker push eltanweb/airfrontend:dev
+
+    - name: SSH and deploy to development server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          export GITHUB_SHA=${{ github.sha }}
+          docker-compose -f /home/ai_assists/docker-compose.dev.yml pull
+          docker-compose -f /home/ai_assists/docker-compose.dev.yml up -d --force-recreate
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Build Docker image for prod
+      run: |
+        docker build --target production_stage -t eltanweb/airfrontend:latest .
+        
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image for prod
+      run: |
+        docker push eltanweb/airfrontend:latest
+
+    - name: SSH and deploy to production server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          export GITHUB_SHA=${{ github.sha }}
+          docker-compose -f /home/ai_assists/docker-compose.prod.yml pull
+          docker-compose -f /home/ai_assists/docker-compose.prod.yml down
+          docker-compose -f /home/ai_assists/docker-compose.prod.yml up -d --force-recreate

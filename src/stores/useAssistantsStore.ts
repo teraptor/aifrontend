@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import avatarImage from '@/assets/cl1_45.png';
 import { useAuthStore } from './useAuthStore';
 import { agentService } from '@/api/services/agentService';
+import { notifications } from '@/plugins/notifications';
 
 // Интерфейс для ответа API
 interface ApiAssistant {
@@ -40,7 +41,6 @@ export interface IAssistent {
   description: string;
   summary: string;
   image: string;
-
   call_name: string;
   isLocked: boolean;
   isActive: boolean;
@@ -48,6 +48,10 @@ export interface IAssistent {
   created_at: string;
   business: boolean;
   author_id: string;
+  instructions?: string;
+  skillLevel?: number;
+  systemPrompt?: string;
+  model?: string;
 }
 
 export type SortOption = 'popular' | 'new';
@@ -64,6 +68,18 @@ export const useAssistentsStore = defineStore('assistents', {
   }),
 
   actions: {
+
+    // обновление ассистента
+    async updateAssistent(id: string, data: Partial<IAssistent>) {
+      try {
+        console.log("data", data);
+        const response = await agentService.updateAgent(id, data);
+        return response;
+      } catch(error) {
+        throw error;
+      }
+    },
+
     // получение шаблонов ассистентов
     async fetchAssitantents() {
       try {
@@ -126,6 +142,7 @@ export const useAssistentsStore = defineStore('assistents', {
           summary: assistant.description ? assistant.description.substring(0, 50) + '...' : '',
           image: assistant.image || avatarImage,
           call_name: assistant.name || '',
+          instructions: '',
           isLocked: assistant.isLocked || false,
           isActive: assistant.isActive || false,
           isDisabled: assistant.isDisabled || false,
@@ -140,6 +157,45 @@ export const useAssistentsStore = defineStore('assistents', {
         throw error;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async deleteAssistent(id: string) {
+      try {
+        const response = await agentService.deleteAgent(id);
+        
+        // Удаляем ассистента из локального состояния
+        this.assistants = this.assistants.filter(assistant => assistant.id !== id);
+        
+        // Можно добавить уведомление пользователя об успешном удалении
+        notifications.success('Ассистент успешно удален');
+        
+        return response;
+      } catch(error) {
+        // Показываем ошибку пользователю
+        notifications.error('Ошибка при удалении ассистента');
+        throw error;
+      }
+    },
+
+    async fetchAssistentById(id: string) {
+      try {
+        const response = await agentService.getAgentById(id);
+        return response;
+      } catch(error) {
+        throw error;
+      }
+    },
+    
+    // установка ассистента
+    async installAssistent(id: string) {
+      try {
+        const response = await agentService.createAgentFromTemplate(id);
+        notifications.success('Ассистент установлен успешно');
+        return response;
+      } catch(error) {
+        notifications.success('Ошибка создания ассистента');
+        throw error;
       }
     },
 
@@ -194,6 +250,7 @@ export const useAssistentsStore = defineStore('assistents', {
     },
 
     getAssistentById: (state) => (id: string) => {
+      console.log("state.assistants", state.assistants);
       return state.assistants.find((a) => a.id === id);
     },
   },

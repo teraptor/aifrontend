@@ -8,7 +8,7 @@
         <p class="assistents-card__summary"> {{ assistents.summary }}</p>
       </div>
     </div>
-    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked' && statusClass && authStore.isAuthenticated">
+    <div class="assistents-card__footer" v-if="cardClass !== 'assistents-card--locked' && authStore.isAuthenticated">
       <div :class="['assistents-card__footer-status', statusClass]">
         {{ statusText }}
       </div>
@@ -50,13 +50,12 @@ const cardClass = computed(() => {
 
 const statusClass = computed(() => {
   if (!assistents) return '';
-  return assistents.isDisabled ? 'assistents-card__footer-status--disabled' : assistents.isActive ? 'assistents-card__footer-status--active' : '';
+  return assistents.isDisabled ? 'assistents-card__footer-status--disabled' : assistents.isActive ? 'assistents-card__footer-status--active' : 'assistents-card__footer-status--inactive';
 });
 
 const statusText = computed(() => {
   if (!assistents) return '';
-  console.log('assistents', assistents);
-  return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : '';
+  return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : 'Неактивный';
 });
 
 const goToAssistentDetails = () => {
@@ -209,6 +208,10 @@ const goToSetting = (event: MouseEvent) => {
 
       &--active {
         background-color: $success-color;
+      }
+      
+      &--inactive {
+        background-color: $help-color;
       }
     }
   }

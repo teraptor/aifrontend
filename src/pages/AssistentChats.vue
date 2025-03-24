@@ -1,19 +1,24 @@
 <template>
   <div class="assistent-chat">
     <div class="assistent-chat__container">
-      <div class="assistent-chat__sessions">
-        <h2>Ассистенты</h2>
+      <div class="assistent-chat__sessions" :class="{ 'collapsed': isSessionsCollapsed }">
+        <div class="sessions-header">
+          <h2>Ассистенты</h2>
+        </div>
         <div class="assistent-chat__session-list">
           <div 
             v-for="assistant in assistants" 
             :key="assistant.id" 
-            :class="['session-item', { 'session-item--active': selectedAssistant?.id === assistant.id }]"
+            :class="['session-item', { 'session-item--active': selectedAssistant?.id === assistant.id }, { 'session-item--collapsed': isSessionsCollapsed }]"
             @click="selectAssistant(assistant)"
           >
             <div class="session-item__avatar">
               <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
+              <span v-if="getAssistantUnreadCount(assistant.id) > 0" class="assistant-unread-badge">
+                {{ getAssistantUnreadCount(assistant.id) }}
+              </span>
             </div>
-            <div class="session-item__content">
+            <div class="session-item__content" v-show="!isSessionsCollapsed">
               <div class="session-item__title">{{ assistant.name }}</div>
               <div class="session-item__meta">
                 <span class="session-item__description">{{ assistant.description }}</span>
@@ -21,11 +26,16 @@
             </div>
           </div>
         </div>
+        <button class="collapse-button" @click="toggleSessionsCollapse">
+          <span class="collapse-icon">{{ isSessionsCollapsed ? '→' : '←' }}</span>
+        </button>
       </div>
 
       <div class="assistent-chat__dialogs" v-if="selectedAssistant">
-        <div class="new-dialog-button" @click="createNewDialog">
-          <span>+ Диалог</span>
+        <div class="dialogs-header">
+          <div class="new-dialog-button" @click="createNewDialog">
+            <span>+ Диалог</span>
+          </div>
         </div>
         <div class="assistent-chat__session-list">
           <div 
@@ -47,12 +57,27 @@
                   />
                 </div>
                 <div v-else class="session-item__title">{{ session.title }}</div>
-                <div class="session-item__edit-icon" @click.stop="startEditingTitle(session)">
-                  <span class="pencil-icon">✏️</span>
+                <div class="session-item__menu-icon" @click.stop="toggleDialogMenu(session, $event)">
+                  <span class="dots-icon">⋮</span>
+                </div>
+              </div>
+              
+              <!-- Выпадающее меню для диалога -->
+              <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
+                <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
+                  <span class="dialog-dropdown__action-icon">✏️</span>
+                  <span class="dialog-dropdown__action-title">Изменить название</span>
+                </div>
+                <div class="dialog-dropdown__action" @click="deleteDialog(session)">
+                  <span class="dialog-dropdown__action-icon">🗑️</span>
+                  <span class="dialog-dropdown__action-title">Удалить диалог</span>
                 </div>
               </div>
               <div class="session-item__meta">
                 <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
+                <span v-if="session.unreadCount > 0" class="session-item__unread-badge">
+                  {{ session.unreadCount }}
+                </span>
               </div>
             </div>
           </div>
@@ -70,16 +95,12 @@
               </div>
               <div class="assistant-header__info">
                 <h2 class="assistant-header__name">
-                  {{ selectedAssistant.name }} <span class="dropdown-icon">▼</span>
+                  {{ selectedAssistant.name }} 
+                  <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
+                  <span class="dropdown-icon">▼</span>
                 </h2>
                 <p class="assistant-header__description">
                   {{ selectedAssistant.description }}
-                </p>
-                <p 
-                  class="assistant-header__status"
-                  :class="{ 'assistant-header__status--active': selectedAssistant.isActive }"
-                >
-                  {{ selectedAssistant.isActive ? 'Активный' : 'Заблокирован' }}
                 </p>
               </div>
             </div>
@@ -96,30 +117,6 @@
                 >
                   <span class="assistant-dropdown__action-icon">{{ item.icon }}</span>
                   <span class="assistant-dropdown__action-title">{{ item.title }}</span>
-                </div>
-              </div>
-              
-              <div class="assistant-dropdown__header">Мои ассистенты</div>
-              <div class="assistant-dropdown__list">
-                <div
-                  v-for="assistant in assistants"
-                  :key="assistant.id"
-                  :class="['assistant-dropdown__item', { 'assistant-dropdown__item--active': selectedAssistant?.id === assistant.id }]"
-                  @click="switchAssistant(assistant)"
-                >
-                  <div class="assistant-dropdown__item-avatar">
-                    <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
-                  </div>
-                  <div class="assistant-dropdown__item-info">
-                    <div class="assistant-dropdown__item-name">{{ assistant.name }}</div>
-                    <div class="assistant-dropdown__item-description">{{ assistant.description }}</div>
-                    <div 
-                      class="assistant-dropdown__item-status"
-                      :class="{ 'assistant-dropdown__item-status--active': assistant.isActive }"
-                    >
-                      {{ assistant.isActive ? 'Активный' : 'Заблокирован' }}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -203,6 +200,9 @@ const editingDialogId = ref<string | null>(null)
 const editedDialogTitle = ref('')
 const editTitleInput = ref<HTMLInputElement | null>(null)
 const selectedAssistant = ref<IAssistent | null>(null)
+const isSessionsCollapsed = ref(true)
+const dialogMenuOpen = ref<string | null>(null)
+const dialogMenu = ref<HTMLElement | null>(null)
 
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
@@ -247,13 +247,14 @@ const sortedSessions = computed(() => {
 // Выбор ассистента
 const selectAssistant = (assistant: IAssistent) => {
   selectedAssistant.value = assistant
-  
+  console.log('selectedAssistant', selectedAssistant.value)
   // Проверяем, есть ли сессии для этого ассистента
   const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistant.id)
   
   if (assistantSessions.length > 0) {
-    // Если есть сессии, выбираем первую
-    selectSession(assistantSessions[0].id)
+    // Используем новый метод без сброса счетчика
+    chatStore.selectAssistantActiveSessions(assistant.id)
+    scrollToBottom()
   } else {
     // Если нет сессий, создаем новую
     createNewDialog()
@@ -291,7 +292,7 @@ const sendMessage = async () => {
   newMessage.value = ''
   
   // Отправляем сообщение на сервер
-  await chatStore.addMessage(messageText, true)
+  await chatStore.addMessage(messageText, true, chatStore.activeSessionId)
   
   // Фокус на поле ввода и прокрутка вниз
   nextTick(() => {
@@ -331,6 +332,9 @@ const startEditingTitle = (session: any) => {
   editingDialogId.value = session.id
   editedDialogTitle.value = session.title
   
+  // Закрываем меню
+  dialogMenuOpen.value = null
+  
   nextTick(() => {
     if (editTitleInput.value) {
       editTitleInput.value.focus()
@@ -358,21 +362,13 @@ const cancelEditingTitle = () => {
 const scrollToBottom = () => {
   nextTick(() => {
     if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+      // Используем setTimeout для гарантии выполнения после рендеринга
+      setTimeout(() => {
+        chatContainer.value!.scrollTop = chatContainer.value!.scrollHeight;
+      }, 50);
     }
   })
 }
-
-// Следим за новыми сообщениями
-watch(
-  () => chatStore.newMessageReceived,
-  (newValue) => {
-    if (newValue) {
-      scrollToBottom()
-      chatStore.resetNewMessageFlag()
-    }
-  }
-)
 
 // Создаем меню действий
 const menuItems = ref<MenuItem[]>([
@@ -421,7 +417,69 @@ onMounted(async () => {
   if (assistants.value.length > 0) {
     selectAssistant(assistants.value[0])
   }
+  
+  // Создаем аудио элемент для уведомлений
+  createNotificationSound()
+  
+  // Настраиваем MutationObserver для отслеживания изменений в чате
+  if (chatContainer.value) {
+    const observer = new MutationObserver((mutations) => {
+      // Прокручиваем чат вниз при изменениях содержимого
+      scrollToBottom();
+    });
+    
+    observer.observe(chatContainer.value, {
+      childList: true,      // наблюдать за добавлением/удалением дочерних элементов
+      subtree: true,        // наблюдать за изменениями во всех потомках
+      characterData: true,  // наблюдать за изменениями текста
+    });
+  }
 })
+
+// Создаем аудио элемент для уведомлений
+const notificationSound = ref<HTMLAudioElement | null>(null)
+
+// Функция для создания звукового уведомления
+const createNotificationSound = () => {
+  notificationSound.value = new Audio()
+  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
+  notificationSound.value.load()
+}
+
+// Функция для проигрывания звука уведомления
+const playNotificationSound = () => {
+  if (notificationSound.value) {
+    notificationSound.value.play().catch(error => {
+      console.error('Ошибка воспроизведения звука:', error)
+    })
+  }
+}
+
+// Следим за новыми сообщениями и проигрываем звук
+watch(
+  () => chatStore.newMessageReceived,
+  (newValue) => {
+    if (newValue) {
+      // Если сообщение пришло в активный диалог, прокручиваем чат вниз
+      if (chatStore.activeSessionId === chatStore.lastReceivedMessageSessionId) {
+        scrollToBottom();
+      } else {
+        // Если сообщение пришло в неактивный диалог, проигрываем звук
+        playNotificationSound();
+      }
+      
+      chatStore.resetNewMessageFlag();
+    }
+  }
+)
+
+// Следим за изменениями в сообщениях и прокручиваем вниз
+watch(
+  () => chatStore.sessionMessages.length,
+  () => {
+    scrollToBottom();
+  }
+)
 
 // Функция для автоматического увеличения высоты текстового поля
 const autoGrow = () => {
@@ -434,12 +492,119 @@ const autoGrow = () => {
   const newHeight = Math.min(messageInput.value.scrollHeight, 150)
   messageInput.value.style.height = `${newHeight}px`
 }
+
+// Переключение состояния сворачивания колонки ассистентов
+const toggleSessionsCollapse = () => {
+  isSessionsCollapsed.value = !isSessionsCollapsed.value
+}
+
+// Получение общего количества непрочитанных сообщений
+const totalUnreadMessages = computed(() => {
+  return chatStore.totalUnreadCount;
+});
+
+// Получение количества непрочитанных сообщений для ассистента
+const getAssistantUnreadCount = (assistantId: string) => {
+  return chatStore.getUnreadCountByAssistantId(assistantId)
+}
+
+// Убираем автоматический выбор диалогов с непрочитанными сообщениями при смене ассистента
+watch(
+  () => selectedAssistant.value,
+  (newAssistant, oldAssistant) => {
+    if (newAssistant && newAssistant.id !== oldAssistant?.id) {
+      console.log('Assistant changed:', newAssistant.name);
+      
+      // Больше не выбираем автоматически диалоги с непрочитанными сообщениями
+      // Пользователь должен сам кликнуть на диалог, чтобы сбросить счетчик
+      // const assistantSessions = chatStore.sessions.filter(s => s.agentId === newAssistant.id);
+      // const sessionsWithUnread = assistantSessions.filter(s => s.unreadCount > 0);
+      // 
+      // if (sessionsWithUnread.length > 0) {
+      //   selectSession(sessionsWithUnread[0].id);
+      // }
+    }
+  }
+)
+
+// Переключение меню диалога
+const toggleDialogMenu = (session: any, event?: Event) => {
+  // Останавливаем всплытие события
+  event?.stopPropagation()
+  
+  // Если текущее меню уже открыто, закрываем его
+  if (dialogMenuOpen.value === session.id) {
+    dialogMenuOpen.value = null
+  } else {
+    // Иначе открываем новое
+    dialogMenuOpen.value = session.id
+  }
+}
+
+// Удаление диалога
+const deleteDialog = (session: any) => {
+  if (confirm('Вы действительно хотите удалить этот диалог?')) {
+    // Удаляем сессию из хранилища
+    chatStore.sessions = chatStore.sessions.filter(s => s.id !== session.id)
+    
+    // Удаляем все сообщения этой сессии
+    chatStore.messages = chatStore.messages.filter(m => m.sessionId !== session.id)
+    
+    // Если удаляемая сессия была активной, сбрасываем activeSessionId
+    if (chatStore.activeSessionId === session.id) {
+      chatStore.activeSessionId = null
+      
+      // Если есть другие сессии для этого ассистента, выбираем первую
+      const otherSessions = sortedSessions.value
+      if (otherSessions.length > 0) {
+        selectSession(otherSessions[0].id)
+      }
+    }
+    
+    dialogMenuOpen.value = null
+  }
+}
+
+// Закрытие меню диалога при клике вне его
+onClickOutside(dialogMenu, (event) => {
+  // Проверяем, что клик был не по иконке меню
+  const clickedElement = event.target as HTMLElement
+  const menuIcon = clickedElement.closest('.session-item__menu-icon')
+  
+  // Если клик не по иконке меню, закрываем его
+  if (!menuIcon) {
+    dialogMenuOpen.value = null
+  }
+})
+
+// Закрываем меню диалога при клике в любом месте документа
+onMounted(() => {
+  document.addEventListener('click', (event) => {
+    const clickedElement = event.target as HTMLElement
+    
+    // Если клик был не по меню и не по иконке меню
+    if (!clickedElement.closest('.dialog-dropdown') && !clickedElement.closest('.session-item__menu-icon')) {
+      dialogMenuOpen.value = null
+    }
+  })
+})
+
+// Следим за изменениями активной сессии
+watch(
+  () => chatStore.activeSessionId,
+  (newSessionId) => {
+    if (newSessionId) {
+      // Прокрутка вниз с небольшой задержкой после загрузки сообщений
+      setTimeout(scrollToBottom, 100);
+    }
+  }
+)
 </script>
 
 <style lang="scss" scoped>
 .assistent-chat {
   width: 100%;
-  height: 90vh;
+  height: 95vh;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -454,6 +619,14 @@ const autoGrow = () => {
     overflow: hidden;
     padding: 16px;
     border-radius: 12px;
+    
+    .collapsed + .assistent-chat__dialogs {
+      width: calc(35% - 80px);
+    }
+    
+    .collapsed ~ .assistent-chat__chat {
+      width: calc(65%);
+    }
   }
 
   &__sessions {
@@ -463,16 +636,103 @@ const autoGrow = () => {
     flex-direction: column;
     gap: 16px;
     overflow: hidden;
+    transition: width 0.3s ease;
+    position: relative;
+    
+    &.collapsed {
+      width: 80px;
+      min-width: 80px;
+      
+      .sessions-header h2 {
+        display: none;
+      }
+      
+      .assistent-chat__session-list {
+        padding: 8px 0;
+      }
+    }
+
+    .sessions-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 0 0 12px 0;
+      height: 45px;
+      position: relative;
+    }
 
     h2 {
       margin: 0;
-      margin: 7px;
-      padding: 0 0 12px 0;
+      padding: 0;
       font-size: 18px;
       font-weight: 600;
-      height: 45px; /* Высота соответствует высоте кнопки в центральной колонке */
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .collapse-button {
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      border: 1px solid rgba(#999, 0.1);
+      cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      
+      &:hover {
+        background-color: #f5f7fa;
+      }
+      
+      .collapse-icon {
+        font-size: 14px;
+        color: #999;
+      }
+    }
+
+    .total-unread-counter {
+      position: absolute;
+      right: 10px;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      background-color: #ff4d4f;
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 0 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      }
     }
   }
 
@@ -503,6 +763,12 @@ const autoGrow = () => {
     border-bottom: 1px solid rgba(#999, 0.1);
     display: flex;
     align-items: center;
+    position: relative;
+    
+    &--collapsed {
+      justify-content: center;
+      padding: 8px;
+    }
     
     &:last-child {
       border-bottom: none;
@@ -518,6 +784,11 @@ const autoGrow = () => {
 
     &__avatar {
       margin-right: 12px;
+      position: relative;
+      
+      .session-item--collapsed & {
+        margin-right: 0;
+      }
     }
     
     &__content {
@@ -544,7 +815,7 @@ const autoGrow = () => {
       flex: 1;
     }
     
-    &__edit-icon {
+    &__menu-icon {
       opacity: 0;
       transition: opacity 0.2s;
       margin-left: 8px;
@@ -553,7 +824,7 @@ const autoGrow = () => {
       align-items: center;
       justify-content: center;
       
-      .pencil-icon {
+      .dots-icon {
         font-size: 14px;
       }
       
@@ -563,7 +834,7 @@ const autoGrow = () => {
     }
     
     &:hover {
-      .session-item__edit-icon {
+      .session-item__menu-icon {
         opacity: 0.5;
       }
     }
@@ -579,6 +850,22 @@ const autoGrow = () => {
     &__time {
       font-size: 12px;
       color: #999;
+    }
+
+    &__unread-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      background-color: #40c4dd;
+      color: white;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 8px;
+      padding: 0 6px;
+      animation: pulse 1.5s infinite;
     }
 
     &__description {
@@ -617,8 +904,8 @@ const autoGrow = () => {
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 4px;
+    border-radius: 6px;
     width: 100%;
     
     &:hover {
@@ -626,17 +913,24 @@ const autoGrow = () => {
     }
     
     &__avatar {
-      margin-right: 12px;
+      margin-right: 8px;
+      
+      .assistant-avatar {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        font-size: 12px;
+      }
     }
     
     &__info {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
     
     &__name {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       margin: 0;
       display: flex;
@@ -644,20 +938,27 @@ const autoGrow = () => {
       gap: 4px;
       
       .dropdown-icon {
-        font-size: 10px;
+        font-size: 8px;
         color: #999;
+        margin-left: 4px;
+      }
+      
+      .status-indicator {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #ff4d4f;
+        display: inline-block;
+        
+        &--active {
+          background-color: #52c41a;
+        }
       }
     }
     
     &__description {
-      font-size: 12px;
+      font-size: 10px;
       color: #666;
-      margin: 0;
-    }
-    
-    &__status {
-      font-size: 12px;
-      color: #999;
       margin: 0;
     }
   }
@@ -937,7 +1238,7 @@ const autoGrow = () => {
 }
 
 .new-dialog-button {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   text-align: center;
   background-color: #40c4dd;
@@ -945,13 +1246,13 @@ const autoGrow = () => {
   cursor: pointer;
   color: #ffffff;
   font-weight: 500;
-  margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   height: 45px; /* Фиксированная высота, чтобы соответствовать заголовку в левой колонке */
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 10px;
   
   &:hover {
     background-color: #33b5ce;
@@ -1058,6 +1359,86 @@ const autoGrow = () => {
     &__sessions,
     &__dialogs {
       height: auto;
+    }
+  }
+}
+
+.assistant-unread-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  background-color: #ff4d4f;
+  color: white;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  animation: pulse 1.5s infinite;
+}
+
+.dialogs-header {
+  display: flex;
+  align-items: center;
+  height: 45px;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.assistant-dialogs-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background-color: #40c4dd;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  animation: pulse 1.5s infinite;
+}
+
+.dialog-dropdown {
+  position: absolute;
+  right: 8px;
+  top: 30px;
+  width: 200px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  
+  &__action {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: rgba(#999, 0.05);
+    }
+    
+    &-icon {
+      margin-right: 12px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    
+    &-title {
+      font-size: 14px;
     }
   }
 }
