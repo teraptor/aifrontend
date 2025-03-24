@@ -6,9 +6,12 @@
         <span class="toggle-icon"></span>
       </button>
     </div>
-    <div class="side-menu__container" v-show="!SidebarIsOpen" >
-      <SidebarUnauthenticated v-if="!isAuthenticated"/>
-      <SidebarAuthenticated v-else/>
+    <div class="side-menu__container">
+      <SidebarUnauthenticated v-if="!isAuthenticated && !SidebarIsOpen"/>
+      <SidebarAuthenticated v-else-if="!SidebarIsOpen"/>
+      <div v-else-if="SidebarIsOpen && isAuthenticated" class="side-menu__user-collapsed">
+        <UserAvatar />
+      </div>
     </div>
   </aside>
 </template>
@@ -19,6 +22,7 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/stores/useAuthStore';
 import SidebarAuthenticated from '../SidebarComponents/SidebarAuthenticated.vue';
+import UserAvatar from '../User/UserAvatar.vue';
 
 const authStore = useAuthStore()
 const { isAuthenticated } = storeToRefs(authStore);
@@ -32,7 +36,7 @@ const { toggleSidebar } = layoutStore;
 
 <style scoped lang="scss">
 .side-menu {
-  width: 280px;
+  width: 250px;
   height: 100vh;
   background: $light-color;
   display: flex;
@@ -42,6 +46,7 @@ const { toggleSidebar } = layoutStore;
   top: 0;
   left: 0;
   z-index: 10;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 
   &--collapsed {
     width: 72px;
@@ -70,6 +75,12 @@ const { toggleSidebar } = layoutStore;
     width: 100%;
     overflow-y: auto;
   }
+
+  &__user-collapsed {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
 }
 
 .toggle-button {
@@ -93,29 +104,39 @@ const { toggleSidebar } = layoutStore;
   position: relative;
   width: 18px;
   height: 2px;
-  background-color: #111827;
+  background-color: transparent;
   transition: all 0.3s ease;
 
   &::before,
   &::after {
     content: '';
     position: absolute;
-    width: 18px;
+    width: 10px;
     height: 2px;
     background-color: #111827;
     transition: all 0.3s ease;
   }
 
   &::before {
-    transform: translateY(-6px);
+    transform: rotate(45deg);
+    transform-origin: 0 0;
   }
 
   &::after {
-    transform: translateY(6px);
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
   }
 }
 
 .side-menu--collapsed .toggle-icon {
-  transform: rotate(180deg);
+  &::before {
+    transform: rotate(-45deg);
+    transform-origin: 100% 0;
+  }
+
+  &::after {
+    transform: rotate(45deg);
+    transform-origin: 100% 100%;
+  }
 }
 </style>

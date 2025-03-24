@@ -128,7 +128,7 @@ const navigateToRoute = (routeName: string):void => {
     width: 100%;
     padding: 16px;
     margin-top: auto;
-    margin-bottom: 20px;
+    // margin-bottom: 20px;
   }
 }
 </style>
