@@ -72,8 +72,8 @@ const activeTab = ref(tabs.value[0].id);
 const installAssistentWithRedirect = async (id: string) => {
   try {
     await assistentsStore.installAssistent(id);
-    // После успешной установки перенаправляем на страницу /my
-    router.push({ path: '/my' });
+    // После успешной установки перенаправляем на страницу чатов
+    router.push({ path: '/chats' });
     notifications.success('Ассистент установлен');
   } catch (error) {
     console.error('Ошибка при установке ассистента:', error);

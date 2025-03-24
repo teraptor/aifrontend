@@ -279,7 +279,7 @@ const selectComponent = (component: any) => {
 const saveAssistant = () => {
   // TODO: Сохранение ассистента
   console.log('Сохранение ассистента:', assistant.value);
-  router.push('/');
+  router.push('/chats');
 };
 
 const handleDragOver = (event: DragEvent) => {

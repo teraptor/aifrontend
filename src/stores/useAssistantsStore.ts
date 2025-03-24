@@ -192,6 +192,10 @@ export const useAssistentsStore = defineStore('assistents', {
       try {
         const response = await agentService.createAgentFromTemplate(id);
         notifications.success('Ассистент установлен успешно');
+        
+        // Обновляем список моих ассистентов после установки
+        await this.getMyAssistents();
+        
         return response;
       } catch(error) {
         notifications.success('Ошибка создания ассистента');
