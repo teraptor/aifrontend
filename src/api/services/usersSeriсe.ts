@@ -11,7 +11,6 @@ export const userUservice = {
       const response = await apiClient.get<ProfileUserResponse>('/v1/profile');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении профиля пользователя:', error);
       throw error;
     }
   },
@@ -22,7 +21,6 @@ export const userUservice = {
       const response = await apiClient.post<ProfileUserResponse>('/v1/profile');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при обновлении профиля пользователя:', error);
       throw error;
     }
   }

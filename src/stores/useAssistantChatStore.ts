@@ -55,9 +55,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       // и это не активный диалог или пользователь переключился на другой диалог
       if (!isUser && sessionId !== this.activeSessionId) {
         session.unreadCount = (session.unreadCount || 0) + 1;
-        
-        // Показываем уведомление о новом сообщении
-        this.showNewMessageNotification(session.title, text);
       }
       
       // Сохраняем ID сессии и ID ассистента, куда должен прийти ответ
@@ -112,8 +109,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
             }, 1000);
           }
         } catch (error) {
-          console.error('Ошибка при отправке сообщения:', error);
-          
           // Удаляем запрос из списка ожидающих ответов в случае ошибки
           this.pendingResponses = this.pendingResponses.filter(
             pr => !(pr.sessionId === sessionId && pr.agentId === session.agentId)
@@ -134,7 +129,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     async createNewSession(agentId: string) {
       try {
         const response = await agentService.createDialog(agentId);
-        console.log('New session created:', response);
         // Создаем новую сессию
         const newSession: Session = {
           id: response.ID || response.id || Date.now().toString(),
@@ -145,7 +139,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           unreadCount: 0
         };
         
-        console.log('New session:', newSession);
         // Добавляем сессию в список
         this.sessions.push(newSession);
         
@@ -154,15 +147,12 @@ export const useAssistentChatStore = defineStore('assistentChat', {
         
         return newSession;
       } catch (error) {
-        console.error('Ошибка при создании нового диалога:', error);
         throw error;
       }
     },
 
     // выбор диалога
     selectSession(sessionId: string) {
-      console.log('Selecting session:', sessionId);
-      console.log('Sessions:', this.sessions);
       // Сначала деактивируем все сессии
       this.sessions.forEach(session => {
         session.isActive = false;
@@ -244,7 +234,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           this.isLoading = false;
         }
       } catch (error) {
-        console.error('Ошибка при загрузке сообщений диалога:', error);
         // Сбрасываем состояние загрузки в случае ошибки
         this.isLoading = false;
       }

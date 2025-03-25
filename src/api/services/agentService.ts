@@ -60,7 +60,6 @@ export const agentService = {
   async getAgentById(agentId: string): Promise<CreateAgentResponse> {
     try {
       const response = await apiClient.get<CreateAgentResponse>(`${API_BASE}/agents/${agentId}`);
-      console.log("response getAgentById:", response.data);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'getAgentById');
@@ -97,7 +96,6 @@ export const agentService = {
   async getMyAgents(): Promise<MyAgentsResponse> {
     try {
       const response = await apiClient.get<MyAgentsResponse>(`${API_BASE}/agents/my`);
-      console.log('My agents response:', response.data);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'getMyAgents');
@@ -160,7 +158,6 @@ export const agentService = {
   // PUT /v1/agents/{agentID}
   async updateAgent(agentId: string, data: any): Promise<any> {
     try {
-      console.log("data", data);
       const response = await apiClient.post<any>(`${API_BASE}/agents/${agentId}`, data);
       return response.data;
     } catch (error) {

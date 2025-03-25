@@ -112,7 +112,6 @@ export const useAssistentsStore = defineStore('assistents', {
             business: false,
             author_id: '1'
           }));
-        console.log('templates', this.assistants);
         return templates;
       } catch(error){
         this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке ассистентов';
