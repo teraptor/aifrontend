@@ -162,14 +162,8 @@ export const useAssistentsStore = defineStore('assistents', {
         
         // Удаляем ассистента из локального состояния
         this.assistants = this.assistants.filter(assistant => assistant.id !== id);
-        
-        // Можно добавить уведомление пользователя об успешном удалении
-        notifications.success('Ассистент успешно удален');
-        
         return response;
       } catch(error) {
-        // Показываем ошибку пользователю
-        notifications.error('Ошибка при удалении ассистента');
         throw error;
       }
     },
