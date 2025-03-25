@@ -115,7 +115,6 @@ const installAssistentWithRedirect = async (id: string) => {
     router.push({ path: '/chats' });
     notifications.success('Ассистент установлен');
   } catch (error) {
-    console.error('Ошибка при установке ассистента:', error);
     notifications.error('Ошибка при установке ассистента');
   }
 };
@@ -127,7 +126,7 @@ onMounted(async () => {
     try {
       await assistentsStore.fetchAssitantents();
     } catch (error) {
-      console.error('Ошибка при загрузке ассистентов:', error);
+      notifications.error('Ошибка при загрузке ассистентов');
     }
   }
   
@@ -136,7 +135,6 @@ onMounted(async () => {
     try {
       await assistentsStore.fetchAssistentById(route.params.id as string);
     } catch (error) {
-      console.error('Ошибка при загрузке ассистента:', error);
       notifications.error('Не удалось загрузить данные ассистента');
     }
   }

@@ -3,17 +3,12 @@ import { notifications } from "@/plugins/notifications";
 
 export class ApiErrorHandler {
     static handleError(error: any, methodName: string) {
-        console.error(`API Error in ${methodName}:`, error);
-        
         if (error.response) {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx
             const status = error.response.status;
             const statusText = error.response.statusText;
             const data = error.response.data;
-            
-            console.error(`Status: ${status} ${statusText}`);
-            console.error("Response data:", data);
             
             // Handle specific status codes
             switch (status) {
@@ -38,11 +33,9 @@ export class ApiErrorHandler {
             }
         } else if (error.request) {
             // The request was made but no response was received
-            console.error("No response received:", error.request);
             notifications.error("Сервер не отвечает");
         } else {
             // Something happened in setting up the request that triggered an Error
-            console.error("Error message:", error.message);
             notifications.error(`Ошибка: ${error.message}`);
         }
         

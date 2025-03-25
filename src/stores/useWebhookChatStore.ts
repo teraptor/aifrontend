@@ -47,7 +47,6 @@ export const useWebhookChatStore = defineStore('webhookChat', () => {
       
       messages.value.push(botMessage)
     } catch (err) {
-      console.error('Ошибка при отправке сообщения:', err)
       error.value = 'Не удалось получить ответ'
       
       // Добавляем сообщение об ошибке

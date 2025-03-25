@@ -72,7 +72,6 @@ export const useAssistentsStore = defineStore('assistents', {
     // обновление ассистента
     async updateAssistent(id: string, data: Partial<IAssistent>) {
       try {
-        console.log("data", data);
         const response = await agentService.updateAgent(id, data);
         return response;
       } catch(error) {
@@ -125,8 +124,6 @@ export const useAssistentsStore = defineStore('assistents', {
         this.isLoading = true;
         const response = await agentService.getMyAgents();
         
-        console.log('response getMyAssistents:', response.assistants);
-
         if (!response.assistants || !Array.isArray(response.assistants)) {
           console.warn('No assistants received from API or invalid format');
           this.assistants = [];
@@ -253,7 +250,6 @@ export const useAssistentsStore = defineStore('assistents', {
     },
 
     getAssistentById: (state) => (id: string) => {
-      console.log("state.assistants", state.assistants);
       return state.assistants.find((a) => a.id === id);
     },
   },

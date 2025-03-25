@@ -615,8 +615,6 @@ watch(
   () => selectedAssistant.value,
   (newAssistant, oldAssistant) => {
     if (newAssistant && newAssistant.id !== oldAssistant?.id) {
-      console.log('Assistant changed:', newAssistant.name);
-      
       // Больше не выбираем автоматически диалоги с непрочитанными сообщениями
       // Пользователь должен сам кликнуть на диалог, чтобы сбросить счетчик
       // const assistantSessions = chatStore.sessions.filter(s => s.agentId === newAssistant.id);

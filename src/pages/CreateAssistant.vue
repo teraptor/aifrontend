@@ -272,13 +272,11 @@ const toggleComponentsMenu = () => {
 };
 
 const selectComponent = (component: any) => {
-  console.log('Выбран компонент:', component);
   // TODO: Добавление компонента в ассистента
 };
 
 const saveAssistant = () => {
   // TODO: Сохранение ассистента
-  console.log('Сохранение ассистента:', assistant.value);
   router.push('/chats');
 };
 

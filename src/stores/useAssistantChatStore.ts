@@ -74,9 +74,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           // Устанавливаем состояние загрузки
           this.isLoading = true;
           
-          // Отправляем сообщение через API
-          console.log('Sending message to dialog:', session.agentId, sessionId, text);
-          
           // Сохраняем ID сессии для ответа в локальной переменной
           const targetSession = sessionId;
           const targetAgentId = session.agentId;

@@ -182,7 +182,6 @@ const saveChanges = async () => {
       instructions: instructions.value,
     };
     
-    console.log('Отправляемые данные для сохранения:', updateData);
     
     // Проверяем, что поле инструкций не пустое
     if (!updateData.instructions.trim()) {
@@ -205,7 +204,6 @@ const saveChanges = async () => {
     
     notifications.success('Ассистент успешно обновлен');
   } catch(error) {
-    console.error('Ошибка при обновлении:', error);
     notifications.error('Ошибка обновления ассистента');
   } finally {
     // Сбрасываем флаг сохранения независимо от результата
@@ -260,17 +258,14 @@ onMounted(async () => {
         instructions.value = assistent.value.instructions || '';
       }
     } catch (error) {
-      console.error('Ошибка при загрузке инструкций ассистента:', error);
       instructions.value = assistent.value.instructions || '';
     }
     
     // Сохраняем изначальные данные для отслеживания изменений
     updateOriginalData();
     
-    console.log("assistent", assistent.value);
   } else {
     // Если ассистент не найден после загрузки, возвращаемся назад
-    console.error('Ассистент не найден');
     router.push('/assistents');
   }
 });
@@ -289,8 +284,6 @@ const updateInstructions = (value: string) => {
     if (confirm('Вы хотите использовать выбранный шаблон?')) {
       instructions.value = templateContent[value];
       hasChanges.value = true;
-      
-      console.log('Применен шаблон инструкций:', instructions.value);
       
       // Добавляем автоматическое сохранение при выборе шаблона
       if (assistent.value && !assistent.value.isDisabled) {

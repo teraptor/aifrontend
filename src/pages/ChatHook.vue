@@ -88,7 +88,6 @@
   }
 
   onMounted(async () => {
-    console.log('Загружен чат с ID:', chatId.value);
     try {
       isLoading.value = true;
       
@@ -102,7 +101,6 @@
         isLoading.value = false;
       }, 1000);
     } catch (error) {
-      console.error('Ошибка при загрузке чата:', error);
       chatData.value = null;
     } finally {
       isLoading.value = false;

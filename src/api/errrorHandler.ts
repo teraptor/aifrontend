@@ -12,9 +12,6 @@ export class ApiErrorHandler {
             const statusText = error.response.statusText;
             const data = error.response.data;
             
-            console.error(`Status: ${status} ${statusText}`);
-            console.error("Response data:", data);
-            
             // Handle specific status codes
             switch (status) {
                 case 400:
@@ -38,11 +35,9 @@ export class ApiErrorHandler {
             }
         } else if (error.request) {
             // The request was made but no response was received
-            console.error("No response received:", error.request);
             notifications.error("Сервер не отвечает");
         } else {
             // Something happened in setting up the request that triggered an Error
-            console.error("Error message:", error.message);
             notifications.error(`Ошибка: ${error.message}`);
         }
         
