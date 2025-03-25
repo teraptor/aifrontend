@@ -15,12 +15,21 @@
           <p class="assistent-detail__summary"> {{ assistent.summary }}</p>
         </div>
         <Button
+            v-if="authStore.isAuthenticated"
             button-type="secondary"
             text="Установить"
             type="button"
             size="medium"
             icon="icon icon-arrow-right2"
             @click="installAssistentWithRedirect(assistent.id)"
+          />
+        <Button
+            v-else
+            button-type="secondary"
+            text="Войдите для установки"
+            type="button"
+            size="medium"
+            @click="openLoginModal"
           />
       </div>
 
@@ -41,21 +50,29 @@
         </template>
       </Tabs>
     </div>
+    
+    <!-- Модальные окна -->
+    <LoginModal ref="loginModal" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 import Button from '@/components/ui/Button.vue';
 import Tabs from '@/components/ui/Tabs.vue';
 import { notifications } from '@/plugins/notifications';
+import { useAuthStore } from '@/stores/useAuthStore';
+import LoginModal from '@/components/Modal/LoginModal.vue';
 
 const assistentsStore = useAssistentsStore();
+const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
+const loginModal = ref<InstanceType<typeof LoginModal> | null>(null);
+const pendingInstallId = ref<string | null>(null);
 
 const assistent = computed(() => assistentsStore.getAssistentById(route.params.id as string)); 
 
@@ -68,8 +85,30 @@ const tabs = ref([
 
 const activeTab = ref(tabs.value[0].id);
 
+// Открытие модального окна авторизации
+const openLoginModal = () => {
+  loginModal.value?.openModal();
+};
+
+// Наблюдаем за изменением статуса авторизации
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (isAuthenticated && pendingInstallId.value) {
+    // Если пользователь авторизовался и есть отложенная установка ассистента
+    installAssistentWithRedirect(pendingInstallId.value);
+    pendingInstallId.value = null;
+    loginModal.value?.prefillEmail(''); // Очищаем поле почты в модальном окне
+  }
+});
+
 // Функция для установки ассистента с редиректом
 const installAssistentWithRedirect = async (id: string) => {
+  if (!authStore.isAuthenticated) {
+    notifications.warning('Пожалуйста, войдите в систему для установки ассистента');
+    pendingInstallId.value = id; // Сохраняем ID ассистента для отложенной установки
+    openLoginModal();
+    return;
+  }
+  
   try {
     await assistentsStore.installAssistent(id);
     // После успешной установки перенаправляем на страницу чатов
@@ -194,4 +233,3 @@ onMounted(async () => {
   }
 }
 </style>
-@/stores/useAssistantsStore

@@ -1,7 +1,9 @@
 <template>
   <div class="main">
     <h1>Чат #{{ chatId }}</h1>
-    <div v-if="isLoading">Загрузка...</div>
+    <div v-if="isLoading">
+      Загрузка...
+    </div>
     <div v-else-if="!chatData">
       <p>Чат не найден или произошла ошибка загрузки.</p>
       <AssistentsList />

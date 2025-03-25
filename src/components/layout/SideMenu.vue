@@ -2,9 +2,6 @@
   <aside class="side-menu" :class="{ 'side-menu--collapsed': SidebarIsOpen }">
     <div class="side-menu__header">
       <h1 v-show="!SidebarIsOpen">AI</h1>
-      <button class="toggle-button" @click="toggleSidebar">
-        <span class="toggle-icon"></span>
-      </button>
     </div>
     <div class="side-menu__container">
       <SidebarUnauthenticated v-if="!isAuthenticated && !SidebarIsOpen"/>
@@ -29,8 +26,6 @@ const { isAuthenticated } = storeToRefs(authStore);
 
 const layoutStore = useLayoutStore();
 const { SidebarIsOpen } = storeToRefs(layoutStore);
-const { toggleSidebar } = layoutStore;
-
 
 </script>
 
