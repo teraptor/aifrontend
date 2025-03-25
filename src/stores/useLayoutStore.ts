@@ -23,7 +23,7 @@ interface ILayoutStore {
 
 export const useLayoutStore = defineStore('Layout', {
   state: (): ILayoutStore => ({
-    SidebarIsOpen: true,
+    SidebarIsOpen: false,
     RightSidebarIsOpen: true,
     footerNav: [
       {
