@@ -1,10 +1,10 @@
 // Настройка Jest для тестирования
-import * as dotenv from 'dotenv';
+import { config } from 'dotenv';
 import { TextEncoder, TextDecoder } from 'util';
-import 'jest';
+import '@jest/globals';
 
 // Загрузка переменных окружения из .env
-dotenv.config();
+config();
 
 // Мок для localStorage
 class LocalStorageMock implements Storage {
@@ -31,20 +31,20 @@ class LocalStorageMock implements Storage {
   }
 
   key(index: number): string | null {
-    const keys = Object.keys(this.store);
-    return keys[index] || null;
+    return Object.keys(this.store)[index] || null;
   }
 }
 
-// Мок для объектов window
+// Установка глобальных объектов
+global.TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
 global.localStorage = new LocalStorageMock();
 
-// Мок для TextEncoder/TextDecoder
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
-
-// Мок для router и notifications
-global.jest = jest;
+// Мок для window
+global.window = {
+  ...global.window,
+  localStorage: new LocalStorageMock()
+} as any;
 
 // Мок для import.meta
 Object.defineProperty(globalThis, 'import', {

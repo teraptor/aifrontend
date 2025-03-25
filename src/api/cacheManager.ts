@@ -5,43 +5,33 @@ interface CacheOptions {
     staleWhileRevalidate?: boolean;
 }
 
-interface CacheItem<T> {
-    value: T;
-    expiresAt: number;
+interface CacheData<T> {
+    data: T;
+    timestamp: number;
 }
 
 export class CacheManager {
-    private static cache = new Map<string, CacheItem<any>>();
+    private static cache = new Map<string, CacheData<any>>();
 
     // получение данных из кэша
     static get<T>(key: string): T | null {
         const item = this.cache.get(key);
-
-        if (!item) {
-            return null;
-        }
-
-        return item.value;
+        return item ? item.data : null;
     }
     
     // проверка актуальности данных
     static isFresh(key: string, ttl: number): boolean {
         const item = this.cache.get(key);
-
-        if (!item) {
-            return false;
-        }
-
-        const now = Date.now();
-        return now - item.expiresAt < ttl;
+        if (!item) return false;
+        return Date.now() - item.timestamp <= ttl;
     }
 
     // сохранение данных в кэш
-    static set<T>(key: string, data: T):void {
+    static set<T>(key: string, data: T): void {
         this.cache.set(key, {
-            value: data,
-            expiresAt: Date.now(),
-        })
+            data,
+            timestamp: Date.now()
+        });
     }
     
     // удаление данных из кэша
@@ -58,23 +48,25 @@ export class CacheManager {
     static async getOrFetch<T>(
         key: string,
         fetchFn: () => Promise<T>,
-        options: CacheOptions
+        ttl: number,
+        staleWhileRevalidate = false
     ): Promise<T> {
-        const cachedData = this.get<T>(key);
-        const isFresh = this.isFresh(key, options.ttl);
+        const cached = this.cache.get(key) as CacheData<T> | undefined;
+        const isFresh = cached && this.isFresh(key, ttl);
 
-        // если данные есть и они актуальны, то возвращаем их
-        if (cachedData && isFresh) {
-            return cachedData;
+        if (isFresh) {
+            return cached.data;
         }
 
-        if (cachedData && options.staleWhileRevalidate) {
-            this.fetchAndUpdateCache(key, fetchFn);
-            return cachedData;
+        if (staleWhileRevalidate && cached) {
+            // Запускаем обновление в фоне
+            fetchFn().then(newData => this.set(key, newData));
+            return cached.data;
         }
 
-        // если данные нет или они не актуальны, то запрашиваем их
-        return this.fetchAndUpdateCache(key, fetchFn);
+        const newData = await fetchFn();
+        this.set(key, newData);
+        return newData;
     }
 
     // запрос данных и обновление кэша

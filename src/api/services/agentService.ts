@@ -28,7 +28,8 @@ export const agentService = {
             return { data: [] };
           }
         },
-        { ttl: 3600000, staleWhileRevalidate: true }
+        3600000,
+        true
       );
     } catch (error) {
       // Возвращаем пустой массив вместо выброса исключения
@@ -40,7 +41,7 @@ export const agentService = {
   // GET /v1/agents/create
   async createAgent(): Promise<CreateAgentResponse> {
     const cacheKey = 'createAgent';
-    return CacheManager.getOrFetch (
+    return CacheManager.getOrFetch(
       cacheKey,
       async () => {
         try {
@@ -51,7 +52,8 @@ export const agentService = {
           throw error;
         }
       },
-      { ttl: 3600000, staleWhileRevalidate: true }
+      3600000,
+      true
     );
   },
 

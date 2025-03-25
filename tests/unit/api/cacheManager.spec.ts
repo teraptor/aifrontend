@@ -1,47 +1,55 @@
+import { jest } from '@jest/globals';
 import { CacheManager } from '@/api/cacheManager';
+
+interface TestData {
+  test: string;
+}
 
 describe('CacheManager', () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     // Очищаем кэш перед каждым тестом
     CacheManager.clear();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe('get', () => {
     it('должен возвращать null для отсутствующего ключа', () => {
-      expect(CacheManager.get('non-existent-key')).toBeNull();
+      expect(CacheManager.get<TestData>('non-existent')).toBeNull();
     });
 
-    it('должен возвращать значение для существующего ключа', () => {
-      const testData = { test: 'data' };
-      CacheManager.set('test-key', testData);
-      expect(CacheManager.get('test-key')).toEqual(testData);
+    it('должен возвращать сохраненные данные', () => {
+      const testData: TestData = { test: 'data' };
+      CacheManager.set<TestData>('test-key', testData);
+      expect(CacheManager.get<TestData>('test-key')).toEqual(testData);
     });
   });
 
   describe('set и delete', () => {
     it('должен устанавливать и удалять значения', () => {
-      const testData = { test: 'data' };
+      const testData: TestData = { test: 'data' };
       
       // Устанавливаем значение
-      CacheManager.set('test-key', testData);
-      expect(CacheManager.get('test-key')).toEqual(testData);
+      CacheManager.set<TestData>('test-key', testData);
+      expect(CacheManager.get<TestData>('test-key')).toEqual(testData);
       
       // Удаляем значение
       CacheManager.delete('test-key');
-      expect(CacheManager.get('test-key')).toBeNull();
+      expect(CacheManager.get<TestData>('test-key')).toBeNull();
     });
   });
 
   describe('isFresh', () => {
     it('должен проверять актуальность данных', () => {
-      const testData = { test: 'data' };
-      
-      // Устанавливаем данные
-      CacheManager.set('test-key', testData);
-      
-      // Проверяем свежесть с большим TTL - данные должны быть свежими
-      expect(CacheManager.isFresh('test-key', 10000)).toBe(true);
-      
+      const testData: TestData = { test: 'data' };
+      CacheManager.set<TestData>('test-key', testData);
+
+      // Проверяем с большим TTL - данные должны быть свежими
+      expect(CacheManager.isFresh('test-key', 1000)).toBe(true);
+
       // Проверяем с малым TTL - данные должны быть устаревшими после задержки
       jest.advanceTimersByTime(100);
       expect(CacheManager.isFresh('test-key', 50)).toBe(false);
@@ -49,64 +57,70 @@ describe('CacheManager', () => {
   });
 
   describe('getOrFetch', () => {
-    it('должен возвращать кэшированные данные, если они свежие', async () => {
-      const testData = { test: 'data' };
-      const fetchFn = jest.fn().mockResolvedValue({ test: 'new-data' });
-      
-      // Устанавливаем данные в кэш
-      CacheManager.set('test-key', testData);
-      
-      // Запрашиваем данные с большим TTL
-      const result = await CacheManager.getOrFetch('test-key', fetchFn, { ttl: 10000 });
-      
-      // Ожидаем, что вернутся кэшированные данные
+    it('должен запрашивать новые данные, если кэш пуст', async () => {
+      const testData: TestData = { test: 'data' };
+      const fetchFn = jest.fn<() => Promise<TestData>>().mockImplementation(
+        () => Promise.resolve(testData)
+      );
+
+      const result = await CacheManager.getOrFetch<TestData>('test-key', fetchFn, 1000);
       expect(result).toEqual(testData);
-      
-      // Проверяем, что fetchFn не вызывался
+      expect(fetchFn).toHaveBeenCalled();
+    });
+
+    it('должен возвращать данные из кэша, если они свежие', async () => {
+      const testData: TestData = { test: 'data' };
+      const newData: TestData = { test: 'new-data' };
+      const fetchFn = jest.fn<() => Promise<TestData>>().mockImplementation(
+        () => Promise.resolve(newData)
+      );
+
+      // Устанавливаем данные в кэш
+      CacheManager.set<TestData>('test-key', testData);
+
+      const result = await CacheManager.getOrFetch<TestData>('test-key', fetchFn, 1000);
+      expect(result).toEqual(testData);
       expect(fetchFn).not.toHaveBeenCalled();
     });
 
     it('должен запрашивать новые данные, если кэш устарел', async () => {
-      const testData = { test: 'data' };
-      const newData = { test: 'new-data' };
-      const fetchFn = jest.fn().mockResolvedValue(newData);
-      
+      const testData: TestData = { test: 'data' };
+      const newData: TestData = { test: 'new-data' };
+      const fetchFn = jest.fn<() => Promise<TestData>>().mockImplementation(
+        () => Promise.resolve(newData)
+      );
+
       // Устанавливаем данные в кэш
-      CacheManager.set('test-key', testData);
-      
-      // Запрашиваем данные с маленьким TTL
-      const result = await CacheManager.getOrFetch('test-key', fetchFn, { ttl: 0 });
-      
-      // Ожидаем, что вернутся новые данные
+      CacheManager.set<TestData>('test-key', testData);
+
+      // Продвигаем время вперед
+      jest.advanceTimersByTime(1100);
+
+      const result = await CacheManager.getOrFetch<TestData>('test-key', fetchFn, 1000);
       expect(result).toEqual(newData);
-      
-      // Проверяем, что fetchFn вызывался
       expect(fetchFn).toHaveBeenCalled();
     });
 
     it('должен возвращать устаревшие данные и обновлять кэш при staleWhileRevalidate', async () => {
-      const testData = { test: 'data' };
-      const newData = { test: 'new-data' };
-      const fetchFn = jest.fn().mockResolvedValue(newData);
-      
+      const testData: TestData = { test: 'data' };
+      const newData: TestData = { test: 'new-data' };
+      const fetchFn = jest.fn<() => Promise<TestData>>().mockImplementation(
+        () => Promise.resolve(newData)
+      );
+
       // Устанавливаем данные в кэш
-      CacheManager.set('test-key', testData);
-      
-      // Запрашиваем данные с маленьким TTL и staleWhileRevalidate
-      const result = await CacheManager.getOrFetch('test-key', fetchFn, { 
-        ttl: 0, 
-        staleWhileRevalidate: true 
-      });
-      
-      // Ожидаем, что вернутся старые данные
+      CacheManager.set<TestData>('test-key', testData);
+
+      // Продвигаем время вперед
+      jest.advanceTimersByTime(1100);
+
+      const result = await CacheManager.getOrFetch<TestData>('test-key', fetchFn, 1000, true);
       expect(result).toEqual(testData);
-      
-      // Проверяем, что fetchFn вызывался
       expect(fetchFn).toHaveBeenCalled();
-      
-      // После обновления кэша, данные должны измениться
-      await new Promise(resolve => setTimeout(resolve, 0));
-      expect(CacheManager.get('test-key')).toEqual(newData);
+
+      // Проверяем, что кэш обновился
+      await Promise.resolve(); // Ждем выполнения промиса
+      expect(CacheManager.get<TestData>('test-key')).toEqual(newData);
     });
   });
 }); 
