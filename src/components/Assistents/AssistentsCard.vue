@@ -60,11 +60,7 @@ const statusText = computed(() => {
 
 const goToAssistentDetails = () => {
   if (cardClass.value !== 'assistents-card--locked') {
-    if(route.name === RouteNames.MAIN.name) {
-      router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
-    } else {
-      router.push({ name: RouteNames.ASSISTENT_CHAT, params: { id: assistents.id } });
-    }
+    router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistents.id } });
   }
 };
 const goToSetting = (event: MouseEvent) => {
