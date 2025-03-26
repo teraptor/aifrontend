@@ -33,6 +33,8 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 .layout {
   display: flex;
   min-height: 100vh;
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 .content-wrapper {
@@ -43,15 +45,15 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
   transition: margin-left 0.3s ease, margin-right 0.3s ease;
 
   &--expanded {
-    margin-left: 110px;
+    margin-left: 250px;
   }
 }
 
 .main-content {
   margin-top: 20px;
   flex-grow: 1;
-  // display: flex;
+  display: flex;
   justify-content: center;
-  width: 68rem;
+  width: 75rem;
 }
 </style>

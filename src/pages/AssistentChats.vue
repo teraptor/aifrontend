@@ -3,7 +3,7 @@
     <div class="assistent-chat__container">
       <div class="assistent-chat__chat">
         <div class="assistent-chat__chat-container" v-if="selectedAssistant && chatStore.activeSessionId">
-          <div class="chat-header">
+          <div class="chat-header" ref="chatHeader">
             <div class="assistant-header" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
               <div class="assistant-header__avatar">
                 <div class="assistant-avatar" v-if="selectedAssistant">
@@ -34,6 +34,31 @@
                   <span class="assistant-dropdown__action-icon">{{ item.icon }}</span>
                   <span class="assistant-dropdown__action-title">{{ item.title }}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div 
+            class="sticky-header" 
+            :class="{ 'hidden': !isHeaderSticky }" 
+            ref="stickyHeader"
+            :style="stickyHeaderStyle"
+          >
+            <div class="assistant-header" @click="toggleAssistentMenu">
+              <div class="assistant-header__avatar">
+                <div class="assistant-avatar" v-if="selectedAssistant">
+                  {{ selectedAssistant.name.charAt(0) }}
+                </div>
+              </div>
+              <div class="assistant-header__info">
+                <h2 class="assistant-header__name">
+                  {{ selectedAssistant.name }} 
+                  <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
+                  <span class="dropdown-icon">▼</span>
+                </h2>
+                <p class="assistant-header__description">
+                  {{ selectedAssistant.description }}
+                </p>
               </div>
             </div>
           </div>
@@ -200,7 +225,7 @@
         ref="messageInput"
         v-model="newMessage" 
         placeholder="Напишите сообщение..." 
-        @keyup.enter.exact="sendMessage"
+        @keydown.ctrl.enter.prevent="sendMessage"
         @input="autoGrow"
         :disabled="chatStore.isLoading"
         rows="1"
@@ -213,7 +238,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, watch, onUnmounted } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
@@ -250,6 +275,14 @@ const assistantSelectorDropdown = ref<HTMLElement | null>(null)
 const isNotificationsMenuOpen = ref(false)
 const notificationBellTrigger = ref<HTMLElement | null>(null)
 const notificationsDropdown = ref<HTMLElement | null>(null)
+const chatHeader = ref<HTMLElement | null>(null)
+const stickyHeader = ref<HTMLElement | null>(null)
+const isHeaderSticky = ref(false)
+const stickyHeaderStyle = ref({
+  top: '0px',
+  left: '0px',
+  width: '0px'
+})
 
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
@@ -381,8 +414,11 @@ const sendMessage = async () => {
   // Сохраняем текст сообщения в переменную
   const messageText = newMessage.value
   
-  // Очищаем поле ввода сразу
+  // Очищаем поле ввода и сбрасываем его высоту
   newMessage.value = ''
+  if (messageInput.value) {
+    messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
+  }
   
   // Отправляем сообщение на сервер
   await chatStore.addMessage(messageText, true, chatStore.activeSessionId)
@@ -453,12 +489,12 @@ const cancelEditingTitle = () => {
 
 // Прокрутка чата вниз
 const scrollToBottom = () => {
+  // Выводим высоту элемента .assistent-chat в консоль
   nextTick(() => {
-    if (chatContainer.value) {
-      // Используем setTimeout для гарантии выполнения после рендеринга
-      setTimeout(() => {
-        chatContainer.value!.scrollTop = chatContainer.value!.scrollHeight;
-      }, 50);
+    const assistentChat = document.querySelector('.assistent-chat')
+    if (assistentChat) {
+      console.log('Высота .assistent-chat:', assistentChat.clientHeight)
+      window.scrollTo(0, assistentChat.clientHeight) 
     }
   })
 }
@@ -543,6 +579,9 @@ onMounted(async () => {
       characterData: true,  // наблюдать за изменениями текста
     });
   }
+
+  // Добавляем слушатель прокрутки
+  window.addEventListener('scroll', checkHeaderVisibility)
 })
 
 // Создаем аудио элемент для уведомлений
@@ -551,7 +590,7 @@ const notificationSound = ref<HTMLAudioElement | null>(null)
 // Функция для создания звукового уведомления
 const createNotificationSound = () => {
   notificationSound.value = new Audio()
-  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
+  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
   notificationSound.value.load()
 }
 
@@ -595,7 +634,7 @@ const autoGrow = () => {
   if (!messageInput.value) return
   
   // Сбрасываем высоту для корректного расчета
-  messageInput.value.style.height = 'auto'
+  messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
   
   // Устанавливаем высоту на основе содержимого, но не более 150px
   const newHeight = Math.min(messageInput.value.scrollHeight, 150)
@@ -745,6 +784,45 @@ const unreadDialogs = computed(() => {
 const getAssistantById = (assistantId: string) => {
   return assistants.value.find(a => a.id === assistantId)
 }
+
+// Функция для проверки видимости шапки
+const checkHeaderVisibility = () => {
+  if (!chatHeader.value || !stickyHeader.value) return
+  
+  const headerRect = chatHeader.value.getBoundingClientRect()
+  const isMainHeaderVisible = headerRect.top >= 0
+  
+  // Если основная шапка стала видимой, плавно скрываем прикрепленную
+  if (isMainHeaderVisible && isHeaderSticky.value) {
+    setTimeout(() => {
+      isHeaderSticky.value = false
+    }, 300)
+  } else if (!isMainHeaderVisible) {
+    // Если основная шапка не видна, показываем прикрепленную
+    isHeaderSticky.value = true
+    
+    // Обновляем позицию прикрепленной шапки
+    const chatContainer = chatHeader.value.closest('.assistent-chat__chat-container')
+    if (chatContainer) {
+      const containerRect = chatContainer.getBoundingClientRect()
+      stickyHeaderStyle.value = {
+        top: '0px',
+        left: `${containerRect.left}px`,
+        width: `${containerRect.width}px`
+      }
+    }
+  }
+}
+
+// Добавляем слушатель прокрутки
+onMounted(() => {
+  window.addEventListener('scroll', checkHeaderVisibility)
+})
+
+// Удаляем слушатель при размонтировании
+onUnmounted(() => {
+  window.removeEventListener('scroll', checkHeaderVisibility)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -790,7 +868,7 @@ const getAssistantById = (assistantId: string) => {
       overflow-y: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
-      width: 25%;
+      width: 20%;
       border-radius: 12px;
     }
 
@@ -1124,21 +1202,33 @@ const getAssistantById = (assistantId: string) => {
   .message {
     display: flex;
     max-width: 80%;
+    width: 100%;
     
     &__content {
       padding: 12px 16px;
       border-radius: 12px;
       position: relative;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      width: 100%;
+      box-sizing: border-box;
     }
     
     &__text {
       margin: 0;
       font-size: 14px;
       line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-all;
+      hyphens: auto;
       
       :deep(a) {
         color: #1890ff;
         text-decoration: underline;
+        word-break: break-all;
       }
       
       :deep(code) {
@@ -1146,6 +1236,8 @@ const getAssistantById = (assistantId: string) => {
         padding: 2px 4px;
         border-radius: 4px;
         font-family: monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
       }
       
       :deep(strong) {
@@ -1204,13 +1296,12 @@ const getAssistantById = (assistantId: string) => {
     z-index: 100;
     display: flex;
     align-items: center;
-    width: 51%;
+    width: 57%;
     padding: 8px;
     margin: 0 auto;
     
     textarea {
       flex: 1;
-      padding: 12px 16px;
       border: 1px solid rgba($help-color, 0.2);
       border-radius: 20px;
       background-color: $light-color;
@@ -1220,8 +1311,15 @@ const getAssistantById = (assistantId: string) => {
       max-height: 150px;
       resize: none;
       overflow-y: auto;
-      line-height: 1.5;
+      // line-height: 1.5;
       margin: 0 20px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      display: block;
+      box-sizing: border-box;
+      padding: 11px 16px;
+      vertical-align: middle;
       
       &:focus {
         outline: none;
@@ -1230,6 +1328,7 @@ const getAssistantById = (assistantId: string) => {
       
       &::placeholder {
         color: #999;
+        vertical-align: middle;
       }
       
       &::-webkit-scrollbar {
@@ -1758,6 +1857,35 @@ const getAssistantById = (assistantId: string) => {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
+  }
+
+  .sticky-header {
+    position: fixed;
+    z-index: 100;
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(#999, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 8px 16px;
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease-out;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    
+    &.hidden {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-100%);
+    }
+    
+    .assistant-header {
+      padding: 4px;
+      border-radius: 6px;
+      
+      &:hover {
+        background-color: rgba(#1890ff, 0.05);
+      }
+    }
   }
 }
 </style>
