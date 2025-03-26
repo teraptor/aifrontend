@@ -121,10 +121,12 @@ export const useAuthStore = defineStore('auth', {
       try {
         this.isLoading = true;
         this.error = null;
-        const response = await authService.register(credentials);
-        notifications.success('Регистрация прошла успешно');
         
-        // Возвращаем true, чтобы сигнализировать об успешной регистрации
+        const response = await authService.register(credentials);
+        notifications.success('Регистрация прошла успешно. Добро пожаловать!');
+        
+        await this.login(credentials);
+        
         return true;
       } catch (error: any) {
         notifications.error(error.message);

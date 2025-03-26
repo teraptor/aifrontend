@@ -6,10 +6,10 @@
     <form @submit.prevent="submitForm" class="form">
       <InputField
         v-model="formData.email"
-        type="tel"
-        id="phone"
-        placeholder="test@mail.com"
-        autocomplete="phone"
+        type="email"
+        id="email"
+        placeholder="Введите электронную почту"
+        autocomplete="email"
         size="big"
       />
       <InputField
@@ -44,7 +44,7 @@ import InputField from '../ui/InputField.vue';
 import Button from '../ui/Button.vue';
 import { useAuthStore } from '@/stores/useAuthStore';
 
-const emit = defineEmits(['switch-to-login']);
+const emit = defineEmits(['switch-to-login', 'success']);
 
 const modal = ref<InstanceType<typeof Modal> | null>(null);
 const showPassword = ref<boolean>(false);
@@ -59,29 +59,25 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 
-const isFormValid = computed(() =>{
-  const isUsernameValid = formData.value.email.trim().length >= 3
-  const isPasswordValid = formData.value.password.trim().length >= 8
-  return isUsernameValid && isPasswordValid
-})
+const isFormValid = computed(() => {
+  const isUsernameValid = formData.value.email.trim().length >= 3;
+  const isPasswordValid = formData.value.password.trim().length >= 8;
+  return isUsernameValid && isPasswordValid;
+});
 
 const switchToLogin = () => {
   modal.value?.closeModal();
   emit('switch-to-login');
-}
+};
 
 const submitForm = async () => {
-  if (!isFormValid.value) {
-    return;
-  }
+  if (!isFormValid.value) return;
   
   try {
     const success = await authStore.register(formData.value);
     if (success) {
-      // Закрываем модальное окно регистрации
       modal.value?.closeModal();
-      // Эмитим событие для открытия формы авторизации
-      emit('switch-to-login', formData.value.email);
+      emit('success', formData.value.email);
     }
   } catch (error) {
     console.error('Ошибка при регистрации:', error);

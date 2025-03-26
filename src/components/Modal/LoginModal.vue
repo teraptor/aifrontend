@@ -6,10 +6,10 @@
     <form @submit.prevent="submitForm" class="form">
       <InputField
         v-model="formData.email"
-        type="tel"
-        id="phone"
-        placeholder="test@mail.com"
-        autocomplete="phone"
+        type="email"
+        id="email"
+        placeholder="Введите электронную почту"
+        autocomplete="email"
         size="big"
       />
       <InputField
