@@ -245,6 +245,17 @@ import { onClickOutside } from '@vueuse/core'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
+import type { KatexOptions } from 'katex'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+import mermaid from 'mermaid'
+
+// Инициализация Mermaid
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  securityLevel: 'loose',
+})
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -293,8 +304,58 @@ const assistants = computed(() => assistentsStore.sortedAssistents)
 const formattedText = (text: string) => {
   if (!text) return ''
   
+  let formatted = text
+
+  // Форматирование блоков кода
+  formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const language = lang || ''
+    return `<pre class="code-block ${language}"><code>${code.trim()}</code></pre>`
+  })
+  
+  // Форматирование таблиц
+  formatted = formatted.replace(/\|(.+)\|/g, (match, content: string) => {
+    const cells: string[] = content.split('|').map((cell: string) => cell.trim())
+    return `<div class="table-row">${cells.map((cell: string) => `<div class="table-cell">${cell}</div>`).join('')}</div>`
+  })
+  
+  // Форматирование диаграмм (поддержка Mermaid)
+  formatted = formatted.replace(/```mermaid\n([\s\S]*?)```/g, (match, diagram) => {
+    const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+    nextTick(() => {
+      try {
+        mermaid.render(id, diagram.trim()).then((result) => {
+          const element = document.getElementById(id)
+          if (element) {
+            element.innerHTML = result.svg
+          }
+        })
+      } catch (error) {
+        console.error('Error rendering mermaid diagram:', error)
+      }
+    })
+    return `<div class="mermaid-diagram"><div id="${id}"></div></div>`
+  })
+  
   // Заменяем переносы строк на <br />
-  let formatted = text.replace(/\n/g, '<br />')
+  formatted = formatted.replace(/\n/g, '<br />')
+  
+  // Форматирование математических формул
+  formatted = formatted.replace(/\$\$(.*?)\$\$/g, (match, formula) => {
+    try {
+      return `<div class="math-block">${katex.renderToString(formula, { displayMode: true })}</div>`
+    } catch (error) {
+      console.error('Error rendering math formula:', error)
+      return match
+    }
+  })
+  formatted = formatted.replace(/\$(.*?)\$/g, (match, formula) => {
+    try {
+      return `<span class="math-inline">${katex.renderToString(formula, { displayMode: false })}</span>`
+    } catch (error) {
+      console.error('Error rendering math formula:', error)
+      return match
+    }
+  })
   
   // Выделяем жирным текст между ** (как в Markdown)
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -303,7 +364,7 @@ const formattedText = (text: string) => {
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>')
   
   // Форматируем код (однострочный)
-  formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>')
+  formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
   
   // Добавляем ссылки
   formatted = formatted.replace(
@@ -1215,6 +1276,82 @@ onUnmounted(() => {
       overflow-wrap: break-word;
       width: 100%;
       box-sizing: border-box;
+
+      :deep(.code-block) {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 8px 0;
+        font-family: 'Fira Code', monospace;
+        font-size: 13px;
+        overflow-x: auto;
+        position: relative;
+        
+        &::before {
+          content: attr(class);
+          position: absolute;
+          top: 0;
+          right: 0;
+          padding: 4px 8px;
+          font-size: 12px;
+          color: #666;
+          background-color: rgba(255, 255, 255, 0.1);
+          border-bottom-left-radius: 6px;
+          border-top-right-radius: 6px;
+        }
+      }
+
+      :deep(.table-row) {
+        display: flex;
+        border-bottom: 1px solid rgba(#999, 0.1);
+        
+        &:first-child {
+          font-weight: bold;
+          background-color: rgba(#1890ff, 0.05);
+        }
+      }
+
+      :deep(.table-cell) {
+        padding: 8px;
+        flex: 1;
+        min-width: 100px;
+        border-right: 1px solid rgba(#999, 0.1);
+        
+        &:last-child {
+          border-right: none;
+        }
+      }
+
+      :deep(.mermaid-diagram) {
+        background-color: #fff;
+        padding: 16px;
+        border-radius: 6px;
+        margin: 8px 0;
+        border: 1px solid rgba(#999, 0.1);
+      }
+
+      :deep(.math-block) {
+        padding: 8px;
+        margin: 8px 0;
+        background-color: rgba(#1890ff, 0.05);
+        border-radius: 4px;
+        text-align: center;
+        font-family: 'KaTeX', 'Times New Roman', serif;
+      }
+
+      :deep(.math-inline) {
+        font-family: 'KaTeX', 'Times New Roman', serif;
+        padding: 0 4px;
+      }
+
+      :deep(.inline-code) {
+        background-color: rgba(#000, 0.05);
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: 'Fira Code', monospace;
+        font-size: 13px;
+      }
     }
     
     &__text {
@@ -1224,30 +1361,15 @@ onUnmounted(() => {
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      word-break: break-all;
-      hyphens: auto;
       
       :deep(a) {
         color: #1890ff;
         text-decoration: underline;
-        word-break: break-all;
-      }
-      
-      :deep(code) {
-        background-color: rgba(0, 0, 0, 0.05);
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-family: monospace;
-        white-space: pre-wrap;
-        word-break: break-all;
-      }
-      
-      :deep(strong) {
-        font-weight: bold;
-      }
-      
-      :deep(em) {
-        font-style: italic;
+        word-break: break-word;
+        
+        &:hover {
+          text-decoration: none;
+        }
       }
     }
     
