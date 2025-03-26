@@ -22,7 +22,6 @@
               </div>
             </div>
 
-            <!-- Выпадающее меню для ассистента -->
             <div class="assistant-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
               <div class="assistant-dropdown__header">Действия</div>
               <div class="assistant-dropdown__actions">
@@ -51,7 +50,6 @@
               </div>
             </div>
             
-            <!-- Индикатор "печатает ответ" -->
             <div v-if="chatStore.isLoading" class="message message--assistant message--typing">
               <div class="message__content typing-indicator">
                 <div class="typing-dots">
@@ -62,21 +60,6 @@
                 <p class="message__text typing-text">Печатает ответ...</p>
               </div>
             </div>
-          </div>
-
-          <div class="chat-input">
-            <textarea 
-              ref="messageInput"
-              v-model="newMessage" 
-              placeholder="Напишите сообщение..." 
-              @keyup.enter.exact="sendMessage"
-              @input="autoGrow"
-              :disabled="chatStore.isLoading"
-              rows="1"
-            ></textarea>
-            <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-              <span class="arrow-icon">↑</span>
-            </button>
           </div>
         </div>
         <div v-else class="no-dialog-selected">
@@ -92,7 +75,6 @@
               <span v-if="totalUnreadMessages > 0" class="notification-bell__badge">{{ totalUnreadMessages }}</span>
             </div>
             
-            <!-- Выпадающий список непрочитанных диалогов -->
             <div class="notifications-dropdown" v-if="isNotificationsMenuOpen" ref="notificationsDropdown">
               <div class="notifications-dropdown__header">
                 Непрочитанные сообщения ({{ totalUnreadMessages }})
@@ -140,7 +122,6 @@
             <span class="assistant-selector__dropdown-icon">▼</span>
           </div>
           
-          <!-- Выпадающий список ассистентов -->
           <div class="assistant-selector-dropdown" v-if="isAssistantSelectorOpen" ref="assistantSelectorDropdown">
             <div class="assistant-selector-dropdown__header">Ассистенты</div>
             <div class="assistant-selector-dropdown__list">
@@ -190,7 +171,6 @@
                 </div>
               </div>
               
-              <!-- Выпадающее меню для диалога -->
               <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
                 <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
                   <span class="dialog-dropdown__action-icon">✏️</span>
@@ -211,6 +191,21 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="fixed-chat-input" v-if="selectedAssistant && chatStore.activeSessionId">
+      <textarea 
+        ref="messageInput"
+        v-model="newMessage" 
+        placeholder="Напишите сообщение..." 
+        @keyup.enter.exact="sendMessage"
+        @input="autoGrow"
+        :disabled="chatStore.isLoading"
+        rows="1"
+      ></textarea>
+      <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
+        <span class="arrow-icon">↑</span>
+      </button>
     </div>
   </div>
 </template>
@@ -753,21 +748,23 @@ const getAssistantById = (assistantId: string) => {
 <style lang="scss" scoped>
 .assistent-chat {
   width: 100%;
-  height: 95vh;
+  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+  position: relative;
+  margin-bottom: 100px;
 
   &__container {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 80px);
     display: flex;
     gap: 16px;
-    // background-color: #f5f7fa;
     overflow: hidden;
-    padding: 5px;
-    border-radius: 12px;
+    padding: 16px;
+    box-sizing: border-box;
   }
 
   &__chat {
@@ -1184,18 +1181,23 @@ const getAssistantById = (assistantId: string) => {
     }
   }
 
-  .chat-input {
+  .fixed-chat-input {
+    position: fixed;
+    bottom: 20px;
+    background-color: transparent;
+    z-index: 100;
     display: flex;
-    align-items: flex-end;
-    padding: 16px;
-    border-top: 1px solid rgba(#999, 0.1);
+    align-items: center;
+    width: 51%;
+    padding: 8px;
+    margin: 0 auto;
     
     textarea {
       flex: 1;
       padding: 12px 16px;
-      border: none;
+      border: 1px solid rgba($help-color, 0.2);
       border-radius: 20px;
-      background-color: #f5f7fa;
+      background-color: $light-color;
       font-family: inherit;
       font-size: 14px;
       min-height: 44px;
@@ -1203,6 +1205,7 @@ const getAssistantById = (assistantId: string) => {
       resize: none;
       overflow-y: auto;
       line-height: 1.5;
+      margin: 0 20px;
       
       &:focus {
         outline: none;
@@ -1213,7 +1216,6 @@ const getAssistantById = (assistantId: string) => {
         color: #999;
       }
       
-      // Стили для скроллбара
       &::-webkit-scrollbar {
         width: 4px;
       }
@@ -1237,7 +1239,6 @@ const getAssistantById = (assistantId: string) => {
       color: white;
       border: none;
       cursor: pointer;
-      margin-left: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1257,505 +1258,490 @@ const getAssistantById = (assistantId: string) => {
       }
     }
   }
-}
 
-.assistant-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #1890ff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 18px;
-}
-
-.new-dialog-button {
-  padding: 4px 12px;
-  text-align: center;
-  background-color: #40c4dd;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #ffffff;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  
-  &:hover {
-    background-color: #33b5ce;
-  }
-}
-
-.no-dialog-selected {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 16px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.edit-title-container {
-  flex: 1;
-  
-  input {
-    width: 100%;
-    padding: 4px 8px;
-    font-size: 14px;
-    font-weight: 500;
-    border: 1px solid #1890ff;
-    border-radius: 4px;
-    outline: none;
-  }
-}
-
-.typing-indicator {
-  background-color: #f5f7fa;
-  border-bottom-left-radius: 4px;
-}
-
-.typing-dots {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 0;
-  
-  span {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    background-color: #999;
+  .assistant-avatar {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    opacity: 0.6;
-    animation: typing 1s infinite ease-in-out;
-    
-    &:nth-child(1) {
-      animation-delay: 0s;
-    }
-    
-    &:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-    
-    &:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-  }
-}
-
-.typing-text {
-  font-size: 14px;
-  color: #666;
-  margin: 4px 0 0 0;
-}
-
-@keyframes typing {
-  0% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-}
-
-// Адаптивный дизайн для мобильных устройств
-@media (max-width: 768px) {
-  .assistent-chat {
-    padding: 8px;
-
-    &__container {
-      flex-direction: column;
-      padding: 8px;
-    }
-
-    &__dialogs, 
-    &__chat {
-      width: 100%;
-    }
-    
-    &__dialogs {
-      height: auto;
-    }
-  }
-}
-
-.assistant-unread-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  background-color: #ff4d4f;
-  color: white;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 0 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  animation: pulse 1.5s infinite;
-}
-
-.dialogs-header {
-  display: flex;
-  align-items: center;
-  height: 45px;
-  position: relative;
-  margin-bottom: 16px;
-  gap: 12px;
-}
-
-.assistant-selector {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background-color: rgba(#1890ff, 0.05);
-  border: 1px solid rgba(#999, 0.1);
-  flex-grow: 1;
-  
-  &:hover {
-    background-color: rgba(#1890ff, 0.1);
-  }
-  
-  &__avatar {
-    margin-right: 8px;
-    position: relative;
-    
-    .assistant-avatar {
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      font-size: 14px;
-    }
-  }
-  
-  &__unread-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
+    background-color: #1890ff;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    background-color: #ff4d4f;
-    color: white;
-    border-radius: 9px;
-    font-size: 10px;
     font-weight: bold;
-    padding: 0 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    animation: pulse 1.5s infinite;
-  }
-  
-  &__name {
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-  }
-  
-  &__dropdown-icon {
-    font-size: 10px;
-    color: #999;
-    margin-left: 4px;
-  }
-}
-
-.assistant-selector-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 16px;
-  width: 300px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  margin-top: 8px;
-  overflow: hidden;
-  
-  &__header {
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    border-bottom: 1px solid rgba(#999, 0.1);
-  }
-  
-  &__list {
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  &__item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(#999, 0.1);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-    
-    &:hover {
-      background-color: rgba(#999, 0.05);
-    }
-    
-    &--active {
-      background-color: rgba(#1890ff, 0.05);
-    }
-    
-    &-avatar {
-      margin-right: 12px;
-      position: relative;
-    }
-    
-    &-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    
-    &-name {
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    &-description {
-      font-size: 12px;
-      color: #666;
-    }
-  }
-}
-
-.assistant-dialogs-counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  background-color: #40c4dd;
-  color: white;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 0 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  animation: pulse 1.5s infinite;
-}
-
-.dialog-dropdown {
-  position: absolute;
-  right: 8px;
-  top: 30px;
-  width: 200px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  overflow: hidden;
-  
-  &__action {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    cursor: pointer;
-    
-    &:hover {
-      background-color: rgba(#999, 0.05);
-    }
-    
-    &-icon {
-      margin-right: 12px;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-    
-    &-title {
-      font-size: 14px;
-    }
-  }
-}
-
-.notification-bell-container {
-  position: relative;
-}
-
-.notification-bell {
-  position: relative;
-  cursor: pointer;
-  margin-right: 8px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(#1890ff, 0.05);
-  border: 1px solid rgba(#999, 0.1);
-  border-radius: 6px;
-  transition: all 0.2s;
-  
-  &:hover {
-    background-color: rgba(#1890ff, 0.1);
-  }
-  
-  &__icon {
     font-size: 18px;
   }
-  
-  &.has-notifications &__icon {
-    animation: bell-shake 2s infinite;
-  }
-  
-  &__badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
+
+  .new-dialog-button {
+    padding: 4px 12px;
+    text-align: center;
+    background-color: #40c4dd;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
+    white-space: nowrap;
+    
+    &:hover {
+      background-color: #33b5ce;
+    }
+  }
+
+  .no-dialog-selected {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 16px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .edit-title-container {
+    flex: 1;
+    
+    input {
+      width: 100%;
+      padding: 4px 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #1890ff;
+      border-radius: 4px;
+      outline: none;
+    }
+  }
+
+  .typing-indicator {
+    background-color: #f5f7fa;
+    border-bottom-left-radius: 4px;
+  }
+
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    
+    span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background-color: #999;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: typing 1s infinite ease-in-out;
+      
+      &:nth-child(1) {
+        animation-delay: 0s;
+      }
+      
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      
+      &:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+
+  .typing-text {
+    font-size: 14px;
+    color: #666;
+    margin: 4px 0 0 0;
+  }
+
+  @keyframes typing {
+    0% {
+      transform: translateY(0);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(-5px);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 0.6;
+    }
+  }
+
+  .assistant-unread-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
     background-color: #ff4d4f;
     color: white;
-    border-radius: 9px;
+    border-radius: 10px;
     font-size: 10px;
     font-weight: bold;
-    padding: 0 4px;
+    padding: 0 6px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     animation: pulse 1.5s infinite;
   }
-}
 
-@keyframes bell-shake {
-  0% { transform: rotate(0); }
-  2% { transform: rotate(10deg); }
-  4% { transform: rotate(-10deg); }
-  6% { transform: rotate(10deg); }
-  8% { transform: rotate(0); }
-  100% { transform: rotate(0); }
-}
-
-.notifications-dropdown {
-  position: absolute;
-  top: 45px;
-  left: 0;
-  width: 300px;
-  min-width: 300px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  overflow: hidden;
-  
-  &__header {
-    padding: 12px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    border-bottom: 1px solid rgba(#999, 0.1);
-  }
-  
-  &__list {
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  &__item {
+  .dialogs-header {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    height: 45px;
+    position: relative;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .assistant-selector {
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    border-bottom: 1px solid rgba(#999, 0.1);
-    
-    &:last-child {
-      border-bottom: none;
-    }
+    padding: 4px 8px;
+    border-radius: 6px;
+    background-color: rgba(#1890ff, 0.05);
+    border: 1px solid rgba(#999, 0.1);
+    flex-grow: 1;
     
     &:hover {
-      background-color: rgba(#999, 0.05);
+      background-color: rgba(#1890ff, 0.1);
     }
     
-    &-avatar {
-      margin-right: 12px;
+    &__avatar {
+      margin-right: 8px;
+      position: relative;
       
       .assistant-avatar {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
         font-size: 14px;
       }
     }
     
-    &-info {
+    &__unread-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1;
-      min-width: 0; /* Это нужно для корректной работы text-overflow */
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      background-color: #ff4d4f;
+      color: white;
+      border-radius: 9px;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 0 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      animation: pulse 1.5s infinite;
     }
     
-    &-title {
+    &__name {
       font-size: 14px;
       font-weight: 500;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
     }
     
-    &-assistant {
-      font-size: 12px;
-      color: #666;
+    &__dropdown-icon {
+      font-size: 10px;
+      color: #999;
+      margin-left: 4px;
+    }
+  }
+
+  .assistant-selector-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 16px;
+    width: 300px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    margin-top: 8px;
+    overflow: hidden;
+    
+    &__header {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border-bottom: 1px solid rgba(#999, 0.1);
+    }
+    
+    &__list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    &__item {
       display: flex;
       align-items: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(#999, 0.1);
       
-      &::before {
-        content: "👤";
-        margin-right: 4px;
-        font-size: 10px;
-        flex-shrink: 0;
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background-color: rgba(#999, 0.05);
+      }
+      
+      &--active {
+        background-color: rgba(#1890ff, 0.05);
+      }
+      
+      &-avatar {
+        margin-right: 12px;
+        position: relative;
+      }
+      
+      &-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      
+      &-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      &-description {
+        font-size: 12px;
+        color: #666;
       }
     }
   }
-  
-  &__empty {
-    padding: 16px;
-    text-align: center;
-    color: #999;
-    font-size: 14px;
+
+  .assistant-dialogs-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    background-color: #40c4dd;
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 0 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    animation: pulse 1.5s infinite;
+  }
+
+  .dialog-dropdown {
+    position: absolute;
+    right: 8px;
+    top: 30px;
+    width: 200px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
+    
+    &__action {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: rgba(#999, 0.05);
+      }
+      
+      &-icon {
+        margin-right: 12px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+      
+      &-title {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .notification-bell-container {
+    position: relative;
+  }
+
+  .notification-bell {
+    position: relative;
+    cursor: pointer;
+    margin-right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(#1890ff, 0.05);
+    border: 1px solid rgba(#999, 0.1);
+    border-radius: 6px;
+    transition: all 0.2s;
+    
+    &:hover {
+      background-color: rgba(#1890ff, 0.1);
+    }
+    
+    &__icon {
+      font-size: 18px;
+    }
+    
+    &.has-notifications &__icon {
+      animation: bell-shake 2s infinite;
+    }
+    
+    &__badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      background-color: #ff4d4f;
+      color: white;
+      border-radius: 9px;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 0 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      animation: pulse 1.5s infinite;
+    }
+  }
+
+  @keyframes bell-shake {
+    0% { transform: rotate(0); }
+    2% { transform: rotate(10deg); }
+    4% { transform: rotate(-10deg); }
+    6% { transform: rotate(10deg); }
+    8% { transform: rotate(0); }
+    100% { transform: rotate(0); }
+  }
+
+  .notifications-dropdown {
+    position: absolute;
+    top: 45px;
+    left: 0;
+    width: 300px;
+    min-width: 300px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
+    
+    &__header {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border-bottom: 1px solid rgba(#999, 0.1);
+    }
+    
+    &__list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    &__item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(#999, 0.1);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background-color: rgba(#999, 0.05);
+      }
+      
+      &-avatar {
+        margin-right: 12px;
+        
+        .assistant-avatar {
+          width: 30px;
+          height: 30px;
+          min-width: 30px;
+          font-size: 14px;
+        }
+      }
+      
+      &-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+        min-width: 0;
+      }
+      
+      &-title {
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      &-assistant {
+        font-size: 12px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        
+        &::before {
+          content: "👤";
+          margin-right: 4px;
+          font-size: 10px;
+          flex-shrink: 0;
+        }
+      }
+    }
+    
+    &__empty {
+      padding: 16px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+    }
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
   }
 }
 </style>
