@@ -97,7 +97,9 @@
           <div class="dialogs-header">
             <div class="notification-bell-container">
               <div class="notification-bell" :class="{ 'has-notifications': totalUnreadMessages > 0 }" @click="toggleNotificationsMenu" ref="notificationBellTrigger">
-                <span class="notification-bell__icon">🔔</span>
+                <svg class="notification-bell__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
                 <span v-if="totalUnreadMessages > 0" class="notification-bell__badge">{{ totalUnreadMessages }}</span>
               </div>
               
@@ -1721,17 +1723,20 @@ onUnmounted(() => {
     }
     
     &__icon {
-      font-size: 18px;
+      width: 20px;
+      height: 20px;
+      color: #666;
     }
     
     &.has-notifications &__icon {
       animation: bell-shake 2s infinite;
+      color: #1890ff;
     }
     
     &__badge {
       position: absolute;
-      top: -6px;
-      right: -6px;
+      top: -3px;
+      right: -8px;
       display: flex;
       align-items: center;
       justify-content: center;
