@@ -68,124 +68,126 @@
       </div>
 
       <div class="assistent-chat__dialogs" v-if="selectedAssistant">
-        <div class="dialogs-header">
-          <div class="notification-bell-container">
-            <div class="notification-bell" :class="{ 'has-notifications': totalUnreadMessages > 0 }" @click="toggleNotificationsMenu" ref="notificationBellTrigger">
-              <span class="notification-bell__icon">🔔</span>
-              <span v-if="totalUnreadMessages > 0" class="notification-bell__badge">{{ totalUnreadMessages }}</span>
-            </div>
-            
-            <div class="notifications-dropdown" v-if="isNotificationsMenuOpen" ref="notificationsDropdown">
-              <div class="notifications-dropdown__header">
-                Непрочитанные сообщения ({{ totalUnreadMessages }})
-              </div>
-              <div class="notifications-dropdown__list" v-if="unreadDialogs.length > 0">
-                <div 
-                  v-for="dialog in unreadDialogs" 
-                  :key="dialog.id" 
-                  class="notifications-dropdown__item"
-                  @click="goToUnreadDialog(dialog)"
-                >
-                  <div class="notifications-dropdown__item-avatar">
-                    <div class="assistant-avatar" v-if="getAssistantById(dialog.agentId)">
-                      {{ getAssistantById(dialog.agentId)?.name.charAt(0) }}
-                    </div>
-                  </div>
-                  <div class="notifications-dropdown__item-info">
-                    <div class="notifications-dropdown__item-title">
-                      {{ dialog.title }}
-                    </div>
-                    <div class="notifications-dropdown__item-assistant" v-if="getAssistantById(dialog.agentId)">
-                      {{ getAssistantById(dialog.agentId)?.name }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="notifications-dropdown__empty" v-else>
-                Нет непрочитанных сообщений
-              </div>
-            </div>
-          </div>
-          
-          <div class="assistant-selector" ref="assistantSelectorTrigger" @click="toggleAssistantSelector">
-            <div class="assistant-selector__avatar">
-              <div class="assistant-avatar" v-if="selectedAssistant">
-                {{ selectedAssistant.name.charAt(0) }}
-              </div>
-              <span v-if="selectedAssistant && getAssistantUnreadCount(selectedAssistant.id) > 0" class="assistant-selector__unread-badge">
-                {{ getAssistantUnreadCount(selectedAssistant.id) }}
-              </span>
-            </div>
-            <div class="assistant-selector__name">
-              {{ selectedAssistant.name }}
-            </div>
-            <span class="assistant-selector__dropdown-icon">▼</span>
-          </div>
-          
-          <div class="assistant-selector-dropdown" v-if="isAssistantSelectorOpen" ref="assistantSelectorDropdown">
-            <div class="assistant-selector-dropdown__header">Ассистенты</div>
-            <div class="assistant-selector-dropdown__list">
-              <div 
-                v-for="assistant in assistants" 
-                :key="assistant.id" 
-                :class="['assistant-selector-dropdown__item', { 'assistant-selector-dropdown__item--active': selectedAssistant?.id === assistant.id }]"
-                @click="selectAssistant(assistant); isAssistantSelectorOpen = false"
-              >
-                <div class="assistant-selector-dropdown__item-avatar">
-                  <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
-                </div>
-                <div class="assistant-selector-dropdown__item-info">
-                  <div class="assistant-selector-dropdown__item-name">{{ assistant.name }}</div>
-                  <div class="assistant-selector-dropdown__item-description">{{ assistant.description }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="new-dialog-button" @click="createNewDialog">
-            <span>+ Диалог</span>
-          </div>
-        </div>
-        <div class="assistent-chat__session-list">
-          <div 
-            v-for="session in sortedSessions" 
-            :key="session.id" 
-            :class="['session-item', { 'session-item--active': chatStore.activeSessionId === session.id }]"
-            @click="selectSession(session.id)"
-          >
-            <div class="session-item__content">
-              <div class="session-item__title-container">
-                <div v-if="editingDialogId === session.id" class="edit-title-container" @click.stop>
-                  <input 
-                    ref="editTitleInput"
-                    v-model="editedDialogTitle" 
-                    type="text"
-                    @keyup.enter="saveDialogTitle()"
-                    @keyup.esc="cancelEditingTitle()"
-                    @blur="saveDialogTitle()"
-                  />
-                </div>
-                <div v-else class="session-item__title">{{ session.title }}</div>
-                <div class="session-item__menu-icon" @click.stop="toggleDialogMenu(session, $event)">
-                  <span class="dots-icon">⋮</span>
-                </div>
+        <div class="assistent-chat__dialogs-container">
+          <div class="dialogs-header">
+            <div class="notification-bell-container">
+              <div class="notification-bell" :class="{ 'has-notifications': totalUnreadMessages > 0 }" @click="toggleNotificationsMenu" ref="notificationBellTrigger">
+                <span class="notification-bell__icon">🔔</span>
+                <span v-if="totalUnreadMessages > 0" class="notification-bell__badge">{{ totalUnreadMessages }}</span>
               </div>
               
-              <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
-                <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
-                  <span class="dialog-dropdown__action-icon">✏️</span>
-                  <span class="dialog-dropdown__action-title">Изменить название</span>
+              <div class="notifications-dropdown" v-if="isNotificationsMenuOpen" ref="notificationsDropdown">
+                <div class="notifications-dropdown__header">
+                  Непрочитанные сообщения ({{ totalUnreadMessages }})
                 </div>
-                <div class="dialog-dropdown__action" @click="deleteDialog(session)">
-                  <span class="dialog-dropdown__action-icon">🗑️</span>
-                  <span class="dialog-dropdown__action-title">Удалить диалог</span>
+                <div class="notifications-dropdown__list" v-if="unreadDialogs.length > 0">
+                  <div 
+                    v-for="dialog in unreadDialogs" 
+                    :key="dialog.id" 
+                    class="notifications-dropdown__item"
+                    @click="goToUnreadDialog(dialog)"
+                  >
+                    <div class="notifications-dropdown__item-avatar">
+                      <div class="assistant-avatar" v-if="getAssistantById(dialog.agentId)">
+                        {{ getAssistantById(dialog.agentId)?.name.charAt(0) }}
+                      </div>
+                    </div>
+                    <div class="notifications-dropdown__item-info">
+                      <div class="notifications-dropdown__item-title">
+                        {{ dialog.title }}
+                      </div>
+                      <div class="notifications-dropdown__item-assistant" v-if="getAssistantById(dialog.agentId)">
+                        {{ getAssistantById(dialog.agentId)?.name }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="notifications-dropdown__empty" v-else>
+                  Нет непрочитанных сообщений
                 </div>
               </div>
-              <div class="session-item__meta">
-                <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
-                <span v-if="session.unreadCount > 0" class="session-item__unread-badge">
-                  {{ session.unreadCount }}
+            </div>
+            
+            <div class="assistant-selector" ref="assistantSelectorTrigger" @click="toggleAssistantSelector">
+              <div class="assistant-selector__avatar">
+                <div class="assistant-avatar" v-if="selectedAssistant">
+                  {{ selectedAssistant.name.charAt(0) }}
+                </div>
+                <span v-if="selectedAssistant && getAssistantUnreadCount(selectedAssistant.id) > 0" class="assistant-selector__unread-badge">
+                  {{ getAssistantUnreadCount(selectedAssistant.id) }}
                 </span>
+              </div>
+              <div class="assistant-selector__name">
+                {{ selectedAssistant.name }}
+              </div>
+              <span class="assistant-selector__dropdown-icon">▼</span>
+            </div>
+            
+            <div class="assistant-selector-dropdown" v-if="isAssistantSelectorOpen" ref="assistantSelectorDropdown">
+              <div class="assistant-selector-dropdown__header">Ассистенты</div>
+              <div class="assistant-selector-dropdown__list">
+                <div 
+                  v-for="assistant in assistants" 
+                  :key="assistant.id" 
+                  :class="['assistant-selector-dropdown__item', { 'assistant-selector-dropdown__item--active': selectedAssistant?.id === assistant.id }]"
+                  @click="selectAssistant(assistant); isAssistantSelectorOpen = false"
+                >
+                  <div class="assistant-selector-dropdown__item-avatar">
+                    <div class="assistant-avatar">{{ assistant.name.charAt(0) }}</div>
+                  </div>
+                  <div class="assistant-selector-dropdown__item-info">
+                    <div class="assistant-selector-dropdown__item-name">{{ assistant.name }}</div>
+                    <div class="assistant-selector-dropdown__item-description">{{ assistant.description }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="new-dialog-button" @click="createNewDialog">
+              <span>+ Диалог</span>
+            </div>
+          </div>
+          <div class="assistent-chat__session-list">
+            <div 
+              v-for="session in sortedSessions" 
+              :key="session.id" 
+              :class="['session-item', { 'session-item--active': chatStore.activeSessionId === session.id }]"
+              @click="selectSession(session.id)"
+            >
+              <div class="session-item__content">
+                <div class="session-item__title-container">
+                  <div v-if="editingDialogId === session.id" class="edit-title-container" @click.stop>
+                    <input 
+                      ref="editTitleInput"
+                      v-model="editedDialogTitle" 
+                      type="text"
+                      @keyup.enter="saveDialogTitle()"
+                      @keyup.esc="cancelEditingTitle()"
+                      @blur="saveDialogTitle()"
+                    />
+                  </div>
+                  <div v-else class="session-item__title">{{ session.title }}</div>
+                  <div class="session-item__menu-icon" @click.stop="toggleDialogMenu(session, $event)">
+                    <span class="dots-icon">⋮</span>
+                  </div>
+                </div>
+                
+                <div v-if="dialogMenuOpen === session.id" class="dialog-dropdown" @click.stop ref="dialogMenu">
+                  <div class="dialog-dropdown__action" @click="startEditingTitle(session); dialogMenuOpen = null">
+                    <span class="dialog-dropdown__action-icon">✏️</span>
+                    <span class="dialog-dropdown__action-title">Изменить название</span>
+                  </div>
+                  <div class="dialog-dropdown__action" @click="deleteDialog(session)">
+                    <span class="dialog-dropdown__action-icon">🗑️</span>
+                    <span class="dialog-dropdown__action-title">Удалить диалог</span>
+                  </div>
+                </div>
+                <div class="session-item__meta">
+                  <span class="session-item__time">{{ formatDate(session.timestamp) }}</span>
+                  <span v-if="session.unreadCount > 0" class="session-item__unread-badge">
+                    {{ session.unreadCount }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -781,6 +783,20 @@ const getAssistantById = (assistantId: string) => {
     flex-direction: column;
     gap: 16px;
     overflow: hidden;
+
+    &-container {
+      position: fixed;
+      height: 82vh;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      width: 25%;
+      border-radius: 12px;
+    }
+
+    &-container::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__session-list {
