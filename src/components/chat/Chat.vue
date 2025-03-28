@@ -475,6 +475,19 @@ onMounted(() => {
       subtree: true,        // наблюдать за изменениями во всех потомках
       characterData: true,  // наблюдать за изменениями текста
     });
+
+    // Добавляем ResizeObserver для отслеживания изменений высоты
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const height = entry.contentRect.height;
+        // Скроллим на 100 пикселей вниз при изменении высоты
+        if (chatContainer.value) {
+          chatContainer.value.scrollTop = height - 100;
+        }
+      }
+    });
+
+    resizeObserver.observe(chatContainer.value);
   }
 
   // Добавляем слушатель прокрутки
