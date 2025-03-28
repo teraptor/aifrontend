@@ -18,12 +18,6 @@
             Копировать
           </button>
         </div>
-        <div class="share-modal__actions">
-          <button class="share-modal__action-button" @click="shareViaWebShare">
-            <span class="share-modal__action-icon">↗️</span>
-            Поделиться
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -31,6 +25,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { notifications } from '@/plugins/notifications'
 
 const props = defineProps<{
   isOpen: boolean
@@ -46,7 +41,7 @@ const emit = defineEmits<{
 const linkInput = ref<HTMLInputElement | null>(null)
 
 const assistantLink = computed(() => {
-  return `${window.location.origin}/assistant/${props.assistantId || ''}`
+  return `${window.location.origin}/chat/${props.assistantId || ''}`
 })
 
 const close = () => {
@@ -56,8 +51,11 @@ const close = () => {
 const copyLink = async () => {
   try {
     await navigator.clipboard.writeText(assistantLink.value)
+    notifications.success('Ссылка скопирована')
+    close()
   } catch (error) {
     console.error('Ошибка при копировании ссылки:', error)
+    notifications.error('Не удалось скопировать ссылку')
   }
 }
 

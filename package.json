@@ -23,6 +23,7 @@
     "dayjs": "^1.11.13",
     "katex": "^0.16.21",
     "mermaid": "^11.6.0",
+    "naive-ui": "^2.41.0",
     "notivue": "^2.4.5",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",
