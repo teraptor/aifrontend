@@ -2,94 +2,11 @@
   <div class="assistent-chat">
     <div class="assistent-chat__container">
       <div class="assistent-chat__chat">
-        <div class="assistent-chat__chat-container" v-if="selectedAssistant && chatStore.activeSessionId">
-          <div class="chat-header" ref="chatHeader">
-            <div class="assistant-header" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
-              <div class="assistant-header__avatar">
-                <div class="assistant-avatar" v-if="selectedAssistant">
-                  {{ selectedAssistant.name.charAt(0) }}
-                </div>
-              </div>
-              <div class="assistant-header__info">
-                <h2 class="assistant-header__name">
-                  {{ selectedAssistant.name }} 
-                  <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
-                  <span class="dropdown-icon">▼</span>
-                </h2>
-                <p class="assistant-header__description">
-                  {{ selectedAssistant.description }}
-                </p>
-              </div>
-            </div>
-
-            <div class="assistant-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
-              <div class="assistant-dropdown__header">Действия</div>
-              <div class="assistant-dropdown__actions">
-                <div 
-                  v-for="item in menuItems" 
-                  :key="item.id"
-                  class="assistant-dropdown__action"
-                  @click="item.action"
-                >
-                  <span class="assistant-dropdown__action-icon">{{ item.icon }}</span>
-                  <span class="assistant-dropdown__action-title">{{ item.title }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div 
-            class="sticky-header" 
-            :class="{ 'hidden': !isHeaderSticky }" 
-            ref="stickyHeader"
-            :style="stickyHeaderStyle"
-          >
-            <div class="assistant-header" @click="toggleAssistentMenu">
-              <div class="assistant-header__avatar">
-                <div class="assistant-avatar" v-if="selectedAssistant">
-                  {{ selectedAssistant.name.charAt(0) }}
-                </div>
-              </div>
-              <div class="assistant-header__info">
-                <h2 class="assistant-header__name">
-                  {{ selectedAssistant.name }} 
-                  <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
-                  <span class="dropdown-icon">▼</span>
-                </h2>
-                <p class="assistant-header__description">
-                  {{ selectedAssistant.description }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="chat-messages" ref="chatContainer">
-            <div
-              v-for="message in chatStore.sessionMessages"
-              :key="message.id"
-              :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
-            >
-              <div class="message__content">
-                <p class="message__text" v-html="formattedText(message.text)"></p>
-                <span class="message__time">{{ formatTime(message.timestamp) }}</span>
-              </div>
-            </div>
-            
-            <div v-if="chatStore.isLoading" class="message message--assistant message--typing">
-              <div class="message__content typing-indicator">
-                <div class="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <p class="message__text typing-text">Печатает ответ...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else class="no-dialog-selected">
-          <p>Выберите ассистента и диалог или создайте новый</p>
-        </div>
+        <Chat 
+          :selected-assistant="selectedAssistant"
+          @create-new-dialog="createNewDialog"
+          @clear-chat="clearChat"
+        />
       </div>
 
       <div class="assistent-chat__dialogs" v-if="selectedAssistant">
@@ -221,21 +138,6 @@
         </div>
       </div>
     </div>
-
-    <div class="fixed-chat-input" v-if="selectedAssistant && chatStore.activeSessionId">
-      <textarea 
-        ref="messageInput"
-        v-model="newMessage" 
-        placeholder="Напишите сообщение..." 
-        @keydown.ctrl.enter.prevent="sendMessage"
-        @input="autoGrow"
-        :disabled="chatStore.isLoading"
-        rows="1"
-      ></textarea>
-      <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-        <span class="arrow-icon">↑</span>
-      </button>
-    </div>
   </div>
 </template>
 
@@ -245,40 +147,18 @@ import { onClickOutside } from '@vueuse/core'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
-import katex from 'katex'
-import 'katex/dist/katex.min.css'
-import mermaid from 'mermaid'
-
-// Инициализация Mermaid
-mermaid.initialize({
-  startOnLoad: true,
-  theme: 'default',
-  securityLevel: 'loose',
-})
-
-// Интерфейсы для меню
-interface MenuItem {
-  id: string
-  title: string
-  icon: string
-  action: () => void
-}
+import Chat from '@/components/chat/Chat.vue'
+import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 
 // Инициализация хранилищ
 const assistentsStore = useAssistentsStore()
 const chatStore = useAssistentChatStore()
 
 // Локальные переменные для UI
-const newMessage = ref('')
-const messageInput = ref<HTMLTextAreaElement | null>(null)
-const chatContainer = ref<HTMLElement | null>(null)
-const isAssistentMenuOpen = ref(false)
-const assistentMenuTrigger = ref<HTMLElement | null>(null)
-const assistentMenu = ref<HTMLElement | null>(null)
+const selectedAssistant = ref<IAssistent | null>(null)
 const editingDialogId = ref<string | null>(null)
 const editedDialogTitle = ref('')
 const editTitleInput = ref<HTMLInputElement | null>(null)
-const selectedAssistant = ref<IAssistent | null>(null)
 const dialogMenuOpen = ref<string | null>(null)
 const dialogMenu = ref<HTMLElement | null>(null)
 const isAssistantSelectorOpen = ref(false)
@@ -287,92 +167,9 @@ const assistantSelectorDropdown = ref<HTMLElement | null>(null)
 const isNotificationsMenuOpen = ref(false)
 const notificationBellTrigger = ref<HTMLElement | null>(null)
 const notificationsDropdown = ref<HTMLElement | null>(null)
-const chatHeader = ref<HTMLElement | null>(null)
-const stickyHeader = ref<HTMLElement | null>(null)
-const isHeaderSticky = ref(false)
-const stickyHeaderStyle = ref({
-  top: '0px',
-  left: '0px',
-  width: '0px'
-})
 
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
-
-// Функция форматирования текста сообщений
-const formattedText = (text: string) => {
-  if (!text) return ''
-  
-  let formatted = text
-
-  // Форматирование блоков кода
-  formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const language = lang || ''
-    return `<pre class="code-block ${language}"><code>${code.trim()}</code></pre>`
-  })
-  
-  // Форматирование таблиц
-  formatted = formatted.replace(/\|(.+)\|/g, (match, content: string) => {
-    const cells: string[] = content.split('|').map((cell: string) => cell.trim())
-    return `<div class="table-row">${cells.map((cell: string) => `<div class="table-cell">${cell}</div>`).join('')}</div>`
-  })
-  
-  // Форматирование диаграмм (поддержка Mermaid)
-  formatted = formatted.replace(/```mermaid\n([\s\S]*?)```/g, (match, diagram) => {
-    const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-    nextTick(() => {
-      try {
-        mermaid.render(id, diagram.trim()).then((result) => {
-          const element = document.getElementById(id)
-          if (element) {
-            element.innerHTML = result.svg
-          }
-        })
-      } catch (error) {
-        console.error('Error rendering mermaid diagram:', error)
-      }
-    })
-    return `<div class="mermaid-diagram"><div id="${id}"></div></div>`
-  })
-  
-  // Заменяем переносы строк на <br />
-  formatted = formatted.replace(/\n/g, '<br />')
-  
-  // Форматирование математических формул
-  formatted = formatted.replace(/\$\$(.*?)\$\$/g, (match, formula) => {
-    try {
-      return `<div class="math-block">${katex.renderToString(formula, { displayMode: true })}</div>`
-    } catch (error) {
-      console.error('Error rendering math formula:', error)
-      return match
-    }
-  })
-  formatted = formatted.replace(/\$(.*?)\$/g, (match, formula) => {
-    try {
-      return `<span class="math-inline">${katex.renderToString(formula, { displayMode: false })}</span>`
-    } catch (error) {
-      console.error('Error rendering math formula:', error)
-      return match
-    }
-  })
-  
-  // Выделяем жирным текст между ** (как в Markdown)
-  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  
-  // Выделяем курсивом текст между * (как в Markdown)
-  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>')
-  
-  // Форматируем код (однострочный)
-  formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-  
-  // Добавляем ссылки
-  formatted = formatted.replace(
-    /(https?:\/\/[^\s]+)/g,
-    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-  )
-  
-  return formatted
-}
 
 // Сортированные диалоги выбранного ассистента от самого последнего к первому
 const sortedSessions = computed(() => {
@@ -429,18 +226,11 @@ const selectAssistant = (assistant: IAssistent, sessionIdToSelect?: string) => {
     } else {
       // Иначе используем новый метод без сброса счетчика
       chatStore.selectAssistantActiveSessions(assistant.id)
-      scrollToBottom()
     }
   } else {
     // Если нет сессий, создаем новую
     createNewDialog()
   }
-}
-
-// Переключение на другого ассистента из выпадающего меню
-const switchAssistant = (assistant: IAssistent) => {
-  selectAssistant(assistant)
-  isAssistentMenuOpen.value = false
 }
 
 // Выбор диалога
@@ -451,8 +241,6 @@ const selectSession = (sessionId: string) => {
   if (selectedAssistant.value) {
     localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, sessionId)
   }
-  
-  scrollToBottom()
 }
 
 // Создание нового диалога
@@ -465,55 +253,22 @@ const createNewDialog = async () => {
   if (newSession && selectedAssistant.value) {
     localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, newSession.id)
   }
-  
-  scrollToBottom()
 }
 
-// Отправка сообщения
-const sendMessage = async () => {
-  if (!newMessage.value.trim() || chatStore.isLoading || !chatStore.activeSessionId) return
-  
-  // Сохраняем текст сообщения в переменную
-  const messageText = newMessage.value
-  
-  // Очищаем поле ввода и сбрасываем его высоту
-  newMessage.value = ''
-  if (messageInput.value) {
-    messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
-  }
-  
-  // Отправляем сообщение на сервер
-  await chatStore.addMessage(messageText, true, chatStore.activeSessionId)
-  
-  // Фокус на поле ввода и прокрутка вниз
-  nextTick(() => {
-    if (messageInput.value) {
-      messageInput.value.focus()
+// Очистка чата
+const clearChat = () => {
+  if (chatStore.activeSessionId) {
+    // Очистка истории чата
+    const sessionMessages = chatStore.messages.filter(m => m.sessionId === chatStore.activeSessionId)
+    if (sessionMessages.length > 0) {
+      // Удаляем все сообщения активной сессии
+      chatStore.messages = chatStore.messages.filter(m => m.sessionId !== chatStore.activeSessionId)
     }
-    scrollToBottom()
-  })
-}
-
-// Переключение меню ассистента
-const toggleAssistentMenu = () => {
-  isAssistentMenuOpen.value = !isAssistentMenuOpen.value
-}
-
-// Закрытие меню при клике вне его
-onClickOutside(assistentMenu, (event) => {
-  if (assistentMenuTrigger.value && !assistentMenuTrigger.value.contains(event.target as Node)) {
-    isAssistentMenuOpen.value = false
   }
-})
+}
 
 // Форматирование даты
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date)
-}
-
-// Форматирование времени
-const formatTime = (dateString: string) => {
   const date = new Date(dateString)
   return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date)
 }
@@ -548,182 +303,6 @@ const saveDialogTitle = () => {
 const cancelEditingTitle = () => {
   editingDialogId.value = null
 }
-
-// Прокрутка чата вниз
-const scrollToBottom = () => {
-  // Выводим высоту элемента .assistent-chat в консоль
-  nextTick(() => {
-    const assistentChat = document.querySelector('.assistent-chat')
-    if (assistentChat) {
-      console.log('Высота .assistent-chat:', assistentChat.clientHeight)
-      window.scrollTo(0, assistentChat.clientHeight) 
-    }
-  })
-}
-
-// Создаем меню действий
-const menuItems = ref<MenuItem[]>([
-  {
-    id: 'new-dialog',
-    title: 'Новый диалог',
-    icon: '+',
-    action: () => {
-      createNewDialog()
-      isAssistentMenuOpen.value = false
-    }
-  },
-  {
-    id: 'settings',
-    title: 'Настройки ассистента',
-    icon: '⚙️',
-    action: () => {
-      // Здесь будет логика для перехода к настройкам ассистента
-      isAssistentMenuOpen.value = false
-    }
-  },
-  {
-    id: 'clear-chat',
-    title: 'Очистить историю',
-    icon: '🗑️',
-    action: () => {
-      if (chatStore.activeSessionId && confirm('Вы действительно хотите очистить историю чата?')) {
-        // Очистка истории чата
-        const sessionMessages = chatStore.messages.filter(m => m.sessionId === chatStore.activeSessionId)
-        if (sessionMessages.length > 0) {
-          // Удаляем все сообщения активной сессии
-          chatStore.messages = chatStore.messages.filter(m => m.sessionId !== chatStore.activeSessionId)
-        }
-      }
-      isAssistentMenuOpen.value = false
-    }
-  }
-])
-
-// Загрузка данных при монтировании
-onMounted(async () => {
-  // Загружаем список ассистентов
-  await assistentsStore.getMyAssistents()
-  
-  // Проверяем, есть ли сохраненный ID ассистента
-  const savedAssistantId = localStorage.getItem('selectedAssistantId')
-  
-  // Если есть ассистенты
-  if (assistants.value.length > 0) {
-    if (savedAssistantId) {
-      // Ищем ассистента по сохраненному ID
-      const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
-      if (savedAssistant) {
-        // Если нашли, выбираем его
-        selectAssistant(savedAssistant)
-      } else {
-        // Если не нашли (возможно, он был удален), выбираем первого
-        selectAssistant(assistants.value[0])
-      }
-    } else {
-      // Если нет сохраненного ID, выбираем первого ассистента
-      selectAssistant(assistants.value[0])
-    }
-  }
-  
-  // Создаем аудио элемент для уведомлений
-  createNotificationSound()
-  
-  // Настраиваем MutationObserver для отслеживания изменений в чате
-  if (chatContainer.value) {
-    const observer = new MutationObserver((mutations) => {
-      // Прокручиваем чат вниз при изменениях содержимого
-      scrollToBottom();
-    });
-    
-    observer.observe(chatContainer.value, {
-      childList: true,      // наблюдать за добавлением/удалением дочерних элементов
-      subtree: true,        // наблюдать за изменениями во всех потомках
-      characterData: true,  // наблюдать за изменениями текста
-    });
-  }
-
-  // Добавляем слушатель прокрутки
-  window.addEventListener('scroll', checkHeaderVisibility)
-})
-
-// Создаем аудио элемент для уведомлений
-const notificationSound = ref<HTMLAudioElement | null>(null)
-
-// Функция для создания звукового уведомления
-const createNotificationSound = () => {
-  notificationSound.value = new Audio()
-  notificationSound.value.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAuLi4uLi4uLi4uLi4uLi4uLi44ODg4ODg4ODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYIAAAAAAAAAbBJFOh7AAAAAAAAAAAAAAAAAAAA/+MYxAANACpgBUDQAAGpACANATc3N/SAN/8T//53/6n/QDf+IAAH/lwPAAAaB58HgCxL/5cHwQDgef2gGPAP/5cDwQZg/+V5+sgN/+Vg+CQZf/lQPgcGX//8sBwDAMfLA8BAP/w/AQDg8P+CDwH/5ID/4IQOAgcZDwEAgHnweBQXPg8AcZ/g8CwM/KAfBgY/LA8Bgv/LAcBAMHg8A4Lg8P/BAODg//BA4Y8mB4Q/h4Q8IcHg/5cPCHiDfKg/A4PB/yoHhDxB/lwfBAMHg8AeIOD/8EB4h//Kg+CMhfyoHwODL/8sB8DgYOWA8CAeB58HgQBw+fB4EAYPn/hDggfPg8CA//D/BA4CD/yYHgcGB/5MDwKB/LAcAwP+VB8EAYPlgPgcGP5YD4HBg//EA4Yf+TA8CgcH/KAWB4Q//lQfA4MP/yoHwOB//5UHwQDf/wQDAAAN/+gAAAAGn+cAAP/4Ph//+gAAAAfQAD//EAtbt3u/5hEz/+MYxCkVItZVVdMAAC7Z736nQzMR+pV+0QzOx9VaHJV3/lBrm//6TOp/X//UyZkpf8okYEnYpf+VxjAEr9ytThcKf+dxF47/5XGLBXl0vw5E4W/rFQqM/+dTMzZPL+Vx1OHxr/92FpGRn2hbtmHzp5f9QVFB//zupLhMTP/nUaMRif+VhgCj/1KAQv/LAsQhL/yiNGAKXf/pQ5MRMP+sTNh9RV/+oKhj/6lXh8Zbf/lYWkwov/KI0QBWf+UxgBE/9SsFQqX/18fEAVH/qEwGIH/y0KiAZH/1CvD40S//qqvDYW//1BUUf+rq8PjPb/8rC4mFF/5RGCAKP/ysKhAeP/UoA8P/lysKE4f+pWCoY//lYXE4xP/UoBMf/8rCoRC//pQ5MxMP/9TD4gCr/1BUMf/6qrw+Mtv/ysLSYUX/lEaIArP/KYwAgAAAAAAAAAP/4xjELxEi1o1V0wAALwBgAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo='
-  notificationSound.value.load()
-}
-
-// Функция для проигрывания звука уведомления
-const playNotificationSound = () => {
-  if (notificationSound.value) {
-    notificationSound.value.play().catch(error => {
-      console.error('Ошибка воспроизведения звука:', error)
-    })
-  }
-}
-
-// Следим за новыми сообщениями и проигрываем звук
-watch(
-  () => chatStore.newMessageReceived,
-  (newValue) => {
-    if (newValue) {
-      // Если сообщение пришло в активный диалог, прокручиваем чат вниз
-      if (chatStore.activeSessionId === chatStore.lastReceivedMessageSessionId) {
-        scrollToBottom();
-      } else {
-        // Если сообщение пришло в неактивный диалог, проигрываем звук
-        playNotificationSound();
-      }
-      
-      chatStore.resetNewMessageFlag();
-    }
-  }
-)
-
-// Следим за изменениями в сообщениях и прокручиваем вниз
-watch(
-  () => chatStore.sessionMessages.length,
-  () => {
-    scrollToBottom();
-  }
-)
-
-// Автоматически увеличиваем высоту поля ввода сообщения
-const autoGrow = () => {
-  if (!messageInput.value) return
-  
-  // Сбрасываем высоту для корректного расчета
-  messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
-  
-  // Устанавливаем высоту на основе содержимого, но не более 150px
-  const newHeight = Math.min(messageInput.value.scrollHeight, 150)
-  messageInput.value.style.height = `${newHeight}px`
-}
-
-// Получение общего количества непрочитанных сообщений
-const totalUnreadMessages = computed(() => {
-  return chatStore.totalUnreadCount;
-});
-
-// Убираем автоматический выбор диалогов с непрочитанными сообщениями при смене ассистента
-watch(
-  () => selectedAssistant.value,
-  (newAssistant, oldAssistant) => {
-    if (newAssistant && newAssistant.id !== oldAssistant?.id) {
-      // Больше не выбираем автоматически диалоги с непрочитанными сообщениями
-      // Пользователь должен сам кликнуть на диалог, чтобы сбросить счетчик
-      // const assistantSessions = chatStore.sessions.filter(s => s.agentId === newAssistant.id);
-      // const sessionsWithUnread = assistantSessions.filter(s => s.unreadCount > 0);
-      // 
-      // if (sessionsWithUnread.length > 0) {
-      //   selectSession(sessionsWithUnread[0].id);
-      // }
-    }
-  }
-)
 
 // Переключение меню диалога
 const toggleDialogMenu = (session: any, event?: Event) => {
@@ -772,41 +351,6 @@ const deleteDialog = (session: any) => {
   }
 }
 
-// Закрытие меню диалога при клике вне его
-onClickOutside(dialogMenu, (event) => {
-  // Проверяем, что клик был не по иконке меню
-  const clickedElement = event.target as HTMLElement
-  const menuIcon = clickedElement.closest('.session-item__menu-icon')
-  
-  // Если клик не по иконке меню, закрываем его
-  if (!menuIcon) {
-    dialogMenuOpen.value = null
-  }
-})
-
-// Закрываем меню диалога при клике в любом месте документа
-onMounted(() => {
-  document.addEventListener('click', (event) => {
-    const clickedElement = event.target as HTMLElement
-    
-    // Если клик был не по меню и не по иконке меню
-    if (!clickedElement.closest('.dialog-dropdown') && !clickedElement.closest('.session-item__menu-icon')) {
-      dialogMenuOpen.value = null
-    }
-  })
-})
-
-// Следим за изменениями активной сессии
-watch(
-  () => chatStore.activeSessionId,
-  (newSessionId) => {
-    if (newSessionId) {
-      // Прокрутка вниз с небольшой задержкой после загрузки сообщений
-      setTimeout(scrollToBottom, 100);
-    }
-  }
-)
-
 // Переключение выпадающего списка ассистентов
 const toggleAssistantSelector = () => {
   isAssistantSelectorOpen.value = !isAssistantSelectorOpen.value
@@ -847,43 +391,48 @@ const getAssistantById = (assistantId: string) => {
   return assistants.value.find(a => a.id === assistantId)
 }
 
-// Функция для проверки видимости шапки
-const checkHeaderVisibility = () => {
-  if (!chatHeader.value || !stickyHeader.value) return
-  
-  const headerRect = chatHeader.value.getBoundingClientRect()
-  const isMainHeaderVisible = headerRect.top >= 0
-  
-  // Если основная шапка стала видимой, плавно скрываем прикрепленную
-  if (isMainHeaderVisible && isHeaderSticky.value) {
-    setTimeout(() => {
-      isHeaderSticky.value = false
-    }, 300)
-  } else if (!isMainHeaderVisible) {
-    // Если основная шапка не видна, показываем прикрепленную
-    isHeaderSticky.value = true
-    
-    // Обновляем позицию прикрепленной шапки
-    const chatContainer = chatHeader.value.closest('.assistent-chat__chat-container')
-    if (chatContainer) {
-      const containerRect = chatContainer.getBoundingClientRect()
-      stickyHeaderStyle.value = {
-        top: '0px',
-        left: `${containerRect.left}px`,
-        width: `${containerRect.width}px`
-      }
-    }
-  }
-}
-
-// Добавляем слушатель прокрутки
-onMounted(() => {
-  window.addEventListener('scroll', checkHeaderVisibility)
+// Получение общего количества непрочитанных сообщений
+const totalUnreadMessages = computed(() => {
+  return chatStore.totalUnreadCount;
 })
 
-// Удаляем слушатель при размонтировании
-onUnmounted(() => {
-  window.removeEventListener('scroll', checkHeaderVisibility)
+// Загрузка данных при монтировании
+onMounted(async () => {
+  // Загружаем список ассистентов
+  await assistentsStore.getMyAssistents()
+  
+  // Проверяем, есть ли сохраненный ID ассистента
+  const savedAssistantId = localStorage.getItem('selectedAssistantId')
+  
+  // Если есть ассистенты
+  if (assistants.value.length > 0) {
+    if (savedAssistantId) {
+      // Ищем ассистента по сохраненному ID
+      const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
+      if (savedAssistant) {
+        // Если нашли, выбираем его
+        selectAssistant(savedAssistant)
+      } else {
+        // Если не нашли (возможно, он был удален), выбираем первого
+        selectAssistant(assistants.value[0])
+      }
+    } else {
+      // Если нет сохраненного ID, выбираем первого ассистента
+      selectAssistant(assistants.value[0])
+    }
+  }
+})
+
+// Закрываем меню диалога при клике в любом месте документа
+onMounted(() => {
+  document.addEventListener('click', (event) => {
+    const clickedElement = event.target as HTMLElement
+    
+    // Если клик был не по меню и не по иконке меню
+    if (!clickedElement.closest('.dialog-dropdown') && !clickedElement.closest('.session-item__menu-icon')) {
+      dialogMenuOpen.value = null
+    }
+  })
 })
 </script>
 
@@ -927,7 +476,6 @@ onUnmounted(() => {
     &-container {
       position: fixed;
       height: 82vh;
-      overflow-y: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
       width: 20%;
@@ -1067,436 +615,6 @@ onUnmounted(() => {
     }
   }
 
-  &__chat {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-
-    &-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background-color: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-  }
-
-  .chat-header {
-    display: flex;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid rgba(#999, 0.1);
-    position: relative;
-  }
-
-  .assistant-header {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    width: 100%;
-    
-    &:hover {
-      background-color: rgba(#1890ff, 0.05);
-    }
-    
-    &__avatar {
-      margin-right: 8px;
-      
-      .assistant-avatar {
-        width: 24px;
-        height: 24px;
-        min-width: 24px;
-        font-size: 12px;
-      }
-    }
-    
-    &__info {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-    
-    &__name {
-      font-size: 14px;
-      font-weight: 600;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      
-      .dropdown-icon {
-        font-size: 8px;
-        color: #999;
-        margin-left: 4px;
-      }
-      
-      .status-indicator {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background-color: #ff4d4f;
-        display: inline-block;
-        
-        &--active {
-          background-color: #52c41a;
-        }
-      }
-    }
-    
-    &__description {
-      font-size: 10px;
-      color: #666;
-      margin: 0;
-    }
-  }
-
-  .assistant-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 16px;
-    width: 300px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    margin-top: 8px;
-    overflow: hidden;
-    
-    &__header {
-      padding: 12px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
-      border-bottom: 1px solid rgba(#999, 0.1);
-    }
-    
-    &__actions {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(#999, 0.1);
-    }
-    
-    &__action {
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      cursor: pointer;
-      
-      &:hover {
-        background-color: rgba(#999, 0.05);
-      }
-      
-      &-icon {
-        margin-right: 12px;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-      }
-      
-      &-title {
-        font-size: 14px;
-      }
-    }
-    
-    &__list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    &__item {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(#999, 0.1);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      &:hover {
-        background-color: rgba(#999, 0.05);
-      }
-      
-      &--active {
-        background-color: rgba(#1890ff, 0.05);
-      }
-      
-      &-avatar {
-        margin-right: 12px;
-      }
-      
-      &-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      
-      &-name {
-        font-size: 14px;
-        font-weight: 500;
-      }
-      
-      &-description {
-        font-size: 12px;
-        color: #666;
-      }
-    }
-  }
-
-  .chat-messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .message {
-    display: flex;
-    max-width: 80%;
-    width: 100%;
-    
-    &__content {
-      padding: 12px 16px;
-      border-radius: 12px;
-      position: relative;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      width: 100%;
-      box-sizing: border-box;
-
-      :deep(.code-block) {
-        background-color: #1e1e1e;
-        color: #d4d4d4;
-        padding: 12px;
-        border-radius: 6px;
-        margin: 8px 0;
-        font-family: 'Fira Code', monospace;
-        font-size: 13px;
-        overflow-x: auto;
-        position: relative;
-        
-        &::before {
-          content: attr(class);
-          position: absolute;
-          top: 0;
-          right: 0;
-          padding: 4px 8px;
-          font-size: 12px;
-          color: #666;
-          background-color: rgba(255, 255, 255, 0.1);
-          border-bottom-left-radius: 6px;
-          border-top-right-radius: 6px;
-        }
-      }
-
-      :deep(.table-row) {
-        display: flex;
-        border-bottom: 1px solid rgba(#999, 0.1);
-        
-        &:first-child {
-          font-weight: bold;
-          background-color: rgba(#1890ff, 0.05);
-        }
-      }
-
-      :deep(.table-cell) {
-        padding: 8px;
-        flex: 1;
-        min-width: 100px;
-        border-right: 1px solid rgba(#999, 0.1);
-        
-        &:last-child {
-          border-right: none;
-        }
-      }
-
-      :deep(.mermaid-diagram) {
-        background-color: #fff;
-        padding: 16px;
-        border-radius: 6px;
-        margin: 8px 0;
-        border: 1px solid rgba(#999, 0.1);
-      }
-
-      :deep(.math-block) {
-        padding: 8px;
-        margin: 8px 0;
-        background-color: rgba(#1890ff, 0.05);
-        border-radius: 4px;
-        text-align: center;
-        font-family: 'KaTeX', 'Times New Roman', serif;
-      }
-
-      :deep(.math-inline) {
-        font-family: 'KaTeX', 'Times New Roman', serif;
-        padding: 0 4px;
-      }
-
-      :deep(.inline-code) {
-        background-color: rgba(#000, 0.05);
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-family: 'Fira Code', monospace;
-        font-size: 13px;
-      }
-    }
-    
-    &__text {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      
-      :deep(a) {
-        color: #1890ff;
-        text-decoration: underline;
-        word-break: break-word;
-        
-        &:hover {
-          text-decoration: none;
-        }
-      }
-    }
-    
-    &__time {
-      font-size: 10px;
-      color: #999;
-      position: absolute;
-      bottom: 4px;
-      right: 8px;
-    }
-    
-    &--assistant {
-      align-self: flex-start;
-      
-      .message__content {
-        background-color: #f5f7fa;
-        border-bottom-left-radius: 4px;
-      }
-    }
-    
-    &--user {
-      align-self: flex-end;
-      
-      .message__content {
-        background-color: #1890ff;
-        color: #ffffff;
-        border-bottom-right-radius: 4px;
-      }
-      
-      .message__time {
-        color: rgba(#ffffff, 0.8);
-      }
-    }
-    
-    &--typing {
-      opacity: 0.8;
-      
-      .message__content {
-        padding-bottom: 8px;
-      }
-    }
-  }
-
-  .fixed-chat-input {
-    position: fixed;
-    bottom: 20px;
-    background-color: transparent;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    width: 57%;
-    padding: 8px;
-    margin: 0 auto;
-    
-    textarea {
-      flex: 1;
-      border: 1px solid rgba($help-color, 0.2);
-      border-radius: 20px;
-      background-color: $light-color;
-      font-family: inherit;
-      font-size: 14px;
-      min-height: 44px;
-      max-height: 150px;
-      resize: none;
-      overflow-y: auto;
-      // line-height: 1.5;
-      margin: 0 20px;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      display: block;
-      box-sizing: border-box;
-      padding: 11px 16px;
-      vertical-align: middle;
-      
-      &:focus {
-        outline: none;
-        background-color: #edf1f7;
-      }
-      
-      &::placeholder {
-        color: #999;
-        vertical-align: middle;
-      }
-      
-      &::-webkit-scrollbar {
-        width: 4px;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background-color: #c0c0c0;
-        border-radius: 2px;
-      }
-      
-      &::-webkit-scrollbar-track {
-        background-color: transparent;
-      }
-    }
-    
-    .send-button {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      border-radius: 50%;
-      background-color: #40c4dd;
-      color: white;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
-      
-      &:hover {
-        background-color: #33b5ce;
-      }
-      
-      &:disabled {
-        background-color: #d9d9d9;
-        cursor: not-allowed;
-      }
-      
-      .arrow-icon {
-        font-size: 18px;
-      }
-    }
-  }
-
   .assistant-avatar {
     width: 40px;
     height: 40px;
@@ -1531,18 +649,6 @@ onUnmounted(() => {
     }
   }
 
-  .no-dialog-selected {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    font-size: 16px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
   .edit-title-container {
     flex: 1;
     
@@ -1555,80 +661,6 @@ onUnmounted(() => {
       border-radius: 4px;
       outline: none;
     }
-  }
-
-  .typing-indicator {
-    background-color: #f5f7fa;
-    border-bottom-left-radius: 4px;
-  }
-
-  .typing-dots {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 0;
-    
-    span {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      background-color: #999;
-      border-radius: 50%;
-      opacity: 0.6;
-      animation: typing 1s infinite ease-in-out;
-      
-      &:nth-child(1) {
-        animation-delay: 0s;
-      }
-      
-      &:nth-child(2) {
-        animation-delay: 0.2s;
-      }
-      
-      &:nth-child(3) {
-        animation-delay: 0.4s;
-      }
-    }
-  }
-
-  .typing-text {
-    font-size: 14px;
-    color: #666;
-    margin: 4px 0 0 0;
-  }
-
-  @keyframes typing {
-    0% {
-      transform: translateY(0);
-      opacity: 0.6;
-    }
-    50% {
-      transform: translateY(-5px);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 0.6;
-    }
-  }
-
-  .assistant-unread-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    background-color: #ff4d4f;
-    color: white;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 0 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    animation: pulse 1.5s infinite;
   }
 
   .dialogs-header {
@@ -1764,59 +796,6 @@ onUnmounted(() => {
       &-description {
         font-size: 12px;
         color: #666;
-      }
-    }
-  }
-
-  .assistant-dialogs-counter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    height: 24px;
-    background-color: #40c4dd;
-    color: white;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 0 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    animation: pulse 1.5s infinite;
-  }
-
-  .dialog-dropdown {
-    position: absolute;
-    right: 8px;
-    top: 30px;
-    width: 200px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    overflow: hidden;
-    
-    &__action {
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      cursor: pointer;
-      
-      &:hover {
-        background-color: rgba(#999, 0.05);
-      }
-      
-      &-icon {
-        margin-right: 12px;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-      }
-      
-      &-title {
-        font-size: 14px;
       }
     }
   }
@@ -1985,31 +964,39 @@ onUnmounted(() => {
     100% { transform: scale(1); }
   }
 
-  .sticky-header {
-    position: fixed;
-    z-index: 100;
+  .dialog-dropdown {
+    position: absolute;
+    right: 8px;
+    top: 30px;
+    width: 200px;
     background-color: #ffffff;
-    border-bottom: 1px solid rgba(#999, 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 8px 16px;
-    opacity: 1;
-    visibility: visible;
-    transition: all 0.3s ease-out;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
     
-    &.hidden {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-100%);
-    }
-    
-    .assistant-header {
-      padding: 4px;
-      border-radius: 6px;
+    &__action {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      cursor: pointer;
       
       &:hover {
-        background-color: rgba(#1890ff, 0.05);
+        background-color: rgba(#999, 0.05);
+      }
+      
+      &-icon {
+        margin-right: 12px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+      
+      &-title {
+        font-size: 14px;
       }
     }
   }

@@ -41,17 +41,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   },
   
   {
-    path: `${RouteNames.ASSISTENT_CHAT}/:id`,
-    name: RouteNames.ASSISTENT_CHAT,
-    meta: {
-      title: 'Чат с ассистентом',
-      ...defaultMeta,
-      requiresAuth: true,
-    },
-    component: () => import('@/pages/AssistentChat.vue')
-  },
-  
-  {
     path: RouteNames.PROFILE,
     name: RouteNames.PROFILE,
     meta: {

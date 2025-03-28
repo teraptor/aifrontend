@@ -2,16 +2,6 @@
   <div class="assistents">
     <TitleWrapper title="Ассистенты" subtitle="Сделано с <span class='icon icon-like'></span> в 2025" />
     <div class="assistents__nav-group">
-      <SortFiltersTab
-        :activeTab="assistentsStore.sortOption"
-        :activeFilter="assistentsStore.activeFilter"
-        :filterLabels="{
-          all: 'Все',
-          business: 'Бизнес'
-        }"
-        @update:filter="(value: string) => assistentsStore.setActiveFilter(value as FilterOption)"
-        @update:sort="(value: string) => assistentsStore.setSortOption(value as SortOption)"
-      />
       <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
         <InputField
           icon='icon icon-search'
@@ -62,7 +52,6 @@
 import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '../ui/TitleWrapper.vue';
 import AssistentsCard from './AssistentsCard.vue';
-import SortFiltersTab from '../ui/SortFiltersTab.vue';
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { SortOption, FilterOption } from '@/stores/useAssistantsStore';
@@ -154,9 +143,8 @@ onMounted(() => {
   &__nav-group {
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    flex-wrap: wrap;
     gap: 16px;
   }
 

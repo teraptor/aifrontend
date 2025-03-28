@@ -90,6 +90,8 @@
           variant="light"
           :disabled="assistent?.isDisabled"
           @keydown.ctrl.enter="saveChanges"
+          @input="autoExpandTextarea"
+          class="auto-expand"
         />
         <div class="assistent-setting__hint" v-if="!assistent?.isDisabled">
           Для быстрого сохранения используйте Ctrl+Enter
@@ -103,7 +105,7 @@
 <script setup lang="ts">
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useRouter, useRoute } from 'vue-router';
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import TitleWrapper from '@/components/ui/TitleWrapper.vue';
 import InputField from '@/components/ui/InputField.vue';
 import TextAreaField from '@/components/ui/TextAreaField.vue';
@@ -131,6 +133,7 @@ const isEditingDescription = ref(false);
 const nameInput = ref<HTMLInputElement | null>(null);
 const summaryInput = ref<HTMLInputElement | null>(null);
 const descriptionInput = ref<HTMLTextAreaElement | null>(null);
+const instructionsTextarea = ref<HTMLTextAreaElement | null>(null);
 const showDeleteConfirm = ref(false);
 const isSaving = ref(false);
 const originalData = ref<{
@@ -233,6 +236,12 @@ watch([assistentName, description, instructions, summaryText], () => {
   }
 }, { deep: true });
 
+const autoExpandTextarea = (event: Event) => {
+  const textarea = event.target as HTMLTextAreaElement;
+  textarea.style.height = 'auto';
+  textarea.style.height = `${textarea.scrollHeight}px`;
+};
+
 onMounted(async () => {
   // Проверяем, загружены ли ассистенты
   if (!assistentsStore.assistants.length) {
@@ -267,6 +276,18 @@ onMounted(async () => {
   } else {
     // Если ассистент не найден после загрузки, возвращаемся назад
     router.push('/assistents');
+  }
+  
+  // Добавляем обработчик для автоматического расширения textarea
+  if (instructionsTextarea.value) {
+    instructionsTextarea.value.addEventListener('input', autoExpandTextarea);
+  }
+});
+
+// Добавляем очистку обработчика при размонтировании компонента
+onUnmounted(() => {
+  if (instructionsTextarea.value) {
+    instructionsTextarea.value.removeEventListener('input', autoExpandTextarea);
   }
 });
 
@@ -543,6 +564,20 @@ const toggleDescriptionEdit = () => {
       min-height: 100px;
       line-height: 1.5;
       font-family: inherit;
+      overflow: hidden;
+      transition: height 0.2s ease;
+    }
+  }
+
+  .auto-expand {
+    min-height: 100px;
+    height: auto;
+    overflow-y: hidden;
+    resize: none;
+    transition: height 0.2s ease;
+    
+    &:focus {
+      outline: none;
     }
   }
 

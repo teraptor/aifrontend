@@ -5,13 +5,6 @@
       <TitleWrapper title="Мои ассистенты" subtitle="Управляйте своими ассистентами и настройками" />
     </div>
     <div class="my-assistents__list" v-show="isOpenMyAssistents">
-      <div class="add-assistant-wrapper">
-        <div class="add-assistant" @click="openAddModal">
-          <span class="icon icon-plus"></span>
-          <p class="add-assistant__text">Добавить ассистента</p>
-        </div>
-      </div>
-      
       <div v-if="isLoading" class="loading-wrapper">
         <span class="icon icon-loader"></span>
         <p>Загрузка ассистентов...</p>
@@ -29,13 +22,6 @@
         />
       </template>
     </div>
-
-    <AddAssistantModal
-      :show="showAddModal"
-      :installing-id="installingAssistantId"
-      @close="closeAddModal"
-      @select="handleAssistantSelect"
-    />
   </div>
 </template>
 
@@ -51,8 +37,6 @@
   import Button from '../ui/Button.vue';
   import { useRouter } from 'vue-router';
   import { RouteNames } from '@/router/routes/routeNames';
-  import AddAssistantModal from '../Modal/AddAssistantModal.vue';
-  import { notifications } from '@/plugins/notifications';
 
   const assistentsStore = useAssistentsStore();
   const authStore = useAuthStore();
@@ -60,9 +44,6 @@
   const activeFilter = ref<FilterOption>('all');
   const isOpenMyAssistents = ref<boolean>(true);
   const router = useRouter();
-  const showAddModal = ref(false);
-  const isInstallingAssistant = ref(false);
-  const installingAssistantId = ref<string | undefined>(undefined);
 
   const filterLabels: Record<FilterOption, string> = {
     all: 'Все',
@@ -111,46 +92,6 @@
 
   const navigateToCreateAssistent = ():void => {
     router.push(RouteNames.CREATE_ASSISTENT)
-  }
-
-  const openAddModal = () => {
-    showAddModal.value = true;
-  }
-
-  const closeAddModal = () => {
-    showAddModal.value = false;
-  }
-
-  const handleAssistantSelect = async (assistantId: string) => {
-    try {
-      // Отображаем индикатор загрузки для установки
-      isInstallingAssistant.value = true;
-      installingAssistantId.value = assistantId;
-      
-      // Вызываем метод установки ассистента
-      await assistentsStore.installAssistent(assistantId);
-      
-      // После успешной установки обновляем список ассистентов
-      await loadAssistents();
-      
-      // Закрываем модальное окно
-      closeAddModal();
-      
-      // Перенаправляем на страницу с чатами
-      router.push({ path: '/chats' });
-      
-      // Уведомление об успешной установке (если не реализовано в store)
-      notifications.success('Ассистент успешно установлен');
-    } catch (error) {
-      console.error('Ошибка при установке ассистента:', error);
-      
-      // Уведомление об ошибке (если не реализовано в store)
-      notifications.error('Ошибка при установке ассистента');
-    } finally {
-      // Сбрасываем индикатор загрузки для установки
-      isInstallingAssistant.value = false;
-      installingAssistantId.value = undefined;
-    }
   }
 </script>
 
@@ -278,4 +219,4 @@
     transform: rotate(360deg);
   }
 }
-</style>@/stores/useAssistantsStore@/stores/useAssistantsStore
+</style>

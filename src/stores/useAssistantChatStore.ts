@@ -66,56 +66,9 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           sessionId: sessionId,
           agentId: session.agentId
         });
-      }
-      
-      // Если это сообщение от пользователя, отправляем его на сервер
-      if (isUser) {
-        try {
-          // Устанавливаем состояние загрузки
-          this.isLoading = true;
-          
-          // Сохраняем ID сессии для ответа в локальной переменной
-          const targetSession = sessionId;
-          const targetAgentId = session.agentId;
-          
-          const response = await agentService.addMessageToDialog(
-            session.agentId,
-            sessionId,
-            { message: text }
-          );
-          
-          // Если есть ответ от сервера, добавляем его как сообщение от ассистента
-          if (response) {
-            // Используем замыкание, чтобы сохранить правильный ID сессии для ответа
-            setTimeout(() => {
-              console.log('Response from server:', response);
-              console.log('Sending response to session:', targetSession);
-              
-              // Отправляем ответ в тот же диалог, из которого пришло сообщение
-              this.addMessage(`${response.Content}`, false, targetSession);
-              
-              // Удаляем запрос из списка ожидающих ответов
-              this.pendingResponses = this.pendingResponses.filter(
-                pr => !(pr.sessionId === targetSession && pr.agentId === targetAgentId)
-              );
-              
-              // Сбрасываем состояние загрузки только если нет других ожидающих ответов
-              if (this.pendingResponses.length === 0) {
-                this.isLoading = false;
-              }
-            }, 1000);
-          }
-        } catch (error) {
-          // Удаляем запрос из списка ожидающих ответов в случае ошибки
-          this.pendingResponses = this.pendingResponses.filter(
-            pr => !(pr.sessionId === sessionId && pr.agentId === session.agentId)
-          );
-          
-          // Сбрасываем состояние загрузки в случае ошибки, только если нет других ожидающих ответов
-          if (this.pendingResponses.length === 0) {
-            this.isLoading = false;
-          }
-        }
+        
+        // Устанавливаем состояние загрузки
+        this.isLoading = true;
       }
 
       this.newMessageReceived = true;
