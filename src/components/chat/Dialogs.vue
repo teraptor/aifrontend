@@ -354,32 +354,19 @@ const selectSession = (sessionId: string) => {
   emit('select-session', sessionId)
 }
 
-const deleteDialog = (session: any) => {
-  // Создаем кастомное событие для подтверждения удаления
-  const event = new CustomEvent('show-confirmation', {
-    detail: {
-      title: 'Подтвердите действие',
-      message: 'Вы уверены, что хотите удалить этот диалог?',
-      onConfirm: async () => {
-        try {
-          await agentService.deleteDialog(session.agentId, session.id);
-          emit('delete-dialog', session);
-          dialogMenuOpen.value = null;
-          
-          // Перезагружаем список диалогов после успешного удаления
-          if (props.selectedAssistant) {
-            await assistantChatStore.loadDialogs(props.selectedAssistant.id);
-          }
-        } catch (error) {
-          console.error('Ошибка при удалении диалога:', error);
-        }
-      },
-      onCancel: () => {
-        dialogMenuOpen.value = null;
-      }
+const deleteDialog = async (session: any) => {
+  try {
+    await agentService.deleteDialog(session.agentId, session.id);
+    emit('delete-dialog', session);
+    dialogMenuOpen.value = null;
+    
+    // Перезагружаем список диалогов после успешного удаления
+    if (props.selectedAssistant) {
+      await assistantChatStore.loadDialogs(props.selectedAssistant.id);
     }
-  });
-  window.dispatchEvent(event);
+  } catch (error) {
+    console.error('Ошибка при удалении диалога:', error);
+  }
 }
 </script>
 
