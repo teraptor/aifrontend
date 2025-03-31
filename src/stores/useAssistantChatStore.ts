@@ -164,6 +164,14 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           
           const response = await agentService.getDialog(agentId, conversationId);
           
+          // Обновляем название диалога, если оно пришло в ответе
+          if (response && (response.Name || response.name || response.title)) {
+            const session = this.sessions.find(s => s.id === conversationId);
+            if (session) {
+              session.title = response.Name || response.name || response.title;
+            }
+          }
+          
           // Проверяем, есть ли сообщения в ответе
           if (response && response.messages && Array.isArray(response.messages)) {
             // Преобразуем сообщения из API в наш формат
@@ -205,7 +213,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           // Добавляем новые диалоги
           const sessions = response.map(dialog => ({
             id: dialog.ID || dialog.id,
-            title: dialog.title || `Диалог ${dialog.ID || dialog.id}`,
+            title: dialog.Name || dialog.name || dialog.title || `Диалог ${dialog.ID || dialog.id}`,
             timestamp: dialog.created_at || new Date().toISOString(),
             isActive: false,
             agentId,
@@ -221,6 +229,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     // обновление названия диалога в хранилище
     updateSessionTitle(sessionId: string, newTitle: string) {
       const session = this.sessions.find(s => s.id === sessionId);
+      console.log('Обновляем название диалога:', newTitle);
       if (session) {
         session.title = newTitle;
       }

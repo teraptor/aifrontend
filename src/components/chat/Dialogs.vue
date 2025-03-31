@@ -235,14 +235,13 @@ const saveDialogTitle = async () => {
         editedDialogTitle.value.trim()
       );
       
-      console.log('Получен ответ:', response);
       
       // Получаем название из ответа
       let newTitle = editedDialogTitle.value.trim();
       
       // Если в ответе есть поле Name, используем его
-      if (response && response.Name) {
-        newTitle = response.Name;
+      if (response && response.dialogName) {
+        newTitle = response.dialogName;
       }
       // Также проверяем поле name (с маленькой буквы)
       else if (response && response.name) {
@@ -250,7 +249,6 @@ const saveDialogTitle = async () => {
       }
       
       console.log('Итоговое название:', newTitle);
-      
       // Обновляем название в хранилище
       assistantChatStore.updateSessionTitle(editingDialogId.value, newTitle);
       

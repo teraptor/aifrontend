@@ -188,12 +188,12 @@ describe('agentService', () => {
                 Role: 'user',
                 CreatedAt: '2023-01-01T00:00:00Z'
             };
-            const dialogId = 'dialog-123';
+            const agentId = 'agent-123';
             const conversationId = 'conversation-123';
             const messageData = { text: 'Test message' };
             // Настройка мока для ответа API
-            mockApi.onPost(`/v1/conversation/${dialogId}/${conversationId}/reply`).reply(200, mockMessage);
-            const result = await agentService.addMessageToDialog(dialogId, conversationId, messageData);
+            mockApi.onPost(`/v1/conversation/${agentId}/${conversationId}/reply`).reply(200, mockMessage);
+            const result = await agentService.addMessageToDialog(agentId, conversationId, messageData);
             // Проверяем результат
             expect(result).toEqual(mockMessage);
             // Проверяем, что запрос был отправлен с правильными данными

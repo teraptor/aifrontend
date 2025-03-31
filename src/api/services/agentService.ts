@@ -131,9 +131,9 @@ export const agentService = {
 
   // получение диалога
   // GET /v1/conversation/{agentID}/dialog/{conversationID}/messages
-  async getDialog(dialogId: string, conversationID: string): Promise<any> {
+  async getDialog(agentId: string, conversationID: string): Promise<any> {
     try {
-      const response = await apiClient.get<any>(`${API_BASE}/conversation/${dialogId}/dialog/${conversationID}/messages`);
+      const response = await apiClient.get<any>(`${API_BASE}/conversation/${agentId}/dialog/${conversationID}/messages`);
       return response.data;
     } catch (error) {
       ApiErrorHandler.handleError(error, 'getDialog');
@@ -155,10 +155,10 @@ export const agentService = {
   
   // добавление сообщения в диалог
   // POST /v1/conversation/{agentID}/{conversationID}/reply
-  async addMessageToDialog(dialogId: string, conversationID: string, data: any = {}): Promise<Message> {
+  async addMessageToDialog(agentId: string, conversationID: string, data: any = {}): Promise<Message> {
     try {
       const response = await apiClient.post<Message>(
-        `${API_BASE}/conversation/${dialogId}/${conversationID}/reply`,
+        `${API_BASE}/conversation/${agentId}/${conversationID}/reply`,
          data
       );
       return response.data;
@@ -187,16 +187,16 @@ export const agentService = {
       const changeName = {
         Name: name
       };
-      console.log('Отправляемые данные:', changeName);
       
       const response = await apiClient.post<any>(
         `${API_BASE}/conversation/${agentId}/dialogs/${conversationId}`,
         changeName
       );
       
-      console.log('Ответ от сервера:', response.data);
-      // Просто возвращаем полученные данные, включая Name и другие поля
-      return response.data;
+      // Возвращаем объект с обновленным названием
+      return {
+        dialogName: response.data?.Name || response.data?.name || name
+      };
     } catch (error) {
       ApiErrorHandler.handleError(error, 'updateDialogName');
       throw error;
