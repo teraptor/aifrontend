@@ -1,4 +1,5 @@
 import apiClient from '../apiClient'
+import { push } from 'notivue'
 
 // Типы действий
 export enum WebSocketAction {
@@ -40,10 +41,20 @@ class WebSocketService {
   private isConnecting: boolean = false;
   private messageQueue: WebSocketRequest[] = []; // Очередь сообщений
   private connectionPromise: Promise<void> | null = null;
+  private reconnectAttempt: number = 0;
+  private wasDisconnected: boolean = true; // Флаг для отслеживания предыдущего состояния
 
   constructor() {
     console.log('WebSocketService: Инициализация...')
     this.connect();
+  }
+
+  private showNotification(type: 'success' | 'error' | 'warning', message: string) {
+    // Показываем success только если ранее было отключение
+    if (type === 'success' && !this.wasDisconnected) {
+      return;
+    }
+    push[type](message);
   }
 
   private async connect(): Promise<void> {
@@ -55,14 +66,18 @@ class WebSocketService {
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
         this.isConnecting = true;
-        console.log('WebSocketService: Попытка подключения к', import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection')
+        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection';
+        console.log('WebSocketService: Попытка подключения к', wsUrl)
         
-        this.ws = new WebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection');
+        this.ws = new WebSocket(wsUrl);
         
         this.ws.onopen = () => {
           console.log('WebSocketService: Соединение успешно установлено')
           this.isConnecting = false;
-          this.processMessageQueue(); // Обрабатываем очередь после подключения
+          this.reconnectAttempt = 0;
+          this.processMessageQueue();
+          this.showNotification('success', 'Соединение с чатом установлено');
+          this.wasDisconnected = false; // Сбрасываем флаг после успешного подключения
           resolve();
         };
 
@@ -82,6 +97,7 @@ class WebSocketService {
         this.ws.onerror = (error) => {
           console.error('WebSocketService: Ошибка соединения:', error);
           this.isConnecting = false;
+          this.showNotification('error', 'Ошибка соединения с чатом');
           reject(error);
         };
 
@@ -89,10 +105,19 @@ class WebSocketService {
           console.log(`WebSocketService: Соединение закрыто с кодом ${event.code}:`, event.reason);
           this.isConnecting = false;
           this.connectionPromise = null;
+          this.wasDisconnected = true; // Устанавливаем флаг при отключении
           
           if (event.code !== 1000) {
-            console.log(`WebSocketService: Попытка переподключения через ${this.reconnectTimeout}мс...`);
-            setTimeout(() => this.connect(), this.reconnectTimeout);
+            this.reconnectAttempt++;
+            const timeout = this.reconnectTimeout * Math.min(this.reconnectAttempt, 3);
+            console.log(`WebSocketService: Попытка переподключения ${this.reconnectAttempt} через ${timeout}мс...`);
+            
+            // Показываем уведомление только каждую третью попытку
+            if (this.reconnectAttempt % 3 === 0) {
+              this.showNotification('warning', `Соединение с чатом потеряно. Попытка переподключения ${this.reconnectAttempt}`);
+            }
+            
+            setTimeout(() => this.connect(), timeout);
           }
           reject(new Error('WebSocket closed'));
         };
@@ -100,7 +125,9 @@ class WebSocketService {
         console.error('WebSocketService: Ошибка при подключении:', error);
         this.isConnecting = false;
         this.connectionPromise = null;
-        setTimeout(() => this.connect(), this.reconnectTimeout);
+        
+        const timeout = this.reconnectTimeout * Math.min(this.reconnectAttempt, 3);
+        setTimeout(() => this.connect(), timeout);
         reject(error);
       }
     });
