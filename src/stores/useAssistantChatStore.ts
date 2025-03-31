@@ -218,6 +218,14 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       }
     },
 
+    // обновление названия диалога в хранилище
+    updateSessionTitle(sessionId: string, newTitle: string) {
+      const session = this.sessions.find(s => s.id === sessionId);
+      if (session) {
+        session.title = newTitle;
+      }
+    },
+
     // Показ уведомления о новом сообщении
     showNewMessageNotification(dialogTitle: string, messageText: string) {
       const shortMessage = messageText.length > 50 

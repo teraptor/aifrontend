@@ -178,5 +178,28 @@ export const agentService = {
       ApiErrorHandler.handleError(error, 'updateAgent');
       throw error;
     }
+  },
+
+  // обновление названия диалога
+  // POST /v1/conversation/{agentID}/dialogs/{conversationID}
+  async updateDialogName(agentId: string, conversationId: string, name: string): Promise<any> {
+    try {
+      const changeName = {
+        Name: name
+      };
+      console.log('Отправляемые данные:', changeName);
+      
+      const response = await apiClient.post<any>(
+        `${API_BASE}/conversation/${agentId}/dialogs/${conversationId}`,
+        changeName
+      );
+      
+      console.log('Ответ от сервера:', response.data);
+      // Просто возвращаем полученные данные, включая Name и другие поля
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'updateDialogName');
+      throw error;
+    }
   }
 }

@@ -143,10 +143,8 @@ const deleteDialog = (session: any) => {
 
 // Обновление названия диалога
 const updateSessionTitle = (sessionId: string, newTitle: string) => {
-  const session = chatStore.sessions.find(s => s.id === sessionId)
-  if (session) {
-    session.title = newTitle
-  }
+  // Используем метод из хранилища для обновления названия
+  chatStore.updateSessionTitle(sessionId, newTitle);
 }
 
 // Загрузка данных при монтировании

@@ -133,6 +133,7 @@ import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
+import { agentService } from '@/api/services/agentService'
 
 const props = defineProps<{
   selectedAssistant: IAssistent | null
@@ -225,11 +226,51 @@ const startEditingTitle = (session: any) => {
 }
 
 // Сохранить отредактированное название диалога
-const saveDialogTitle = () => {
-  if (editingDialogId.value && editedDialogTitle.value.trim()) {
-    emit('update-session-title', editingDialogId.value, editedDialogTitle.value.trim())
+const saveDialogTitle = async () => {
+  if (editingDialogId.value && editedDialogTitle.value.trim() && props.selectedAssistant) {
+    try {
+      const response = await agentService.updateDialogName(
+        props.selectedAssistant.id,
+        editingDialogId.value,
+        editedDialogTitle.value.trim()
+      );
+      
+      console.log('Получен ответ:', response);
+      
+      // Получаем название из ответа
+      let newTitle = editedDialogTitle.value.trim();
+      
+      // Если в ответе есть поле Name, используем его
+      if (response && response.Name) {
+        newTitle = response.Name;
+      }
+      // Также проверяем поле name (с маленькой буквы)
+      else if (response && response.name) {
+        newTitle = response.name;
+      }
+      
+      console.log('Итоговое название:', newTitle);
+      
+      // Обновляем название в хранилище
+      assistantChatStore.updateSessionTitle(editingDialogId.value, newTitle);
+      
+      // Также отправляем событие в родительский компонент для обратной совместимости
+      emit('update-session-title', editingDialogId.value, newTitle);
+      
+      // Если после этого название в UI не обновилось, принудительно обновим текущую сессию
+      if (props.selectedAssistant) {
+        // Перезагрузим диалоги для текущего ассистента
+        setTimeout(() => {
+          assistantChatStore.loadDialogs(props.selectedAssistant!.id);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении названия диалога:', error);
+    }
   }
-  editingDialogId.value = null
+  
+  // Очищаем состояние редактирования
+  editingDialogId.value = null;
 }
 
 // Отменить редактирование названия диалога
