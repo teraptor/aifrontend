@@ -131,12 +131,12 @@ export const agentService = {
 
   // получение диалога
   // GET /v1/conversation/{agentID}/dialog/{conversationID}/messages
-  async getDialog(agentId: string, conversationID: string): Promise<any> {
+  async getConversation(agentId: string, conversationID: string): Promise<any> {
     try {
       const response = await apiClient.get<any>(`${API_BASE}/conversation/${agentId}/dialog/${conversationID}/messages`);
       return response.data;
     } catch (error) {
-      ApiErrorHandler.handleError(error, 'getDialog');
+      ApiErrorHandler.handleError(error, 'getConversation');
       throw error;
     }
   },

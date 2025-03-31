@@ -229,7 +229,6 @@ const menuItems = ref<MenuItem[]>([
 const handleNewMessage = (response: WebSocketMessage) => {
   try {
     if (!response.roomId || !props.selectedAssistant) {
-      console.error('Отсутствует roomId или selectedAssistant')
       return
     }
 
@@ -309,7 +308,6 @@ const sendMessage = async () => {
       scrollToBottom()
     })
   } catch (error) {
-    console.error('Ошибка при отправке сообщения:', error)
     chatStore.isLoading = false
   }
 }
@@ -399,6 +397,11 @@ onMounted(() => {
   // Подписываемся на события WebSocket
   webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage)
 
+  // Загружаем историю диалога если есть активная сессия
+  if (chatStore.activeSessionId && props.selectedAssistant) {
+    chatStore.loadDialogMessages(props.selectedAssistant.id, chatStore.activeSessionId)
+  }
+
   // Настраиваем MutationObserver для отслеживания изменений в чате
   if (chatContainer.value) {
     observer.value = new MutationObserver(() => {
@@ -421,6 +424,30 @@ onMounted(() => {
 
   // Добавляем слушатель прокрутки
   window.addEventListener('scroll', checkHeaderVisibility)
+})
+
+// Следим за изменением активной сессии
+watch(() => chatStore.activeSessionId, (newSessionId) => {
+  console.log('Chat: Изменение активной сессии:', newSessionId)
+  if (newSessionId && props.selectedAssistant) {
+    console.log('Chat: Загрузка истории для новой сессии:', {
+      sessionId: newSessionId,
+      assistantId: props.selectedAssistant.id
+    })
+    chatStore.loadDialogMessages(props.selectedAssistant.id, newSessionId)
+  }
+})
+
+// Следим за изменением выбранного ассистента
+watch(() => props.selectedAssistant, (newAssistant) => {
+  console.log('Chat: Изменение выбранного ассистента:', newAssistant)
+  if (newAssistant && chatStore.activeSessionId) {
+    console.log('Chat: Загрузка истории для нового ассистента:', {
+      sessionId: chatStore.activeSessionId,
+      assistantId: newAssistant.id
+    })
+    chatStore.loadDialogMessages(newAssistant.id, chatStore.activeSessionId)
+  }
 })
 
 // Отписываемся от WebSocket событий при размонтировании компонента

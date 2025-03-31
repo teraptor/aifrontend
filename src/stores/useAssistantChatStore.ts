@@ -154,45 +154,64 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     // загрузка сообщений диалога
     async loadDialogMessages(agentId: string, conversationId: string) {
       try {
-        // Проверяем, есть ли уже сообщения для этого диалога
-        const existingMessages = this.messages.filter(m => m.sessionId === conversationId);
         
-        // Если сообщений нет, загружаем их с сервера
-        if (existingMessages.length === 0) {
-          // Устанавливаем состояние загрузки
-          this.isLoading = true;
-          
-          const response = await agentService.getDialog(agentId, conversationId);
-          
-          // Обновляем название диалога, если оно пришло в ответе
-          if (response && (response.Name || response.name || response.title)) {
-            const session = this.sessions.find(s => s.id === conversationId);
-            if (session) {
-              session.title = response.Name || response.name || response.title;
-            }
+        // Устанавливаем состояние загрузки
+        this.isLoading = true;
+        
+        const response = await agentService.getConversation(agentId, conversationId);
+        
+        // Обновляем название диалога, если оно пришло в ответе
+        if (response && (response.Name || response.name || response.title)) {
+          const session = this.sessions.find(s => s.id === conversationId);
+          if (session) {
+            session.title = response.Name || response.name || response.title;
           }
+        }
+        
+        // Проверяем, есть ли сообщения в ответе
+        if (response?.messages && Array.isArray(response.messages)) {
+          try {
+            // Преобразуем и валидируем сообщения из API
+            const messages = response.messages
+              .filter((msg: any) => {
+                // Проверяем наличие обязательных полей
+                const hasRequiredFields = msg && 
+                  (msg.id || msg.ID) && 
+                  (msg.content || msg.Content) && 
+                  (msg.role || msg.Role) &&
+                  (msg.created_at || msg.CreatedAt);
+                
+                if (!hasRequiredFields) {
+                  console.warn('Пропущено невалидное сообщение:', msg);
+                }
+                return hasRequiredFields;
+              })
+              .map((msg: any) => ({
+                id: msg.id || msg.ID || `${Date.now()}-${Math.random()}`,
+                text: msg.content || msg.Content || '',
+                isUser: (msg.role || msg.Role)?.toLowerCase() === 'user',
+                timestamp: msg.created_at || msg.CreatedAt || new Date().toISOString(),
+                sessionId: conversationId
+              }))
+              .sort((a: Message, b: Message) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
           
-          // Проверяем, есть ли сообщения в ответе
-          if (response && response.messages && Array.isArray(response.messages)) {
-            // Преобразуем сообщения из API в наш формат
-            const messages = response.messages.map((msg: any) => ({
-              id: msg.id || Date.now().toString() + Math.random().toString(),
-              text: msg.content || '',
-              isUser: msg.role === 'user',
-              timestamp: msg.created_at || new Date().toISOString(),
-              sessionId: conversationId
-            }));
+            // Очищаем существующие сообщения для этой сессии
+            this.messages = this.messages.filter(m => m.sessionId !== conversationId);
             
-            // Добавляем сообщения в хранилище
+            // Добавляем новые сообщения
             this.messages.push(...messages);
             this.newMessageReceived = true;
+          } catch (error) {
+            throw new Error('Ошибка при обработке сообщений');
           }
-          
-          // Сбрасываем состояние загрузки
-          this.isLoading = false;
+        } else {
+          // Очищаем существующие сообщения для этой сессии, так как с сервера пришел пустой список
+          this.messages = this.messages.filter(m => m.sessionId !== conversationId);
         }
       } catch (error) {
-        // Сбрасываем состояние загрузки в случае ошибки
+        throw error;
+      } finally {
+        // Сбрасываем состояние загрузки в любом случае
         this.isLoading = false;
       }
     },
@@ -206,6 +225,7 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     async loadDialogs(agentId: string) {
       try {
         const response = await agentService.getDialogs(agentId);
+        console.log('loadDialogs: response', response);
         if (response && Array.isArray(response)) {
           // Удаляем старые диалоги этого ассистента
           this.sessions = this.sessions.filter(session => session.agentId !== agentId);

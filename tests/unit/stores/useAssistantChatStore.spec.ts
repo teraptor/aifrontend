@@ -121,6 +121,42 @@ describe('useAssistentChatStore', () => {
       // Проверяем, что метод загрузки сообщений был вызван
       expect(loadMessagesSpy).toHaveBeenCalledWith('agent1', 'session1');
     });
+
+    it('should load dialog messages when selecting a session', async () => {
+      const mockResponse = {
+        messages: [
+          {
+            id: 'msg1',
+            content: 'Hello',
+            role: 'user',
+            created_at: '2024-01-01T00:00:00Z'
+          }
+        ]
+      };
+
+      (agentService.getConversation as any).mockResolvedValue(mockResponse);
+
+      await store.selectSession('session1');
+
+      expect(agentService.getConversation).toHaveBeenCalledWith('agent1', 'session1');
+      expect(store.messages.length).toBe(1);
+    });
+
+    it('should not load dialog messages if they already exist', async () => {
+      store.messages = [
+        {
+          id: 'msg1',
+          text: 'Hello',
+          isUser: true,
+          timestamp: '2024-01-01T00:00:00Z',
+          sessionId: 'session1'
+        }
+      ];
+
+      await store.selectSession('session1');
+
+      expect(agentService.getConversation).not.toHaveBeenCalled();
+    });
   });
   
   describe('addMessage', () => {
@@ -253,13 +289,13 @@ describe('useAssistentChatStore', () => {
         ]
       };
       
-      (agentService.getDialog as any).mockResolvedValue(mockResponse);
+      (agentService.getConversation as any).mockResolvedValue(mockResponse);
       
       // Выполняем действие
       await chatStore.loadDialogMessages('agent1', 'session1');
       
       // Проверяем, что сервис был вызван с правильными параметрами
-      expect(agentService.getDialog).toHaveBeenCalledWith('agent1', 'session1');
+      expect(agentService.getConversation).toHaveBeenCalledWith('agent1', 'session1');
       
       // Проверяем, что сообщения загружены
       expect(chatStore.messages.length).toBe(2);
@@ -291,7 +327,7 @@ describe('useAssistentChatStore', () => {
       await chatStore.loadDialogMessages('agent1', 'session1');
       
       // Проверяем, что сервис не был вызван
-      expect(agentService.getDialog).not.toHaveBeenCalled();
+      expect(agentService.getConversation).not.toHaveBeenCalled();
       
       // Проверяем, что сообщения не изменились
       expect(chatStore.messages.length).toBe(1);

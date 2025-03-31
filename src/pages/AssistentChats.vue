@@ -44,58 +44,48 @@ const selectedAssistant = ref<IAssistent | null>(null)
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
 
-// Функция для отправки welcome-message
-const sendWelcomeMessage = (assistantId: string, sessionId: string) => {
-  console.log('AssistentChats: Отправка welcome-message', { assistantId, sessionId })
-  if (!assistantId || !sessionId) {
-    console.error('AssistentChats: Отсутствует assistantId или sessionId для welcome-message')
-    return
-  }
-  webSocketService.send({
-    action: WebSocketAction.WelcomeMessage,
-    workflowId: assistantId,
-    roomId: sessionId
-  })
-}
 
 // Выбор ассистента
-const selectAssistant = (assistant: IAssistent, sessionIdToSelect?: string) => {
-  console.log('AssistentChats: Выбор ассистента', { assistant, sessionIdToSelect })
+const selectAssistant = async (assistant: IAssistent, sessionIdToSelect?: string) => {
   selectedAssistant.value = assistant
-  
   localStorage.setItem('selectedAssistantId', assistant.id)
   
-  if (sessionIdToSelect) {
-    selectSession(sessionIdToSelect)
-    sendWelcomeMessage(assistant.id, sessionIdToSelect)
-    return
-  }
-  
-  const lastSessionId = localStorage.getItem(`lastSessionId_${assistant.id}`)
-  const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistant.id)
-  
-  if (assistantSessions.length > 0) {
-    if (lastSessionId && assistantSessions.some(s => s.id === lastSessionId)) {
-      selectSession(lastSessionId)
-      sendWelcomeMessage(assistant.id, lastSessionId)
-    } else {
-      chatStore.selectAssistantActiveSessions(assistant.id)
-      if (chatStore.activeSessionId) {
-        sendWelcomeMessage(assistant.id, chatStore.activeSessionId)
-      }
+  try {
+    // Загружаем диалоги ассистента
+    await chatStore.loadDialogs(assistant.id)
+    
+    if (sessionIdToSelect) {
+      await selectSession(sessionIdToSelect)
+      return
     }
-  } else {
-    createNewDialog()
+    
+    const lastSessionId = localStorage.getItem(`lastSessionId_${assistant.id}`)
+    const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistant.id)
+    
+    if (assistantSessions.length > 0) {
+      if (lastSessionId && assistantSessions.some(s => s.id === lastSessionId)) {
+        await selectSession(lastSessionId)
+      } else {
+        await chatStore.selectAssistantActiveSessions(assistant.id)
+      }
+    } else {
+      await createNewDialog()
+    }
+  } catch (error) {
   }
 }
 
 // Выбор диалога
-const selectSession = (sessionId: string) => {
-  chatStore.selectSession(sessionId)
-  
-  // Сохраняем ID активной сессии для текущего ассистента
-  if (selectedAssistant.value) {
-    localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, sessionId)
+const selectSession = async (sessionId: string) => {
+  try {
+    await chatStore.selectSession(sessionId)
+    
+    // Сохраняем ID активной сессии для текущего ассистента
+    if (selectedAssistant.value) {
+      localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, sessionId)
+    }
+  } catch (error) {
+    console.error('AssistentChats: Ошибка при выборе сессии:', error)
   }
 }
 
@@ -108,8 +98,6 @@ const createNewDialog = async () => {
   // Сохраняем ID новой сессии как последней активной для этого ассистента
   if (newSession && selectedAssistant.value) {
     localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, newSession.id)
-    // Отправляем welcome-message для новой сессии
-    sendWelcomeMessage(selectedAssistant.value.id, newSession.id)
   }
 }
 
@@ -164,26 +152,31 @@ const updateSessionTitle = (sessionId: string, newTitle: string) => {
 
 // Загрузка данных при монтировании
 onMounted(async () => {
-  console.log('AssistentChats: Компонент монтируется')
-  await assistentsStore.getMyAssistents()
-  
-  const savedAssistantId = localStorage.getItem('selectedAssistantId')
-  console.log('AssistentChats: Сохраненный assistantId:', savedAssistantId)
-  
-  if (assistants.value.length > 0) {
-    if (savedAssistantId) {
-      const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
-      if (savedAssistant) {
-        console.log('AssistentChats: Найден сохраненный ассистент:', savedAssistant)
-        selectAssistant(savedAssistant)
+  try {
+    console.log('AssistentChats: Компонент монтируется')
+    console.log('AssistentChats: Загрузка ассистентов пользователя')
+    await assistentsStore.getMyAssistents()
+    
+    const savedAssistantId = localStorage.getItem('selectedAssistantId')
+    console.log('AssistentChats: Сохраненный assistantId:', savedAssistantId)
+    
+    if (assistants.value.length > 0) {
+      if (savedAssistantId) {
+        const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
+        if (savedAssistant) {
+          console.log('AssistentChats: Найден сохраненный ассистент:', savedAssistant)
+          await selectAssistant(savedAssistant)
+        } else {
+          console.log('AssistentChats: Сохраненный ассистент не найден, выбираем первого')
+          await selectAssistant(assistants.value[0])
+        }
       } else {
-        console.log('AssistentChats: Сохраненный ассистент не найден, выбираем первого')
-        selectAssistant(assistants.value[0])
+        console.log('AssistentChats: Нет сохраненного ассистента, выбираем первого')
+        await selectAssistant(assistants.value[0])
       }
-    } else {
-      console.log('AssistentChats: Нет сохраненного ассистента, выбираем первого')
-      selectAssistant(assistants.value[0])
     }
+  } catch (error) {
+    console.error('AssistentChats: Ошибка при инициализации:', error)
   }
 })
 </script>
