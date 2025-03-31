@@ -8,10 +8,10 @@
       <AssistentsList />
     </div>
     <div v-else class="chat-container">
-      <Chat 
+      <PublicChat 
         :selected-assistant="selectedAssistant"
+        :is-public-access="true"
         @create-new-dialog="createNewDialog"
-        @clear-chat="clearChat"
       />
     </div>
   </div>
@@ -21,7 +21,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import AssistentsList from '@/components/Assistents/AssistentsList.vue';
-import Chat from '@/components/chat/Chat.vue';
+import PublicChat from '@/components/chat/PublicChat.vue';
 import type { IAssistent } from '@/stores/useAssistantsStore';
 
 const route = useRoute();
@@ -47,11 +47,6 @@ const selectedAssistant = ref<IAssistent>({
 const createNewDialog = () => {
   // Логика создания нового диалога
   console.log('Создание нового диалога');
-};
-
-const clearChat = () => {
-  // Логика очистки чата
-  console.log('Очистка чата');
 };
 
 onMounted(async () => {
