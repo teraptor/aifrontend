@@ -125,21 +125,6 @@
         </div>
       </div>
     </div>
-    <div class="dialog-confirmation" v-if="showConfirmation">
-      <div class="dialog-confirmation__overlay"></div>
-      <div class="dialog-confirmation__content">
-        <div class="dialog-confirmation__title">{{ confirmationTitle }}</div>
-        <div class="dialog-confirmation__message">{{ confirmationMessage }}</div>
-        <div class="dialog-confirmation__actions">
-          <button class="dialog-confirmation__button dialog-confirmation__button--cancel" @click="handleCancel">
-            Отмена
-          </button>
-          <button class="dialog-confirmation__button dialog-confirmation__button--confirm" @click="handleConfirm">
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -180,11 +165,6 @@ const assistantSelectorDropdown = ref<HTMLElement | null>(null)
 const isNotificationsMenuOpen = ref(false)
 const notificationBellTrigger = ref<HTMLElement | null>(null)
 const notificationsDropdown = ref<HTMLElement | null>(null)
-const showConfirmation = ref(false)
-const confirmationTitle = ref('')
-const confirmationMessage = ref('')
-let confirmCallback: (() => void) | null = null
-let cancelCallback: (() => void) | null = null
 
 // Сортированные диалоги выбранного ассистента
 const sortedSessions = computed(() => {
@@ -352,18 +332,11 @@ onMounted(async () => {
   if (props.selectedAssistant) {
     await assistantChatStore.loadDialogs(props.selectedAssistant.id)
   }
-
-  window.addEventListener('show-confirmation', ((event: CustomEvent) => {
-    showConfirmation.value = true
-    confirmationTitle.value = event.detail.title
-    confirmationMessage.value = event.detail.message
-    confirmCallback = event.detail.onConfirm
-    cancelCallback = event.detail.onCancel
-  }) as EventListener)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('show-confirmation', (() => {}) as EventListener)
+  // Удаляем удаление обработчика события
+  // window.removeEventListener('show-confirmation', (() => {}) as EventListener)
 })
 
 // Добавляем недостающие методы
@@ -385,7 +358,7 @@ const deleteDialog = (session: any) => {
   // Создаем кастомное событие для подтверждения удаления
   const event = new CustomEvent('show-confirmation', {
     detail: {
-      title: 'Подтвердите действие на localhost:5173',
+      title: 'Подтвердите действие',
       message: 'Вы уверены, что хотите удалить этот диалог?',
       onConfirm: async () => {
         try {
@@ -399,7 +372,6 @@ const deleteDialog = (session: any) => {
           }
         } catch (error) {
           console.error('Ошибка при удалении диалога:', error);
-          // Здесь можно добавить показ уведомления об ошибке
         }
       },
       onCancel: () => {
@@ -408,20 +380,6 @@ const deleteDialog = (session: any) => {
     }
   });
   window.dispatchEvent(event);
-}
-
-const handleConfirm = () => {
-  if (confirmCallback) {
-    confirmCallback()
-  }
-  showConfirmation.value = false
-}
-
-const handleCancel = () => {
-  if (cancelCallback) {
-    cancelCallback()
-  }
-  showConfirmation.value = false
 }
 </script>
 
@@ -903,85 +861,6 @@ const handleCancel = () => {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
-}
-
-.dialog-confirmation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &__overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  &__content {
-    position: relative;
-    background: white;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: 400px;
-    width: 90%;
-  }
-
-  &__title {
-    font-size: 18px;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 16px;
-  }
-
-  &__message {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 24px;
-  }
-
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-
-  &__button {
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &--cancel {
-      background-color: #f5f5f5;
-      color: #666;
-      border: 1px solid #eaeaea;
-
-      &:hover {
-        background-color: #eaeaea;
-      }
-    }
-
-    &--confirm {
-      background-color: #40c4dd;
-      color: white;
-      border: none;
-
-      &:hover {
-        background-color: #33b5ce;
-      }
-    }
-  }
 }
 </style>
 
