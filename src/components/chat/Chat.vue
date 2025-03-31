@@ -414,9 +414,11 @@ const formatTime = (dateString: string) => {
 // Прокрутка чата вниз
 const scrollToBottom = () => {
   nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
+     const assistentChat = document.querySelector('.assistent-chat')
+     if (assistentChat) {
+       console.log('Высота .assistent-chat:', assistentChat.clientHeight)
+       window.scrollTo(0, assistentChat.clientHeight) 
+     }
   })
 }
 

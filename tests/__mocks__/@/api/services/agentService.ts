@@ -66,6 +66,23 @@ export const agentService = {
     id: 'dialog1' 
   }),
   
+  getDialogs: jest.fn().mockResolvedValue([
+    {
+      ID: 'dialog1',
+      id: 'dialog1',
+      title: 'Dialog 1',
+      created_at: '2023-01-01T00:00:00Z',
+      unread_count: 2
+    },
+    {
+      ID: 'dialog2',
+      id: 'dialog2',
+      title: 'Dialog 2',
+      created_at: '2023-01-02T00:00:00Z',
+      unread_count: 0
+    }
+  ]),
+  
   getDialog: jest.fn().mockResolvedValue({
     messages: [
       {

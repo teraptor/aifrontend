@@ -140,6 +140,18 @@ export const agentService = {
       throw error;
     }
   },
+
+  // получение списка диалогов ассистента
+  // GET /v1/conversation/{agentID}/dialogs
+  async getDialogs(agentId: string): Promise<any> {
+    try {
+      const response = await apiClient.get<any>(`${API_BASE}/conversation/${agentId}/dialogs`);
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'getDialogs');
+      throw error;
+    }
+  },
   
   // добавление сообщения в диалог
   // POST /v1/conversation/{agentID}/{conversationID}/reply

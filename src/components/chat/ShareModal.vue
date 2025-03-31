@@ -50,7 +50,21 @@ const close = () => {
 
 const copyLink = async () => {
   try {
-    await navigator.clipboard.writeText(assistantLink.value)
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(assistantLink.value)
+    } else {
+      // Запасной вариант для браузеров без поддержки Clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = assistantLink.value
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      document.execCommand('copy')
+      textArea.remove()
+    }
     notifications.success('Ссылка скопирована')
     close()
   } catch (error) {

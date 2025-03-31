@@ -58,7 +58,6 @@
         </div>
         
         <div class="assistant-selector-dropdown" v-if="isAssistantSelectorOpen" ref="assistantSelectorDropdown">
-          <div class="assistant-selector-dropdown__header">Ассистенты</div>
           <div class="assistant-selector-dropdown__list">
             <div 
               v-for="assistant in assistants" 
@@ -130,9 +129,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import type { IAssistent } from '@/stores/useAssistantsStore'
+import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 
 const props = defineProps<{
   selectedAssistant: IAssistent | null
@@ -149,6 +149,8 @@ const emit = defineEmits<{
   (e: 'delete-dialog', session: any): void
   (e: 'update-session-title', sessionId: string, newTitle: string): void
 }>()
+
+const assistantChatStore = useAssistentChatStore()
 
 // Локальные переменные для UI
 const editingDialogId = ref<string | null>(null)
@@ -270,8 +272,15 @@ onClickOutside(notificationsDropdown, (event) => {
   }
 })
 
-// Закрываем меню диалога при клике в любом месте документа
-onMounted(() => {
+// Добавляем watch для selectedAssistant
+watch(() => props.selectedAssistant, async (newAssistant) => {
+  if (newAssistant) {
+    await assistantChatStore.loadDialogs(newAssistant.id)
+  }
+}, { immediate: true })
+
+// Добавляем загрузку диалогов при монтировании компонента
+onMounted(async () => {
   document.addEventListener('click', (event) => {
     const clickedElement = event.target as HTMLElement
     
@@ -279,11 +288,18 @@ onMounted(() => {
       dialogMenuOpen.value = null
     }
   })
+
+  // Загружаем диалоги при монтировании, если есть выбранный ассистент
+  if (props.selectedAssistant) {
+    await assistantChatStore.loadDialogs(props.selectedAssistant.id)
+  }
 })
 
 // Добавляем недостающие методы
-const selectAssistant = (assistant: IAssistent) => {
+const selectAssistant = async (assistant: IAssistent) => {
   emit('select-assistant', assistant)
+  // Загружаем диалоги для выбранного ассистента
+  await assistantChatStore.loadDialogs(assistant.id)
 }
 
 const createNewDialog = () => {
@@ -544,7 +560,7 @@ const deleteDialog = (session: any) => {
   }
   
   &__list {
-    max-height: 300px;
+    // max-height: 300px;
   }
   
   &__item {

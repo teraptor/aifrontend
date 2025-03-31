@@ -120,9 +120,10 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
     path: `${RouteNames.CHAT}/:id`,
     name: RouteNames.CHAT,
-    component: () => import('@/pages/ChatHook.vue'),
+    component: () => import('@/pages/PublicChat.vue'),
     meta: {
       title: 'диалог',
+      layout: 'public-chat'
     },
   },
   {

@@ -389,4 +389,46 @@ describe('useAssistentChatStore', () => {
       expect(chatStore.newMessageReceived).toBe(false);
     });
   });
+
+  describe('loadDialogs', () => {
+    it('должен загружать диалоги для ассистента', async () => {
+      // Получаем хранилище
+      const chatStore = useAssistentChatStore();
+      
+      // Мокируем ответ от сервиса
+      const mockResponse = [
+        {
+          ID: 'dialog1',
+          id: 'dialog1',
+          title: 'Dialog 1',
+          created_at: '2023-01-01T00:00:00Z',
+          unread_count: 2
+        },
+        {
+          ID: 'dialog2',
+          id: 'dialog2',
+          title: 'Dialog 2',
+          created_at: '2023-01-02T00:00:00Z',
+          unread_count: 0
+        }
+      ];
+      
+      (agentService.getDialogs as any).mockResolvedValue(mockResponse);
+      
+      // Выполняем действие
+      await chatStore.loadDialogs('agent1');
+      
+      // Проверяем, что сервис был вызван с правильными параметрами
+      expect(agentService.getDialogs).toHaveBeenCalledWith('agent1');
+      
+      // Проверяем, что диалоги загружены
+      expect(chatStore.sessions.length).toBe(2);
+      expect(chatStore.sessions[0].id).toBe('dialog1');
+      expect(chatStore.sessions[0].title).toBe('Dialog 1');
+      expect(chatStore.sessions[0].unreadCount).toBe(2);
+      expect(chatStore.sessions[1].id).toBe('dialog2');
+      expect(chatStore.sessions[1].title).toBe('Dialog 2');
+      expect(chatStore.sessions[1].unreadCount).toBe(0);
+    });
+  });
 }); 

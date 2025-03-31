@@ -1,6 +1,5 @@
 <template>
   <div class="main">
-    <h1>Чат #{{ chatId }}</h1>
     <div v-if="isLoading">
       Загрузка...
     </div>
@@ -86,4 +85,4 @@ onMounted(async () => {
   border-radius: 8px;
   overflow: hidden;
 }
-</style>
+</style> 

@@ -194,6 +194,30 @@ export const useAssistentChatStore = defineStore('assistentChat', {
       this.newMessageReceived = false;
     },
 
+    // загрузка диалогов ассистента
+    async loadDialogs(agentId: string) {
+      try {
+        const response = await agentService.getDialogs(agentId);
+        if (response && Array.isArray(response)) {
+          // Удаляем старые диалоги этого ассистента
+          this.sessions = this.sessions.filter(session => session.agentId !== agentId);
+          
+          // Добавляем новые диалоги
+          const sessions = response.map(dialog => ({
+            id: dialog.ID || dialog.id,
+            title: dialog.title || `Диалог ${dialog.ID || dialog.id}`,
+            timestamp: dialog.created_at || new Date().toISOString(),
+            isActive: false,
+            agentId,
+            unreadCount: dialog.unread_count || 0
+          }));
+          this.sessions.push(...sessions);
+        }
+      } catch (error) {
+        console.error(`Ошибка при загрузке диалогов для ассистента ${agentId}:`, error);
+      }
+    },
+
     // Показ уведомления о новом сообщении
     showNewMessageNotification(dialogTitle: string, messageText: string) {
       const shortMessage = messageText.length > 50 
