@@ -36,6 +36,7 @@ defineProps<{
     background-color: #1890ff;
     color: #ffffff;
     border-bottom-right-radius: 4px;
+    min-height: 44px;
   }
 
   &__text {
@@ -45,6 +46,10 @@ defineProps<{
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: break-word;
+
+    &:empty {
+      display: none;
+    }
 
     :deep(a) {
       color: #ffffff;

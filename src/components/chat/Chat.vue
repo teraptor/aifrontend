@@ -89,12 +89,12 @@
         <template v-for="message in chatStore.sessionMessages" :key="message.id">
           <UserMessage
             v-if="message.isUser"
-            :text="message.text"
+            :text="message.text || ''"
             :timestamp="message.timestamp"
           />
           <AssistantMessage
             v-else
-            :text="message.text"
+            :text="message.text || ''"
             :timestamp="message.timestamp"
           />
         </template>
@@ -723,6 +723,14 @@ const closeShareModal = () => {
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  
+  p {
+    margin: 0;
+    max-width: 80%;
+    line-height: 1.5;
+  }
 }
 
 .sticky-header {

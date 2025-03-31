@@ -35,6 +35,7 @@ defineProps<{
     box-sizing: border-box;
     background-color: #f5f7fa;
     border-bottom-left-radius: 4px;
+    min-height: 44px;
   }
 
   &__text {
@@ -44,6 +45,11 @@ defineProps<{
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    color: #333333;
+
+    &:empty {
+      display: none;
+    }
 
     :deep(a) {
       color: #1890ff;

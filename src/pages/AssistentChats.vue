@@ -30,6 +30,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
+import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 import Chat from '@/components/chat/Chat.vue'
 import Dialogs from '@/components/chat/Dialogs.vue'
 
@@ -43,35 +44,47 @@ const selectedAssistant = ref<IAssistent | null>(null)
 // Вычисляемые свойства из хранилищ
 const assistants = computed(() => assistentsStore.sortedAssistents)
 
+// Функция для отправки welcome-message
+const sendWelcomeMessage = (assistantId: string, sessionId: string) => {
+  console.log('AssistentChats: Отправка welcome-message', { assistantId, sessionId })
+  if (!assistantId || !sessionId) {
+    console.error('AssistentChats: Отсутствует assistantId или sessionId для welcome-message')
+    return
+  }
+  webSocketService.send({
+    action: WebSocketAction.WelcomeMessage,
+    workflowId: assistantId,
+    roomId: sessionId
+  })
+}
+
 // Выбор ассистента
 const selectAssistant = (assistant: IAssistent, sessionIdToSelect?: string) => {
+  console.log('AssistentChats: Выбор ассистента', { assistant, sessionIdToSelect })
   selectedAssistant.value = assistant
   
-  // Сохраняем ID выбранного ассистента в localStorage
   localStorage.setItem('selectedAssistantId', assistant.id)
   
-  // Если передан конкретный ID сессии, выбираем её
   if (sessionIdToSelect) {
     selectSession(sessionIdToSelect)
+    sendWelcomeMessage(assistant.id, sessionIdToSelect)
     return
   }
   
-  // Проверяем, есть ли сохраненная сессия для этого ассистента
   const lastSessionId = localStorage.getItem(`lastSessionId_${assistant.id}`)
-  
-  // Проверяем, есть ли сессии для этого ассистента
   const assistantSessions = chatStore.sessions.filter(s => s.agentId === assistant.id)
   
   if (assistantSessions.length > 0) {
     if (lastSessionId && assistantSessions.some(s => s.id === lastSessionId)) {
-      // Если есть сохраненная сессия и она существует, выбираем её
       selectSession(lastSessionId)
+      sendWelcomeMessage(assistant.id, lastSessionId)
     } else {
-      // Иначе используем новый метод без сброса счетчика
       chatStore.selectAssistantActiveSessions(assistant.id)
+      if (chatStore.activeSessionId) {
+        sendWelcomeMessage(assistant.id, chatStore.activeSessionId)
+      }
     }
   } else {
-    // Если нет сессий, создаем новую
     createNewDialog()
   }
 }
@@ -95,6 +108,8 @@ const createNewDialog = async () => {
   // Сохраняем ID новой сессии как последней активной для этого ассистента
   if (newSession && selectedAssistant.value) {
     localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, newSession.id)
+    // Отправляем welcome-message для новой сессии
+    sendWelcomeMessage(selectedAssistant.value.id, newSession.id)
   }
 }
 
@@ -149,26 +164,24 @@ const updateSessionTitle = (sessionId: string, newTitle: string) => {
 
 // Загрузка данных при монтировании
 onMounted(async () => {
-  // Загружаем список ассистентов
+  console.log('AssistentChats: Компонент монтируется')
   await assistentsStore.getMyAssistents()
   
-  // Проверяем, есть ли сохраненный ID ассистента
   const savedAssistantId = localStorage.getItem('selectedAssistantId')
+  console.log('AssistentChats: Сохраненный assistantId:', savedAssistantId)
   
-  // Если есть ассистенты
   if (assistants.value.length > 0) {
     if (savedAssistantId) {
-      // Ищем ассистента по сохраненному ID
       const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
       if (savedAssistant) {
-        // Если нашли, выбираем его
+        console.log('AssistentChats: Найден сохраненный ассистент:', savedAssistant)
         selectAssistant(savedAssistant)
       } else {
-        // Если не нашли (возможно, он был удален), выбираем первого
+        console.log('AssistentChats: Сохраненный ассистент не найден, выбираем первого')
         selectAssistant(assistants.value[0])
       }
     } else {
-      // Если нет сохраненного ID, выбираем первого ассистента
+      console.log('AssistentChats: Нет сохраненного ассистента, выбираем первого')
       selectAssistant(assistants.value[0])
     }
   }

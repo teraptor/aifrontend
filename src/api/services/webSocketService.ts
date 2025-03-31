@@ -9,7 +9,8 @@ export enum WebSocketAction {
   SendMessage = 'sendMessage',
   NewMessage = 'newMessage',
   LeaveRoom = 'leaveRoom',
-  LeftRoom = 'leftRoom'
+  LeftRoom = 'leftRoom',
+  WelcomeMessage = 'welcomeMessage'
 }
 
 // Интерфейс запроса
@@ -35,70 +36,114 @@ export interface WebSocketResponse {
 class WebSocketService {
   private ws: WebSocket | null = null;
   private messageHandlers: Map<WebSocketAction, ((response: WebSocketResponse) => void)[]> = new Map();
-  private reconnectTimeout: number = 5000; // 5 секунд для переподключения
+  private reconnectTimeout: number = 5000;
   private isConnecting: boolean = false;
+  private messageQueue: WebSocketRequest[] = []; // Очередь сообщений
+  private connectionPromise: Promise<void> | null = null;
 
   constructor() {
+    console.log('WebSocketService: Инициализация...')
     this.connect();
   }
 
-  private async connect() {
-    if (this.isConnecting) return;
+  private async connect(): Promise<void> {
+    if (this.isConnecting) {
+      console.log('WebSocketService: Соединение уже устанавливается...')
+      return this.connectionPromise!;
+    }
     
-    try {
-      this.isConnecting = true;
-      
-      // Используем URL из переменных окружения
-      this.ws = new WebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection');
-      
-      this.ws.onopen = () => {
-        console.log('WebSocket соединение установлено');
-        this.isConnecting = false;
-      };
-
-      this.ws.onmessage = (event) => {
-        try {
-          const response: WebSocketResponse = JSON.parse(event.data);
-          const handlers = this.messageHandlers.get(response.action);
-          if (handlers) {
-            handlers.forEach(handler => handler(response));
-          }
-        } catch (error) {
-          console.error('Ошибка при обработке WebSocket сообщения:', error);
-        }
-      };
-
-      this.ws.onerror = (error) => {
-        console.error('WebSocket ошибка:', error);
-        this.isConnecting = false;
-      };
-
-      this.ws.onclose = (event) => {
-        console.log(`WebSocket соединение закрыто с кодом ${event.code}:`, event.reason);
-        this.isConnecting = false;
+    this.connectionPromise = new Promise((resolve, reject) => {
+      try {
+        this.isConnecting = true;
+        console.log('WebSocketService: Попытка подключения к', import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection')
         
-        // Переподключаемся только если соединение было разорвано не намеренно
-        if (event.code !== 1000) { // 1000 - нормальное закрытие
-          console.log(`Попытка переподключения через ${this.reconnectTimeout}мс...`);
-          setTimeout(() => this.connect(), this.reconnectTimeout);
+        this.ws = new WebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection');
+        
+        this.ws.onopen = () => {
+          console.log('WebSocketService: Соединение успешно установлено')
+          this.isConnecting = false;
+          this.processMessageQueue(); // Обрабатываем очередь после подключения
+          resolve();
+        };
+
+        this.ws.onmessage = (event) => {
+          try {
+            const response: WebSocketResponse = JSON.parse(event.data);
+            console.log('WebSocketService: Получено сообщение:', response)
+            const handlers = this.messageHandlers.get(response.action);
+            if (handlers) {
+              handlers.forEach(handler => handler(response));
+            }
+          } catch (error) {
+            console.error('WebSocketService: Ошибка при обработке сообщения:', error);
+          }
+        };
+
+        this.ws.onerror = (error) => {
+          console.error('WebSocketService: Ошибка соединения:', error);
+          this.isConnecting = false;
+          reject(error);
+        };
+
+        this.ws.onclose = (event) => {
+          console.log(`WebSocketService: Соединение закрыто с кодом ${event.code}:`, event.reason);
+          this.isConnecting = false;
+          this.connectionPromise = null;
+          
+          if (event.code !== 1000) {
+            console.log(`WebSocketService: Попытка переподключения через ${this.reconnectTimeout}мс...`);
+            setTimeout(() => this.connect(), this.reconnectTimeout);
+          }
+          reject(new Error('WebSocket closed'));
+        };
+      } catch (error) {
+        console.error('WebSocketService: Ошибка при подключении:', error);
+        this.isConnecting = false;
+        this.connectionPromise = null;
+        setTimeout(() => this.connect(), this.reconnectTimeout);
+        reject(error);
+      }
+    });
+
+    return this.connectionPromise;
+  }
+
+  private async processMessageQueue() {
+    console.log('WebSocketService: Обработка очереди сообщений:', this.messageQueue.length)
+    while (this.messageQueue.length > 0) {
+      const request = this.messageQueue.shift();
+      if (request && this.ws?.readyState === WebSocket.OPEN) {
+        try {
+          console.log('WebSocketService: Отправка отложенного сообщения:', request)
+          this.ws.send(JSON.stringify(request));
+        } catch (error) {
+          console.error('WebSocketService: Ошибка при отправке отложенного сообщения:', error);
+          // Возвращаем сообщение в очередь при ошибке
+          this.messageQueue.unshift(request);
+          break;
         }
-      };
-    } catch (error) {
-      console.error('Ошибка при подключении к WebSocket:', error);
-      this.isConnecting = false;
-      setTimeout(() => this.connect(), this.reconnectTimeout);
+      }
     }
   }
 
-  public send(request: WebSocketRequest) {
+  public async send(request: WebSocketRequest) {
+    console.log('WebSocketService: Состояние соединения перед отправкой:', {
+      readyState: this.ws?.readyState,
+      readyStateText: this.ws ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][this.ws.readyState] : 'NO_CONNECTION'
+    })
+
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
+        console.log('WebSocketService: Отправка сообщения:', request)
         this.ws.send(JSON.stringify(request));
       } catch (error) {
-        console.error('Ошибка при отправке WebSocket сообщения:', error);
+        console.error('WebSocketService: Ошибка при отправке сообщения:', error);
+        this.messageQueue.push(request);
       }
     } else {
-      console.error('WebSocket не подключен, состояние:', this.ws?.readyState);
+      console.log('WebSocketService: Добавление сообщения в очередь:', request);
+      this.messageQueue.push(request);
+      await this.connect();
     }
   }
 
