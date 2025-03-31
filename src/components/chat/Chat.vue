@@ -86,27 +86,20 @@
       </div>
 
       <div class="chat-messages" ref="chatContainer">
-        <div
-          v-for="message in chatStore.sessionMessages"
-          :key="message.id"
-          :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
-        >
-          <div class="message__content">
-            <p class="message__text" v-html="formattedText(message.text)"></p>
-            <span class="message__time">{{ formatTime(message.timestamp) }}</span>
-          </div>
-        </div>
+        <template v-for="message in chatStore.sessionMessages" :key="message.id">
+          <UserMessage
+            v-if="message.isUser"
+            :text="message.text"
+            :timestamp="message.timestamp"
+          />
+          <AssistantMessage
+            v-else
+            :text="message.text"
+            :timestamp="message.timestamp"
+          />
+        </template>
 
-        <div v-if="chatStore.isLoading" class="message message--assistant message--typing">
-          <div class="message__content typing-indicator">
-            <div class="typing-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <p class="message__text typing-text">Печатает ответ...</p>
-          </div>
-        </div>
+        <TypingIndicator v-if="chatStore.isLoading" />
       </div>
     </div>
     <div v-else class="no-dialog-selected">
@@ -146,6 +139,9 @@ import 'katex/dist/katex.min.css'
 import mermaid from 'mermaid'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 import ShareModal from './ShareModal.vue'
+import UserMessage from './messages/UserMessage.vue'
+import AssistantMessage from './messages/AssistantMessage.vue'
+import TypingIndicator from './messages/TypingIndicator.vue'
 
 // Инициализация Mermaid
 mermaid.initialize({
@@ -533,7 +529,7 @@ const closeShareModal = () => {
     display: flex;
     flex-direction: column;
     position: relative;
-    padding-bottom: 84px; // Добавляем отступ снизу для поля ввода
+    padding-bottom: 84px;
   }
 }
 
@@ -680,163 +676,12 @@ const closeShareModal = () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(100% - 60px); // Вычитаем высоту шапки
-  padding-bottom: 20px; // Добавляем отступ снизу
-}
-
-.message {
-  display: flex;
-  max-width: 80%;
-  width: 100%;
-
-  &__content {
-    padding: 12px 16px;
-    border-radius: 12px;
-    position: relative;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    width: 100%;
-    box-sizing: border-box;
-
-    :deep(.code-block) {
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      padding: 12px;
-      border-radius: 6px;
-      margin: 8px 0;
-      font-family: 'Fira Code', monospace;
-      font-size: 13px;
-      overflow-x: auto;
-      position: relative;
-
-      &::before {
-        content: attr(class);
-        position: absolute;
-        top: 0;
-        right: 0;
-        padding: 4px 8px;
-        font-size: 12px;
-        color: #666;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-bottom-left-radius: 6px;
-        border-top-right-radius: 6px;
-      }
-    }
-
-    :deep(.table-row) {
-      display: flex;
-      border-bottom: 1px solid rgba(#999, 0.1);
-
-      &:first-child {
-        font-weight: bold;
-        background-color: rgba(#1890ff, 0.05);
-      }
-    }
-
-    :deep(.table-cell) {
-      padding: 8px;
-      flex: 1;
-      min-width: 100px;
-      border-right: 1px solid rgba(#999, 0.1);
-
-      &:last-child {
-        border-right: none;
-      }
-    }
-
-    :deep(.mermaid-diagram) {
-      background-color: #fff;
-      padding: 16px;
-      border-radius: 6px;
-      margin: 8px 0;
-      border: 1px solid rgba(#999, 0.1);
-    }
-
-    :deep(.math-block) {
-      padding: 8px;
-      margin: 8px 0;
-      background-color: rgba(#1890ff, 0.05);
-      border-radius: 4px;
-      text-align: center;
-      font-family: 'KaTeX', 'Times New Roman', serif;
-    }
-
-    :deep(.math-inline) {
-      font-family: 'KaTeX', 'Times New Roman', serif;
-      padding: 0 4px;
-    }
-
-    :deep(.inline-code) {
-      background-color: rgba(#000, 0.05);
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-family: 'Fira Code', monospace;
-      font-size: 13px;
-    }
-  }
-
-  &__text {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-
-    :deep(a) {
-      color: #1890ff;
-      text-decoration: underline;
-      word-break: break-word;
-
-      &:hover {
-        text-decoration: none;
-      }
-    }
-  }
-
-  &__time {
-    font-size: 10px;
-    color: #999;
-    position: absolute;
-    bottom: 4px;
-    right: 8px;
-  }
-
-  &--assistant {
-    align-self: flex-start;
-
-    .message__content {
-      background-color: #f5f7fa;
-      border-bottom-left-radius: 4px;
-    }
-  }
-
-  &--user {
-    align-self: flex-end;
-
-    .message__content {
-      background-color: #1890ff;
-      color: #ffffff;
-      border-bottom-right-radius: 4px;
-    }
-
-    .message__time {
-      color: rgba(#ffffff, 0.8);
-    }
-  }
-
-  &--typing {
-    opacity: 0.8;
-
-    .message__content {
-      padding-bottom: 8px;
-    }
-  }
+  height: calc(100% - 60px);
+  padding-bottom: 20px;
 }
 
 .fixed-chat-input {
-  position: fixed; // Меняем с fixed на absolute
+  position: fixed;
   bottom: 0;
   z-index: 100;
   width: 50%;
@@ -844,7 +689,6 @@ const closeShareModal = () => {
   align-items: center;
   padding: 20px;
   box-sizing: border-box;
-
 
   textarea {
     flex: 1;
@@ -865,8 +709,7 @@ const closeShareModal = () => {
     box-sizing: border-box;
     padding: 11px 16px;
     vertical-align: middle;
-    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1); // Добавляем мягкую тень сверху
-
+    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1);
 
     &:focus {
       outline: none;
@@ -944,61 +787,6 @@ const closeShareModal = () => {
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.typing-indicator {
-  background-color: #f5f7fa;
-  border-bottom-left-radius: 4px;
-}
-
-.typing-dots {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 0;
-
-  span {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    background-color: #999;
-    border-radius: 50%;
-    opacity: 0.6;
-    animation: typing 1s infinite ease-in-out;
-
-    &:nth-child(1) {
-      animation-delay: 0s;
-    }
-
-    &:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    &:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-  }
-}
-
-.typing-text {
-  font-size: 14px;
-  color: #666;
-  margin: 4px 0 0 0;
-}
-
-@keyframes typing {
-  0% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
 }
 
 .sticky-header {
