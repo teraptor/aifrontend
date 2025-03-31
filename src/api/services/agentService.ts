@@ -201,5 +201,16 @@ export const agentService = {
       ApiErrorHandler.handleError(error, 'updateDialogName');
       throw error;
     }
+  },
+
+  // удаление диалога
+  // DELETE /v1/conversation/{agentID}/{conversationID}
+  async deleteDialog(agentId: string, conversationId: string): Promise<void> {
+    try {
+      await apiClient.delete<void>(`${API_BASE}/conversation/${agentId}/${conversationId}`);
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'deleteDialog');
+      throw error;
+    }
   }
 }
