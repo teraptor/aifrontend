@@ -54,6 +54,46 @@ defineProps<{
         text-decoration: none;
       }
     }
+
+    :deep(.code-block) {
+      background-color: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    :deep(.mermaid-diagram) {
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    :deep(.math-block) {
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    :deep(.math-inline) {
+      font-size: 1.1em;
+    }
+
+    :deep(.inline-code) {
+      background-color: #f8f9fa;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    :deep(.table-row) {
+      display: flex;
+      margin: 4px 0;
+    }
+
+    :deep(.table-cell) {
+      flex: 1;
+      padding: 4px;
+      border: 1px solid #e8e8e8;
+    }
   }
 
   &__time {

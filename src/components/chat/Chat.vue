@@ -130,25 +130,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
-import katex from 'katex'
-import 'katex/dist/katex.min.css'
-import mermaid from 'mermaid'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 import ShareModal from './ShareModal.vue'
 import UserMessage from './messages/UserMessage.vue'
 import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
-
-// Инициализация Mermaid
-mermaid.initialize({
-  startOnLoad: true,
-  theme: 'default',
-  securityLevel: 'loose',
-})
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -199,6 +189,8 @@ const stickyHeaderStyle = ref({
   width: '0px'
 })
 const isShareModalOpen = ref(false)
+const observer = ref<MutationObserver | null>(null)
+const resizeObserver = ref<ResizeObserver | null>(null)
 
 // Создаем меню действий
 const menuItems = ref<MenuItem[]>([
@@ -233,84 +225,14 @@ const menuItems = ref<MenuItem[]>([
   }
 ])
 
-// Функция форматирования текста сообщений
-const formattedText = (text: string) => {
-  if (!text) return ''
-
-  let formatted = text
-
-  // Форматирование блоков кода
-  formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const language = lang || ''
-    return `<pre class="code-block ${language}"><code>${code.trim()}</code></pre>`
-  })
-
-  // Форматирование таблиц
-  formatted = formatted.replace(/\|(.+)\|/g, (match, content: string) => {
-    const cells: string[] = content.split('|').map((cell: string) => cell.trim())
-    return `<div class="table-row">${cells.map((cell: string) => `<div class="table-cell">${cell}</div>`).join('')}</div>`
-  })
-
-  // Форматирование диаграмм (поддержка Mermaid)
-  formatted = formatted.replace(/```mermaid\n([\s\S]*?)```/g, (match, diagram) => {
-    const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-    nextTick(() => {
-      try {
-        mermaid.render(id, diagram.trim()).then((result) => {
-          const element = document.getElementById(id)
-          if (element) {
-            element.innerHTML = result.svg
-          }
-        })
-      } catch (error) {
-        console.error('Error rendering mermaid diagram:', error)
-      }
-    })
-    return `<div class="mermaid-diagram"><div id="${id}"></div></div>`
-  })
-
-  // Заменяем переносы строк на <br />
-  formatted = formatted.replace(/\n/g, '<br />')
-
-  // Форматирование математических формул
-  formatted = formatted.replace(/\$\$(.*?)\$\$/g, (match, formula) => {
-    try {
-      return `<div class="math-block">${katex.renderToString(formula, { displayMode: true })}</div>`
-    } catch (error) {
-      console.error('Error rendering math formula:', error)
-      return match
-    }
-  })
-  formatted = formatted.replace(/\$(.*?)\$/g, (match, formula) => {
-    try {
-      return `<span class="math-inline">${katex.renderToString(formula, { displayMode: false })}</span>`
-    } catch (error) {
-      console.error('Error rendering math formula:', error)
-      return match
-    }
-  })
-
-  // Выделяем жирным текст между ** (как в Markdown)
-  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-
-  // Выделяем курсивом текст между * (как в Markdown)
-  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>')
-
-  // Форматируем код (однострочный)
-  formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-
-  // Добавляем ссылки
-  formatted = formatted.replace(
-    /(https?:\/\/[^\s]+)/g,
-    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-  )
-
-  return formatted
-}
-
 // Обработчики WebSocket событий
 const handleNewMessage = (response: WebSocketMessage) => {
   try {
+    if (!response.roomId || !props.selectedAssistant) {
+      console.error('Отсутствует roomId или selectedAssistant')
+      return
+    }
+
     if (response.roomId === chatStore.activeSessionId) {
       // Если сообщение для активного диалога
       if (response.message) {
@@ -355,6 +277,9 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || chatStore.isLoading || !chatStore.activeSessionId || !props.selectedAssistant) return
 
   try {
+    // Устанавливаем состояние загрузки
+    chatStore.isLoading = true
+
     // Сохраняем текст сообщения в переменную
     const messageText = newMessage.value
 
@@ -410,13 +335,23 @@ const formatTime = (dateString: string) => {
 // Прокрутка чата вниз
 const scrollToBottom = () => {
   nextTick(() => {
-    const chatContainer = document.querySelector('.chat__container')
-    if (chatContainer) {
-      const containerHeight = chatContainer.clientHeight
-      window.scrollTo(0, containerHeight)
+    if (chatContainer.value) {
+      const scrollHeight = chatContainer.value.scrollHeight
+      const clientHeight = chatContainer.value.clientHeight
+      const maxScroll = scrollHeight - clientHeight
+      
+      chatContainer.value.scrollTo({
+        top: maxScroll,
+        behavior: 'smooth'
+      })
     }
   })
 }
+
+// Наблюдаем за изменениями в сообщениях
+watch(() => chatStore.sessionMessages, () => {
+  scrollToBottom()
+}, { deep: true })
 
 // Автоматически увеличиваем высоту поля ввода сообщения
 const autoGrow = () => {
@@ -461,44 +396,45 @@ const checkHeaderVisibility = () => {
 
 // Загрузка данных при монтировании
 onMounted(() => {
+  // Подписываемся на события WebSocket
+  webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage)
+
   // Настраиваем MutationObserver для отслеживания изменений в чате
   if (chatContainer.value) {
-    const observer = new MutationObserver((mutations) => {
-      // Прокручиваем чат вниз при изменениях содержимого
-      scrollToBottom();
+    observer.value = new MutationObserver(() => {
+      scrollToBottom()
     });
 
-    observer.observe(chatContainer.value, {
-      childList: true,      // наблюдать за добавлением/удалением дочерних элементов
-      subtree: true,        // наблюдать за изменениями во всех потомках
-      characterData: true,  // наблюдать за изменениями текста
+    observer.value.observe(chatContainer.value, {
+      childList: true,
+      subtree: true,
+      characterData: true,
     });
 
     // Добавляем ResizeObserver для отслеживания изменений высоты
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const height = entry.contentRect.height;
-        // Скроллим на 100 пикселей вниз при изменении высоты
-        if (chatContainer.value) {
-          chatContainer.value.scrollTop = height - 100;
-        }
-      }
+    resizeObserver.value = new ResizeObserver(() => {
+      scrollToBottom()
     });
 
-    resizeObserver.observe(chatContainer.value);
+    resizeObserver.value.observe(chatContainer.value);
   }
 
   // Добавляем слушатель прокрутки
   window.addEventListener('scroll', checkHeaderVisibility)
-
-  // Подписываемся на события WebSocket
-  webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage)
 })
 
 // Отписываемся от WebSocket событий при размонтировании компонента
 onUnmounted(() => {
   webSocketService.unsubscribe(WebSocketAction.NewMessage, handleNewMessage)
   window.removeEventListener('scroll', checkHeaderVisibility)
+  
+  // Отключаем наблюдатели
+  if (observer.value) {
+    observer.value.disconnect()
+  }
+  if (resizeObserver.value) {
+    resizeObserver.value.disconnect()
+  }
 })
 
 // Обновляем функцию shareAssistant

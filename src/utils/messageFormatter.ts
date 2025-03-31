@@ -1,4 +1,5 @@
 import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import mermaid from 'mermaid'
 
 // Инициализация Mermaid
@@ -28,16 +29,18 @@ export const formattedText = (text: string) => {
   // Форматирование диаграмм (поддержка Mermaid)
   formatted = formatted.replace(/```mermaid\n([\s\S]*?)```/g, (match, diagram) => {
     const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-    try {
-      mermaid.render(id, diagram.trim()).then((result) => {
-        const element = document.getElementById(id)
-        if (element) {
-          element.innerHTML = result.svg
-        }
-      })
-    } catch (error) {
-      console.error('Error rendering mermaid diagram:', error)
-    }
+    setTimeout(() => {
+      try {
+        mermaid.render(id, diagram.trim()).then((result) => {
+          const element = document.getElementById(id)
+          if (element) {
+            element.innerHTML = result.svg
+          }
+        })
+      } catch (error) {
+        console.error('Error rendering mermaid diagram:', error)
+      }
+    }, 0)
     return `<div class="mermaid-diagram"><div id="${id}"></div></div>`
   })
 
