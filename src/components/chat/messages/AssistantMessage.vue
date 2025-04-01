@@ -74,7 +74,7 @@ const saveEdit = async () => {
         content: 'Вся история диалога будет изменена и начата с этого места',
         okText: 'Сохранить',
         cancelText: 'Отмена',
-        okType: 'warning'
+        okType: 'primary'
       })
       emit('update:text', trimmedText)
     } catch {
