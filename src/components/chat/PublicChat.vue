@@ -23,6 +23,10 @@
               </p>
             </div>
           </div>
+          <button class="new-survey-button" @click="createNewSurvey">
+            <span class="new-survey-icon">+</span>
+            <span class="new-survey-text">Новый опрос</span>
+          </button>
         </div>
       </div>
 
@@ -635,6 +639,43 @@ const autoGrow = () => {
     messageInput.value.style.height = messageInput.value.scrollHeight + 'px'
   }
 }
+
+const createNewSurvey = async () => {
+  try {
+    console.log('Создаем новый опрос...');
+    chatStore.isLoading = true;
+    
+    const workflowId = getWorkflowIdFromUrl();
+    
+    // Очищаем текущий roomId
+    roomId.value = null;
+    
+    // Очищаем сообщения в localStorage
+    const storageKey = `public_chat_session_${workflowId}`;
+    localStorage.removeItem(storageKey);
+    
+    // Очищаем сообщения в хранилище
+    if (chatStore.activeSessionId) {
+      chatStore.messages = chatStore.messages.filter(m => m.sessionId !== chatStore.activeSessionId);
+    }
+    
+    // Создаем новую комнату через WebSocket
+    await webSocketService.send({
+      action: WebSocketAction.CreateRoom,
+      workflowId: workflowId,
+      userId: userId.value
+    });
+    
+    // Отправляем приветственное сообщение
+    chatStore.addMessage('Создан новый опрос', false, chatStore.activeSessionId);
+    
+    console.log('Новый опрос создан, история очищена');
+  } catch (error) {
+    console.error('Ошибка при создании нового опроса:', error);
+  } finally {
+    chatStore.isLoading = false;
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -672,6 +713,8 @@ const autoGrow = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding-right: 16px;
+  position: relative;
 }
 
 .assistant-header__avatar {
@@ -937,5 +980,39 @@ textarea {
   color: #999;
   font-size: 14px;
   background: #fafafa;
+}
+
+.new-survey-button {
+  margin-left: auto;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #ff69b4;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #ff1493;
+  }
+  
+  &:active {
+    background: #c71585;
+  }
+}
+
+.new-survey-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.new-survey-text {
+  white-space: nowrap;
 }
 </style> 
