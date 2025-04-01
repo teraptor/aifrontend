@@ -287,7 +287,7 @@ const handleRoomCreated = (response: WebSocketResponse) => {
     const workflowId = getWorkflowIdFromUrl();
     // После создания комнаты присоединяемся к ней
     webSocketService.send({
-      action: WebSocketAction.JoinRoom,
+          action: WebSocketAction.JoinRoom,
       workflowId: workflowId,
       roomId: roomId.value,
       userId: userId.value
@@ -320,8 +320,8 @@ const handleNewMessage = (response: WebSocketResponse) => {
     chatStore.addMessage(messageText, false, chatStore.activeSessionId);
     
     // Прокручиваем чат вниз
-    nextTick(() => {
-      if (chatContainer.value) {
+        nextTick(() => {
+          if (chatContainer.value) {
         chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
       }
     });

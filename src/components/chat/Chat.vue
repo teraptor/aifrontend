@@ -106,6 +106,7 @@
       <p>Выберите ассистента и диалог или создайте новый</p>
     </div>
     <div class="fixed-chat-input">
+      <div class="input-wrapper">
         <textarea
           ref="messageInput"
           v-model="newMessage"
@@ -115,10 +116,18 @@
           :disabled="chatStore.isLoading"
           rows="1"
         ></textarea>
-        <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-          <span class="arrow-icon">↑</span>
-        </button>
+        <ModeMenu
+          class="mode-menu-component"
+          :modes="chatModes"
+          :current-mode="currentMode"
+          :model="activeModel"
+          @update:current-mode="handleModeChange"
+        />
       </div>
+      <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
+        <span class="arrow-icon">↑</span>
+      </button>
+    </div>
     <ShareModal
       :is-open="isShareModalOpen"
       :assistant-name="selectedAssistant?.name"
@@ -139,6 +148,7 @@ import ShareModal from './ShareModal.vue'
 import UserMessage from './messages/UserMessage.vue'
 import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
+import ModeMenu from './ModeMenu.vue'
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -159,6 +169,15 @@ interface WebSocketMessage {
   success?: boolean;
 }
 
+// Интерфейс для режимов чата
+interface ChatMode {
+  id: string;
+  name: string;
+  icon: string;
+  shortcut?: string;
+  model?: string;
+}
+
 // Props
 const props = defineProps<{
   selectedAssistant: IAssistent | null
@@ -168,6 +187,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'createNewDialog'): void
   (e: 'clearChat'): void
+  (e: 'changeChatMode', mode: string): void
 }>()
 
 // Инициализация хранилища
@@ -189,8 +209,16 @@ const stickyHeaderStyle = ref({
   width: '0px'
 })
 const isShareModalOpen = ref(false)
+const currentMode = ref('agent')
+const activeModel = ref('claude-3')
 const observer = ref<MutationObserver | null>(null)
 const resizeObserver = ref<ResizeObserver | null>(null)
+
+// Режимы чата
+const chatModes = ref([
+  { id: 'agent', name: 'Agent', icon: '∞', shortcut: '⌘I' },
+  { id: 'ask', name: 'Ask', icon: '💬' }
+])
 
 // Создаем меню действий
 const menuItems = ref<MenuItem[]>([
@@ -224,6 +252,19 @@ const menuItems = ref<MenuItem[]>([
     }
   }
 ])
+
+// Обработчик изменения режима
+const handleModeChange = (mode: string) => {
+  currentMode.value = mode
+  emit('changeChatMode', mode)
+}
+
+// Закрытие меню режимов при клике вне его
+onClickOutside(assistentMenu, (event) => {
+  if (assistentMenuTrigger.value && !assistentMenuTrigger.value.contains(event.target as Node)) {
+    isAssistentMenuOpen.value = false
+  }
+})
 
 // Обработчики WebSocket событий
 const handleNewMessage = (response: WebSocketMessage) => {
@@ -316,13 +357,6 @@ const sendMessage = async () => {
 const toggleAssistentMenu = () => {
   isAssistentMenuOpen.value = !isAssistentMenuOpen.value
 }
-
-// Закрытие меню при клике вне его
-onClickOutside(assistentMenu, (event) => {
-  if (assistentMenuTrigger.value && !assistentMenuTrigger.value.contains(event.target as Node)) {
-    isAssistentMenuOpen.value = false
-  }
-})
 
 // Форматирование времени
 const formatTime = (dateString: string) => {
@@ -653,18 +687,38 @@ const closeShareModal = () => {
   padding: 20px;
   box-sizing: border-box;
 
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    background-color: $light-color;
+    border-radius: 20px;
+    border: 1px solid rgba($help-color, 0.2);
+    padding-right: 8px;
+    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mode-menu-component {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 2px;
+    margin-left: 5px;
+    z-index: 5;
+  }
+  
   textarea {
     flex: 1;
-    border: 1px solid rgba($help-color, 0.2);
+    border: none;
     border-radius: 20px;
-    background-color: $light-color;
+    background-color: transparent;
     font-family: inherit;
     font-size: 14px;
     min-height: 50px;
     max-height: 250px;
     resize: none;
     overflow-y: auto;
-    margin: 0 20px;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -672,11 +726,10 @@ const closeShareModal = () => {
     box-sizing: border-box;
     padding: 11px 16px;
     vertical-align: middle;
-    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1);
 
     &:focus {
       outline: none;
-      background-color: #edf1f7;
+      background-color: transparent;
     }
 
     &::placeholder {
@@ -711,6 +764,7 @@ const closeShareModal = () => {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    margin-left: 10px;
 
     &:hover {
       background-color: #33b5ce;
@@ -818,3 +872,4 @@ const closeShareModal = () => {
   }
 }
 </style>
+
