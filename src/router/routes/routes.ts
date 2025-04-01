@@ -129,5 +129,10 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
   {
     path: RouteNames.CHAT,
     redirect: RouteNames.MAIN.name,
+    meta: {
+      title: 'Вопросы ассистенту',
+      ...defaultMeta,
+      requiresAuth: false,
+    },
   },
 ]

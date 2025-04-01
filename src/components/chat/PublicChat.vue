@@ -106,6 +106,24 @@ const isHeaderSticky = ref(false)
 const roomId = ref<string | null>(null)
 const isWebSocketConnected = ref(false)
 
+// Генерация или получение ID анонимного пользователя
+const getAnonymousUserId = (): string => {
+  const storageKey = 'anonymous_user_id'
+  let userId = localStorage.getItem(storageKey)
+  
+  if (!userId) {
+    // Генерируем случайный ID, если его еще нет
+    userId = 'anon_' + Math.random().toString(36).substring(2, 15) + 
+      Math.random().toString(36).substring(2, 15)
+    localStorage.setItem(storageKey, userId)
+  }
+  
+  return userId
+}
+
+// Получаем ID пользователя
+const userId = ref(getAnonymousUserId())
+
 // Получаем workflowId из URL
 const getWorkflowIdFromUrl = () => {
   const pathParts = route.path.split('/')
@@ -150,6 +168,7 @@ const initializeWebSocket = async () => {
   try {
     const workflowId = getWorkflowIdFromUrl()
     console.log('Инициализация WebSocket для ассистента, workflowId:', workflowId);
+    console.log('ID анонимного пользователя:', userId.value);
     
     // Принудительно переподключаем WebSocket если нужно
     if (!webSocketService.isConnected()) {
@@ -169,8 +188,26 @@ const initializeWebSocket = async () => {
       
       // Устанавливаем активную сессию из сохраненных данных
       if (!chatStore.activeSessionId) {
-        await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
-        chatStore.selectSession(savedSession.sessionId);
+        // Для публичного доступа создаем локальную сессию вместо запроса к API
+        if (props.isPublicAccess) {
+          // Создаем локальную сессию без вызова API
+          const localSession = {
+            id: savedSession.sessionId,
+            title: `Публичный чат ${workflowId}`,
+            timestamp: new Date().toISOString(),
+            isActive: true,
+            agentId: workflowId,
+            unreadCount: 0
+          };
+          
+          // Добавляем сессию в хранилище
+          chatStore.sessions.push(localSession);
+          chatStore.activeSessionId = localSession.id;
+        } else {
+          // Для авторизованных пользователей используем API
+          await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
+          chatStore.selectSession(savedSession.sessionId);
+        }
       }
       
       // Присоединяемся к существующей комнате
@@ -179,7 +216,7 @@ const initializeWebSocket = async () => {
         action: WebSocketAction.JoinRoom,
         workflowId: workflowId,
         roomId: savedSession.roomId,
-        userId: 'public_user'
+        userId: userId.value
       });
     } else {
       console.log('Сохраненная сессия не найдена, создаем новую');
@@ -187,8 +224,31 @@ const initializeWebSocket = async () => {
       // Проверяем, активна ли сессия, если нет - создаем новую
       if (!chatStore.activeSessionId) {
         console.log('Нет активной сессии, создаем новую');
-        const newSession = await chatStore.createNewSession(workflowId);
-        console.log('Создана новая сессия:', newSession);
+        
+        // Для публичного доступа создаем локальную сессию вместо запроса к API
+        if (props.isPublicAccess) {
+          // Генерируем локальный ID сессии
+          const sessionId = `local_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          
+          // Создаем локальную сессию без вызова API
+          const localSession = {
+            id: sessionId,
+            title: `Публичный чат ${workflowId}`,
+            timestamp: new Date().toISOString(),
+            isActive: true,
+            agentId: workflowId,
+            unreadCount: 0
+          };
+          
+          // Добавляем сессию в хранилище
+          chatStore.sessions.push(localSession);
+          chatStore.activeSessionId = localSession.id;
+          console.log('Создана локальная сессия:', localSession);
+        } else {
+          // Для авторизованных пользователей используем API
+          const newSession = await chatStore.createNewSession(workflowId);
+          console.log('Создана новая сессия через API:', newSession);
+        }
       }
       
       // Создаем комнату
@@ -196,7 +256,7 @@ const initializeWebSocket = async () => {
       await webSocketService.send({
         action: WebSocketAction.CreateRoom,
         workflowId: workflowId,
-        userId: 'public_user'
+        userId: userId.value
       });
     }
 
@@ -230,7 +290,7 @@ const handleRoomCreated = (response: WebSocketResponse) => {
       action: WebSocketAction.JoinRoom,
       workflowId: workflowId,
       roomId: roomId.value,
-      userId: 'public_user'
+      userId: userId.value
     });
   }
 };
@@ -275,6 +335,7 @@ const sendMessage = async () => {
   console.log('Отправка сообщения. Активная сессия:', chatStore.activeSessionId);
   console.log('ID комнаты:', roomId.value);
   console.log('WorkflowId из URL:', workflowId);
+  console.log('ID анонимного пользователя:', userId.value);
 
   const messageText = newMessage.value.trim();
   
@@ -306,7 +367,30 @@ const sendMessage = async () => {
     // Проверяем, активна ли сессия
     if (!chatStore.activeSessionId) {
       console.log('Нет активной сессии, создаем новую');
-      await chatStore.createNewSession(workflowId);
+      
+      // Для публичного доступа создаем локальную сессию вместо запроса к API
+      if (props.isPublicAccess) {
+        // Генерируем локальный ID сессии
+        const sessionId = `local_session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Создаем локальную сессию без вызова API
+        const localSession = {
+          id: sessionId,
+          title: `Публичный чат ${workflowId}`,
+          timestamp: new Date().toISOString(),
+          isActive: true,
+          agentId: workflowId,
+          unreadCount: 0
+        };
+        
+        // Добавляем сессию в хранилище
+        chatStore.sessions.push(localSession);
+        chatStore.activeSessionId = localSession.id;
+        console.log('Создана локальная сессия:', localSession);
+      } else {
+        // Для авторизованных пользователей используем API
+        await chatStore.createNewSession(workflowId);
+      }
     }
 
     // Добавляем сообщение в чат
@@ -337,8 +421,25 @@ const sendMessage = async () => {
         
         // Если нет активной сессии, устанавливаем ее из сохраненных данных
         if (!chatStore.activeSessionId && savedSession.sessionId) {
-          await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
-          chatStore.selectSession(savedSession.sessionId);
+          if (props.isPublicAccess) {
+            // Создаем локальную сессию без вызова API
+            const localSession = {
+              id: savedSession.sessionId,
+              title: `Публичный чат ${workflowId}`,
+              timestamp: new Date().toISOString(),
+              isActive: true,
+              agentId: workflowId,
+              unreadCount: 0
+            };
+            
+            // Добавляем сессию в хранилище
+            chatStore.sessions.push(localSession);
+            chatStore.activeSessionId = localSession.id;
+          } else {
+            // Для авторизованных пользователей используем API
+            await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
+            chatStore.selectSession(savedSession.sessionId);
+          }
         }
         
         // Присоединяемся к существующей комнате
@@ -346,7 +447,7 @@ const sendMessage = async () => {
           action: WebSocketAction.JoinRoom,
           workflowId: workflowId,
           roomId: savedSession.roomId,
-          userId: 'public_user'
+          userId: userId.value
         });
       } else {
         // Создаем новую комнату, если не нашли сохраненную
@@ -355,7 +456,7 @@ const sendMessage = async () => {
         await webSocketService.send({
           action: WebSocketAction.CreateRoom,
           workflowId: workflowId,
-          userId: 'public_user'
+          userId: userId.value
         });
         
         // Ждем немного, чтобы получить ID комнаты
@@ -380,7 +481,7 @@ const sendMessage = async () => {
       workflowId: workflowId,
       roomId: roomId.value || '',
       message: messageText,
-      userId: 'public_user'
+      userId: userId.value
     };
     
     console.log('Запрос WebSocket:', JSON.stringify(request));
@@ -467,7 +568,7 @@ onMounted(() => {
         action: WebSocketAction.LeaveRoom,
         workflowId: getWorkflowIdFromUrl(),
         roomId: roomId.value,
-        userId: 'public_user'
+        userId: userId.value
       });
     }
     

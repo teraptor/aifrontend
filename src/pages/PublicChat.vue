@@ -24,44 +24,68 @@ import AssistentsList from '@/components/Assistents/AssistentsList.vue';
 import PublicChat from '@/components/chat/PublicChat.vue';
 import type { IAssistent } from '@/stores/useAssistantsStore';
 
+// Заголовок страницы для публичного доступа
+document.title = 'Публичный чат с ассистентом';
+
 const route = useRoute();
 const chatId = ref(route.params.id as string);
 const isLoading = ref(true);
 const chatData = ref<{ id: string; title: string } | null>(null);
+
+console.log('Инициализация публичного чата, ID из URL:', chatId.value);
+
+// Используем фиксированные данные ассистента для публичного доступа 
 const selectedAssistant = ref<IAssistent>({
-  id: '1',
-  name: 'Тестовый ассистент',
-  description: 'Описание тестового ассистента',
-  summary: 'Краткое описание',
+  id: chatId.value, // Используем ID из URL
+  name: 'Ассистент',
+  description: 'Публичный доступ к ассистенту',
+  summary: 'Публичный чат',
   image: '',
-  call_name: 'test_assistant',
+  call_name: 'public_assistant',
   isActive: true,
   isLocked: false,
   isDisabled: false,
   created_at: new Date().toISOString(),
   business: false,
-  author_id: '1'
+  author_id: 'public'
 });
 
 // Функции для обработки событий чата
 const createNewDialog = () => {
-  // Логика создания нового диалога
-  console.log('Создание нового диалога');
+  // Логика создания нового диалога без API запросов
+  console.log('Создание нового публичного диалога');
 };
 
 onMounted(async () => {
+  console.log('Компонент PublicChat смонтирован');
+  
   try {
     isLoading.value = true;
     
-    // Имитация загрузки данных чата
-    setTimeout(() => {
-      chatData.value = { id: chatId.value, title: 'Тестовый чат' };
-      isLoading.value = false;
-    }, 1000);
+    // Проверяем наличие ID чата
+    if (chatId.value) {
+      console.log('ID чата найден:', chatId.value);
+      
+      // Обновляем заголовок страницы
+      document.title = `Чат с ассистентом ${chatId.value}`;
+      
+      // Инициализируем данные чата без API запросов
+      chatData.value = { 
+        id: chatId.value, 
+        title: 'Публичный чат с ассистентом' 
+      };
+    } else {
+      console.error('ID чата не найден в URL');
+      chatData.value = null;
+    }
   } catch (error) {
+    console.error('Ошибка при загрузке данных чата:', error);
     chatData.value = null;
   } finally {
-    isLoading.value = false;
+    // Короткая задержка для имитации загрузки
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 300);
   }
 });
 </script>
