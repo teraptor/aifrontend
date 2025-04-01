@@ -57,7 +57,7 @@ class WebSocketService {
     push[type](message);
   }
 
-  private async connect(): Promise<void> {
+  public async connect(): Promise<void> {
     if (this.isConnecting) {
       console.log('WebSocketService: Соединение уже устанавливается...')
       return this.connectionPromise!;
@@ -189,6 +189,10 @@ class WebSocketService {
         handlers.splice(index, 1);
       }
     }
+  }
+
+  public isConnected(): boolean {
+    return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
   public disconnect() {

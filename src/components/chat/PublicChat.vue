@@ -50,9 +50,6 @@
         </div>
       </div>
     </div>
-    <div v-else class="no-dialog-selected">
-      <p>Выберите ассистента и диалог или создайте новый</p>
-    </div>
     <div class="fixed-chat-input">
       <textarea
         ref="messageInput"
@@ -78,6 +75,7 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import mermaid from 'mermaid'
 import { webSocketService, WebSocketAction, type WebSocketRequest, type WebSocketResponse } from '@/api/services/webSocketService'
+import { useRoute } from 'vue-router'
 
 // Инициализация Mermaid
 mermaid.initialize({
@@ -99,152 +97,385 @@ const emit = defineEmits<{
 
 // Инициализация хранилища
 const chatStore = useAssistentChatStore()
-
-// Локальные переменные для UI и WebSocket
+const route = useRoute()
 const newMessage = ref('')
 const messageInput = ref<HTMLTextAreaElement | null>(null)
 const chatContainer = ref<HTMLElement | null>(null)
 const chatHeader = ref<HTMLElement | null>(null)
 const isHeaderSticky = ref(false)
-const currentRoomId = ref<string | null>(null)
-const isConnecting = ref(false)
+const roomId = ref<string | null>(null)
+const isWebSocketConnected = ref(false)
 
-// Получение roomId из localStorage
-const getRoomIdFromStorage = (assistantId: string): string | null => {
-  const key = `public_chat_${assistantId}`
-  return localStorage.getItem(key)
+// Получаем workflowId из URL
+const getWorkflowIdFromUrl = () => {
+  const pathParts = route.path.split('/')
+  // Ищем часть пути после "chat/"
+  const chatIndex = pathParts.findIndex(part => part === 'chat')
+  if (chatIndex !== -1 && pathParts.length > chatIndex + 1) {
+    return pathParts[chatIndex + 1]
+  }
+  // Если не нашли в пути, возвращаем ID выбранного ассистента
+  return props.selectedAssistant?.id || ''
 }
 
-// Сохранение roomId в localStorage
-const saveRoomIdToStorage = (assistantId: string, roomId: string) => {
-  const key = `public_chat_${assistantId}`
-  localStorage.setItem(key, roomId)
-}
-
-// Подключение к комнате
-const connectToRoom = async () => {
-  if (!props.selectedAssistant || isConnecting.value) return
-  
-  isConnecting.value = true
-  
+// Функции для работы с сессией пользователя в localStorage
+const getSessionFromStorage = () => {
   try {
-    // Проверяем наличие сохраненной комнаты
-    const savedRoomId = getRoomIdFromStorage(props.selectedAssistant.id)
+    const workflowId = getWorkflowIdFromUrl()
+    const storageKey = `public_chat_session_${workflowId}`
+    const sessionData = localStorage.getItem(storageKey)
     
-    if (savedRoomId) {
-      // Присоединяемся к существующей комнате
-      const joinRequest: WebSocketRequest = {
-        action: WebSocketAction.JoinRoom,
-        workflowId: props.selectedAssistant.id,
-        roomId: savedRoomId
-      }
-      
-      webSocketService.send(joinRequest)
-      currentRoomId.value = savedRoomId
-    } else {
-      // Создаем новую комнату
-      const createRequest: WebSocketRequest = {
-        action: WebSocketAction.CreateRoom,
-        workflowId: props.selectedAssistant.id
-      }
-      
-      webSocketService.send(createRequest)
+    if (sessionData) {
+      return JSON.parse(sessionData)
     }
   } catch (error) {
-    console.error('Error connecting to room:', error)
-  } finally {
-    isConnecting.value = false
+    console.error('Ошибка при получении сессии из localStorage:', error)
+  }
+  return null
+}
+
+const saveSessionToStorage = (sessionData: { roomId: string, sessionId: string }) => {
+  try {
+    const workflowId = getWorkflowIdFromUrl()
+    const storageKey = `public_chat_session_${workflowId}`
+    localStorage.setItem(storageKey, JSON.stringify(sessionData))
+    console.log('Сессия сохранена в localStorage:', sessionData)
+  } catch (error) {
+    console.error('Ошибка при сохранении сессии в localStorage:', error)
   }
 }
 
-// Обработчик WebSocket сообщений
-const handleWebSocketMessage = (response: WebSocketResponse) => {
-  switch (response.action) {
-    case WebSocketAction.CreatedRoom:
-      if (response.success && response.roomId) {
-        currentRoomId.value = response.roomId
-        saveRoomIdToStorage(props.selectedAssistant!.id, response.roomId)
-        
-        // Присоединяемся к созданной комнате
-        const joinRequest: WebSocketRequest = {
-          action: WebSocketAction.JoinRoom,
-          workflowId: props.selectedAssistant!.id,
-          roomId: response.roomId
-        }
-        webSocketService.send(joinRequest)
-      }
-      break
-      
-    case WebSocketAction.JoinedRoom:
-      if (response.success && response.roomId) {
-        // Создаем новую сессию для публичного чата
-        chatStore.createNewSession(props.selectedAssistant!.id).then(() => {
-          // После создания сессии, устанавливаем её как активную
-          chatStore.selectSession(response.roomId)
-        })
-      }
-      break
-      
-    case WebSocketAction.NewMessage:
-      if (response.message && response.roomId) {
-        // Добавляем новое сообщение от ассистента
-        chatStore.addMessage(response.message, false, response.roomId)
-        
-        // Прокручиваем чат вниз при получении нового сообщения
-        nextTick(() => {
-          if (chatContainer.value) {
-            chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-          }
-        })
-      }
-      break
-  }
-}
-
-// Функция отправки сообщения через WebSocket
-const sendMessage = async () => {
-  if (!newMessage.value.trim() || chatStore.isLoading || !currentRoomId.value) return
-
-  const message = newMessage.value.trim()
-  newMessage.value = ''
-  
-  if (messageInput.value) {
-    messageInput.value.style.height = 'auto'
-  }
-
-  // Отправляем сообщение через WebSocket и добавляем в стор
-  const messageRequest: WebSocketRequest = {
-    action: WebSocketAction.SendMessage,
-    workflowId: props.selectedAssistant!.id,
-    roomId: currentRoomId.value,
-    message: message
-  }
-  
-  // Добавляем сообщение в стор
-  await chatStore.addMessage(message, true, currentRoomId.value)
-  
-  // Отправляем сообщение через WebSocket
-  webSocketService.send(messageRequest)
-}
-
-// Отписка от комнаты при размонтировании
-const leaveRoom = () => {
-  if (currentRoomId.value && props.selectedAssistant) {
-    const leaveRequest: WebSocketRequest = {
-      action: WebSocketAction.LeaveRoom,
-      workflowId: props.selectedAssistant.id,
-      roomId: currentRoomId.value
+// Функции для работы с WebSocket
+const initializeWebSocket = async () => {
+  try {
+    const workflowId = getWorkflowIdFromUrl()
+    console.log('Инициализация WebSocket для ассистента, workflowId:', workflowId);
+    
+    // Принудительно переподключаем WebSocket если нужно
+    if (!webSocketService.isConnected()) {
+      console.log('WebSocket не подключен, инициируем подключение');
+      await webSocketService.connect();
     }
-    webSocketService.send(leaveRequest)
-  }
-}
+    
+    isWebSocketConnected.value = webSocketService.isConnected();
+    console.log('Состояние WebSocket соединения:', isWebSocketConnected.value ? 'Открыто' : 'Закрыто');
+    
+    // Проверяем наличие сохраненной сессии
+    const savedSession = getSessionFromStorage()
+    
+    if (savedSession && savedSession.roomId && savedSession.sessionId) {
+      console.log('Найдена сохраненная сессия:', savedSession)
+      roomId.value = savedSession.roomId
+      
+      // Устанавливаем активную сессию из сохраненных данных
+      if (!chatStore.activeSessionId) {
+        await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
+        chatStore.selectSession(savedSession.sessionId);
+      }
+      
+      // Присоединяемся к существующей комнате
+      console.log('Присоединяемся к существующей комнате:', roomId.value)
+      webSocketService.send({
+        action: WebSocketAction.JoinRoom,
+        workflowId: workflowId,
+        roomId: savedSession.roomId,
+        userId: 'public_user'
+      });
+    } else {
+      console.log('Сохраненная сессия не найдена, создаем новую');
+      
+      // Проверяем, активна ли сессия, если нет - создаем новую
+      if (!chatStore.activeSessionId) {
+        console.log('Нет активной сессии, создаем новую');
+        const newSession = await chatStore.createNewSession(workflowId);
+        console.log('Создана новая сессия:', newSession);
+      }
+      
+      // Создаем комнату
+      console.log('Отправляем запрос на создание комнаты');
+      await webSocketService.send({
+        action: WebSocketAction.CreateRoom,
+        workflowId: workflowId,
+        userId: 'public_user'
+      });
+    }
 
-// Следим за изменением ассистента
+    console.log('Подписываемся на события WebSocket');
+    // Подписываемся на события
+    webSocketService.subscribe(WebSocketAction.CreatedRoom, handleRoomCreated);
+    webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage);
+    webSocketService.subscribe(WebSocketAction.WelcomeMessage, handleNewMessage);
+  } catch (error) {
+    console.error('Ошибка при инициализации WebSocket:', error);
+  }
+};
+
+const handleRoomCreated = (response: WebSocketResponse) => {
+  console.log('Получен ответ о создании комнаты:', response);
+  if (response.roomId) {
+    roomId.value = response.roomId;
+    console.log('Комната создана:', roomId.value);
+    
+    // Сохраняем информацию о сессии в localStorage
+    if (chatStore.activeSessionId) {
+      saveSessionToStorage({
+        roomId: roomId.value,
+        sessionId: chatStore.activeSessionId
+      });
+    }
+    
+    const workflowId = getWorkflowIdFromUrl();
+    // После создания комнаты присоединяемся к ней
+    webSocketService.send({
+      action: WebSocketAction.JoinRoom,
+      workflowId: workflowId,
+      roomId: roomId.value,
+      userId: 'public_user'
+    });
+  }
+};
+
+const handleNewMessage = (response: WebSocketResponse) => {
+  console.log('Получено новое сообщение:', response);
+  
+  // Выводим полное сообщение для отладки
+  console.log('Полное содержимое ответа:', JSON.stringify(response));
+  
+  // Проверяем тип действия и наличие сообщения
+  // Используем любой подходящий тип, так как сервер может использовать разные значения
+  if (response.message !== undefined) {
+    let messageText = response.message || '';
+    
+    // Если сообщение пустое или только 'join', игнорируем его как служебное
+    if (!messageText || messageText === 'join') {
+      console.log('Получено служебное сообщение, игнорируем:', messageText);
+      return;
+    }
+    
+    console.log('Добавляем сообщение в чат:', messageText);
+    
+    // Останавливаем индикатор загрузки
+    chatStore.isLoading = false;
+    
+    chatStore.addMessage(messageText, false, chatStore.activeSessionId);
+    
+    // Прокручиваем чат вниз
+    nextTick(() => {
+      if (chatContainer.value) {
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+      }
+    });
+  }
+};
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim() || chatStore.isLoading) return;
+  
+  const workflowId = getWorkflowIdFromUrl();
+  console.log('Отправка сообщения. Активная сессия:', chatStore.activeSessionId);
+  console.log('ID комнаты:', roomId.value);
+  console.log('WorkflowId из URL:', workflowId);
+
+  const messageText = newMessage.value.trim();
+  
+  // Сохраняем сообщение перед отправкой, чтобы не терять его
+  const tempMessage = newMessage.value.trim();
+  
+  // Очищаем поле ввода сразу, чтобы пользователь видел, что сообщение обрабатывается
+  newMessage.value = '';
+  if (messageInput.value) {
+    messageInput.value.style.height = 'auto';
+  }
+  
+  try {
+    // Проверяем соединение WebSocket
+    if (!webSocketService.isConnected()) {
+      console.log('WebSocket не подключен, пытаемся подключиться');
+      await webSocketService.connect();
+      
+      // Подождем немного, чтобы соединение установилось
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Если соединение не установлено, выводим ошибку
+      if (!webSocketService.isConnected()) {
+        console.error('Не удалось установить соединение WebSocket');
+        throw new Error('Не удалось установить соединение с сервером');
+      }
+    }
+    
+    // Проверяем, активна ли сессия
+    if (!chatStore.activeSessionId) {
+      console.log('Нет активной сессии, создаем новую');
+      await chatStore.createNewSession(workflowId);
+    }
+
+    // Добавляем сообщение в чат
+    console.log('Добавляем сообщение пользователя в чат');
+    chatStore.addMessage(messageText, true, chatStore.activeSessionId);
+    
+    // Устанавливаем состояние загрузки
+    chatStore.isLoading = true;
+    
+    // Прокручиваем чат вниз
+    nextTick(() => {
+      if (chatContainer.value) {
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+      }
+    });
+
+    // Проверяем состояние WebSocket соединения
+    isWebSocketConnected.value = webSocketService.isConnected();
+    console.log('Состояние WebSocket соединения:', isWebSocketConnected.value ? 'Открыто' : 'Закрыто');
+
+    // Если нет ID комнаты, пытаемся получить ее из хранилища
+    if (!roomId.value) {
+      const savedSession = getSessionFromStorage();
+      
+      if (savedSession && savedSession.roomId) {
+        console.log('Восстановлена сессия из хранилища:', savedSession);
+        roomId.value = savedSession.roomId;
+        
+        // Если нет активной сессии, устанавливаем ее из сохраненных данных
+        if (!chatStore.activeSessionId && savedSession.sessionId) {
+          await chatStore.loadDialogMessages(workflowId, savedSession.sessionId);
+          chatStore.selectSession(savedSession.sessionId);
+        }
+        
+        // Присоединяемся к существующей комнате
+        await webSocketService.send({
+          action: WebSocketAction.JoinRoom,
+          workflowId: workflowId,
+          roomId: savedSession.roomId,
+          userId: 'public_user'
+        });
+      } else {
+        // Создаем новую комнату, если не нашли сохраненную
+        console.log('Нет ID комнаты, создаем новую комнату');
+        
+        await webSocketService.send({
+          action: WebSocketAction.CreateRoom,
+          workflowId: workflowId,
+          userId: 'public_user'
+        });
+        
+        // Ждем немного, чтобы получить ID комнаты
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (!roomId.value) {
+          console.error('Не удалось получить ID комнаты после создания');
+          throw new Error('Не удалось получить ID комнаты');
+        }
+      }
+    }
+
+    // Отправляем сообщение через WebSocket
+    console.log('Отправляем сообщение через WebSocket в комнату:', roomId.value);
+    
+    // Дополнительная задержка перед отправкой
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Формируем запрос для отправки
+    const request = {
+      action: WebSocketAction.NewMessage,
+      workflowId: workflowId,
+      roomId: roomId.value || '',
+      message: messageText,
+      userId: 'public_user'
+    };
+    
+    console.log('Запрос WebSocket:', JSON.stringify(request));
+    
+    // Отправляем сообщение
+    const sendPromise = webSocketService.send(request);
+    
+    // Ждем отправки с таймаутом
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Таймаут отправки сообщения')), 5000)
+    );
+    
+    await Promise.race([sendPromise, timeoutPromise]);
+    console.log('Сообщение успешно отправлено через WebSocket');
+    
+    // Устанавливаем таймаут для отмены состояния загрузки через 15 секунд
+    const loadingTimeout = setTimeout(() => {
+      if (chatStore.isLoading) {
+        console.log('Превышен таймаут ожидания ответа, отменяем состояние загрузки');
+        chatStore.isLoading = false;
+      }
+    }, 15000);
+    
+  } catch (error) {
+    console.error('Ошибка при отправке сообщения:', error);
+    // Если произошла ошибка, можно вернуть текст в поле ввода
+    newMessage.value = tempMessage;
+    // Отключаем состояние загрузки
+    chatStore.isLoading = false;
+  }
+};
+
+// Следим за изменением выбранного ассистента и сразу инициализируем
 watch(() => props.selectedAssistant, (newAssistant) => {
   if (newAssistant) {
-    connectToRoom()
+    console.log('Выбран новый ассистент, инициализируем WebSocket');
+    nextTick(() => {
+      initializeWebSocket();
+    });
   }
-}, { immediate: true })
+}, { immediate: true });
+
+// Обработка прокрутки
+const handleScroll = () => {
+  if (!chatHeader.value) return
+  
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  isHeaderSticky.value = scrollTop > 0
+}
+
+// Жизненный цикл компонента
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+  
+  // Проверяем состояние WebSocket каждые 10 секунд
+  const connectionCheckInterval = setInterval(() => {
+    const connected = webSocketService.isConnected();
+    if (connected !== isWebSocketConnected.value) {
+      console.log('Изменение состояния WebSocket:', connected ? 'Подключено' : 'Отключено');
+      isWebSocketConnected.value = connected;
+      
+      // Если соединение потеряно, пытаемся переподключиться
+      if (!connected && props.selectedAssistant) {
+        console.log('Соединение потеряно, пытаемся переподключиться');
+        initializeWebSocket();
+      }
+    }
+  }, 10000);
+  
+  nextTick(() => {
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    }
+  });
+  
+  // Очищаем интервал при размонтировании
+  onUnmounted(() => {
+    clearInterval(connectionCheckInterval);
+    window.removeEventListener('scroll', handleScroll);
+    
+    // Отписываемся от событий и покидаем комнату
+    if (roomId.value) {
+      webSocketService.send({
+        action: WebSocketAction.LeaveRoom,
+        workflowId: getWorkflowIdFromUrl(),
+        roomId: roomId.value,
+        userId: 'public_user'
+      });
+    }
+    
+    webSocketService.unsubscribe(WebSocketAction.CreatedRoom, handleRoomCreated);
+    webSocketService.unsubscribe(WebSocketAction.NewMessage, handleNewMessage);
+    webSocketService.unsubscribe(WebSocketAction.WelcomeMessage, handleNewMessage);
+  });
+});
 
 // Функция форматирования текста сообщений
 const formattedText = (text: string) => {
@@ -303,41 +534,6 @@ const autoGrow = () => {
     messageInput.value.style.height = messageInput.value.scrollHeight + 'px'
   }
 }
-
-// Обработка прокрутки
-const handleScroll = () => {
-  if (!chatHeader.value) return
-  
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-  isHeaderSticky.value = scrollTop > 0
-}
-
-// Жизненный цикл компонента
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
-  
-  // Подписываемся на все необходимые WebSocket события
-  webSocketService.subscribe(WebSocketAction.CreatedRoom, handleWebSocketMessage)
-  webSocketService.subscribe(WebSocketAction.JoinedRoom, handleWebSocketMessage)
-  webSocketService.subscribe(WebSocketAction.NewMessage, handleWebSocketMessage)
-  
-  nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-  
-  // Отписываемся от всех WebSocket событий
-  webSocketService.unsubscribe(WebSocketAction.CreatedRoom, handleWebSocketMessage)
-  webSocketService.unsubscribe(WebSocketAction.JoinedRoom, handleWebSocketMessage)
-  webSocketService.unsubscribe(WebSocketAction.NewMessage, handleWebSocketMessage)
-  
-  leaveRoom()
-})
 </script>
 
 <style lang="scss" scoped>
