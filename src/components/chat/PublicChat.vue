@@ -65,7 +65,7 @@
         rows="1"
       ></textarea>
       <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-        <span class="arrow-icon">↑</span>
+        <span class="arrow-icon">↵</span>
       </button>
     </div>
   </div>
@@ -837,21 +837,20 @@ const createNewSurvey = async () => {
 }
 
 .fixed-chat-input {
-  padding: 16px 24px;
+  padding: 8px;
   background: #fff;
   border-top: 1px solid #f0f0f0;
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
-}
+  align-items: center;
+  gap: 8px;
 
 textarea {
   flex: 1;
-  padding: 12px 16px;
+    padding: 12px;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
   resize: none;
-  min-height: 24px;
+    min-height: 44px;
   max-height: 120px;
   background: #fafafa;
   color: #333;
@@ -874,41 +873,54 @@ textarea {
     background: #f5f5f5;
     border-color: #d9d9d9;
     cursor: not-allowed;
+    }
   }
 }
 
 .send-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #1890ff;
-  color: white;
-  border: none;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  border: none;
+  cursor: pointer;
   padding: 0;
-
-  &:hover {
-    background: #40a9ff;
+  transition: all 0.2s ease;
+  
+  .arrow-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(0deg) scale(1.2);
+    font-size: 20px;
+    line-height: 1;
+    transition: color 0.2s ease;
   }
 
-  &:active {
-    background: #096dd9;
+  &:hover {
+    background: #e5e5e5;
   }
 
   &:disabled {
-    background: #d9d9d9;
+    opacity: 0.5;
     cursor: not-allowed;
   }
-}
+
+  // Активное состояние при наличии текста
+  &:not(:disabled) {
+    background: #007AFF;
 
 .arrow-icon {
-  font-size: 18px;
-  transform: rotate(-90deg);
+      color: white;
+    }
+
+    &:hover {
+      background: #0066DB; // немного темнее при наведении
+    }
+  }
 }
 
 .typing-indicator {
