@@ -311,9 +311,9 @@ onClickOutside(notificationsDropdown, (event) => {
   }
 })
 
-// Добавляем watch для selectedAssistant
-watch(() => props.selectedAssistant, async (newAssistant) => {
-  if (newAssistant) {
+// Изменяем watch для selectedAssistant
+watch(() => props.selectedAssistant, async (newAssistant, oldAssistant) => {
+  if (newAssistant && (!oldAssistant || newAssistant.id !== oldAssistant.id)) {
     await assistantChatStore.loadDialogs(newAssistant.id)
   }
 }, { immediate: true })
@@ -351,7 +351,10 @@ const createNewDialog = () => {
 }
 
 const selectSession = (sessionId: string) => {
-  emit('select-session', sessionId)
+  // Проверяем, не является ли сессия уже активной
+  if (sessionId !== props.activeSessionId) {
+    emit('select-session', sessionId)
+  }
 }
 
 const deleteDialog = async (session: any) => {
