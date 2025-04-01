@@ -6,7 +6,7 @@ import { RouteNames } from '@/router/routes/routeNames';
 // базовый axios
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_BASE_API_URL || 'http://localhost:8088',
-    timeout: 150,
+    timeout: 500,
     headers: {
         'Content-Type': 'application/json',
     },
