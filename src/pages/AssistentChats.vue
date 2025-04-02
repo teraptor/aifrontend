@@ -26,13 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAssistentsStore } from '@/stores/useAssistantsStore'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 import Chat from '@/components/chat/Chat.vue'
-import Dialogs from '@/components/chat/Dialogs.vue'
+import Dialogs from '@/components/chat/dialogs/Dialogs.vue'
+import PublicChat from '@/components/chat/PublicChat.vue'
 
 // Инициализация хранилищ
 const assistentsStore = useAssistentsStore()

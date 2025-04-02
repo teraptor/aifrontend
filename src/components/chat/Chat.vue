@@ -144,11 +144,11 @@ import { onClickOutside } from '@vueuse/core'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
-import ShareModal from './ShareModal.vue'
+import ShareModal from './share/ShareModal.vue'
 import UserMessage from './messages/UserMessage.vue'
 import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
-import ModeMenu from './ModeMenu.vue'
+import ModeMenu from './modalMenu/ModeMenu.vue'
 
 // Интерфейсы для меню
 interface MenuItem {
