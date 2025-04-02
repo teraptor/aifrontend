@@ -2,6 +2,7 @@
   <div class="chat">
     <div class="chat__container" v-if="selectedAssistant && chatStore.activeSessionId">
       <div 
+        v-if="!hideHeader"
         class="chat-header" 
         ref="chatHeader"
         :class="{ 'chat-header--sticky': isHeaderSticky }"
@@ -92,6 +93,7 @@ mermaid.initialize({
 const props = defineProps<{
   selectedAssistant: IAssistent | null
   isPublicAccess?: boolean
+  hideHeader?: boolean
 }>()
 
 // Emits
@@ -684,6 +686,17 @@ const createNewSurvey = async () => {
   flex-direction: column;
   height: 100%;
   background: #fff;
+
+  &__container {
+    // Добавим условные стили для контейнера без шапки
+    &:not(:has(.chat-header)) {
+      padding-top: 0;
+      
+      .chat-messages {
+        height: calc(100vh - 120px); // Корректируем высоту для чата без шапки
+      }
+    }
+  }
 }
 
 .chat__container {

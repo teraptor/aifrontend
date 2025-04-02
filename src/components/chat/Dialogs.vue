@@ -379,23 +379,17 @@ const deleteDialog = async (session: any) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   overflow: hidden;
 
   &-container {
     position: fixed;
     height: 82vh;
-    
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     width: 20%;
     border-radius: 8px;
     background: #fff;
     border: 1px solid #eaeaea;
-  }
-
-  &-container::-webkit-scrollbar {
-    display: none;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -405,6 +399,26 @@ const deleteDialog = async (session: any) => {
   flex-direction: column;
   gap: 1px;
   background-color: #ffffff;
+  overflow-y: auto;
+  height: calc(100% - 61px);
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
 }
 
 .session-item {
@@ -550,6 +564,7 @@ const deleteDialog = async (session: any) => {
   gap: 12px;
   padding: 0 16px;
   border-bottom: 1px solid #eaeaea;
+  flex-shrink: 0;
 }
 
 .assistant-selector {

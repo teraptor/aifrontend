@@ -1,104 +1,146 @@
 <template>
-  <div class="assistent-setting">
-    <div class="assistent-setting__header-wrapper">
-      <div class="assistent-setting__header-back" @click="goBack">
-        <span class="icon icon-arrow-left2" />
-        Назад
+  <div class="two-column-layout">
+    <!-- Левая колонка -->
+    <div class="column column--left">
+      <!-- Переключатель -->
+      <div class="mode-toggle">
+        <button 
+          class="mode-toggle__button" 
+          :class="{ 'mode-toggle__button--active': activeMode === 'assistant' }"
+          @click="activeMode = 'assistant'"
+        >
+          Ассистент
+        </button>
+        <button 
+          class="mode-toggle__button" 
+          :class="{ 'mode-toggle__button--active': activeMode === 'settings' }"
+          @click="activeMode = 'settings'"
+        >
+          Настройка
+        </button>
       </div>
-      <TitleWrapper title="Настройка ассистента" />
-    </div>
-    <div class="assistent-setting__section" v-if="assistent">
-      <div class="assistent-detail__container">
-        <img :src="assistent.image" class="assistent-detail__image"/>
-        <div class="assistent-detail__name-wrapper">
-          <div v-if="isEditingName" class="edit-field-container">
-            <input 
-              v-model="assistentName" 
-              @blur="toggleNameEdit" 
-              @keyup.enter="toggleNameEdit"
-              ref="nameInput"
-              class="edit-field"
-            />
-          </div>
-          <h4 v-else class="assistent-detail__name" @click="toggleNameEdit">
-            {{ assistent.name }}
-            <span class="edit-icon">✎</span>
-          </h4>
-          
-        </div>
-        <div class="assistent-detail__button-group">
-          <Button
-            type="submit"
-            button-type="danger"
-            text="Удалить ассистента"
-            size="medium"
-            :disabled="assistent.isDisabled"
-            @click="confirmDeleteAssistent"
-          />
-          <Button
-            type="submit"
-            button-type="primary"
-            :text="isSaving ? 'Сохранение...' : 'Сохранить'"
-            size="medium"
-            :disabled="!hasChanges || isSaving || assistent.isDisabled"
-            @click="saveChanges"
-            class="save-button"
-          />
-        </div>
-      </div>
-      <div class="assistent-detail__description">
-        <h4 class="assistent-detail__description-title">Описание:</h4>
-        <div v-if="isEditingDescription" class="edit-field-container">
-          <textarea 
-            v-model="description" 
-            @blur="toggleDescriptionEdit" 
-            @keyup.enter="toggleDescriptionEdit"
-            ref="descriptionInput"
-            class="edit-field edit-field--textarea"
-            rows="4"
-          ></textarea>
-        </div>
-        <p v-else class="assistent-detail__description-text" @click="toggleDescriptionEdit">
-          {{ assistent.description }}
-          <span class="edit-icon">✎</span>
-        </p>
-      </div>
-    </div>
-    
-    <div class="assistent-setting__section">
-      <div class="assistent-setting__section-header">
-        <h3 class="assistent-setting__section-title">Инструкции</h3>
-        <div class="assistent-setting__template-select">
-          <SelectField
-            v-model="selectedTemplate"
-            id="selectedTemplate"
-            label=""
-            :enumObject="AssistentSettingEnum"
-            placeholder="Выбрать готовое"
-            :enableSearch="true"
-            variant="light"
-            :disabled="assistent?.isDisabled"
-            @update:modelValue="updateInstructions"
-          />
-        </div>
-      </div>
-      <div class="assistent-setting__form">
-        <TextAreaField
-          v-model="instructions"
-          placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
-          :rows="10"
-          variant="light"
-          :disabled="assistent?.isDisabled"
-          @keydown.ctrl.enter="saveChanges"
-          @input="autoExpandTextarea"
-          class="auto-expand"
+
+      <!-- Чат или настройки в зависимости от режима -->
+      <div v-if="activeMode === 'assistant'" class="chat-container">
+        <PublicChat 
+          :selected-assistant="assistent"
+          :is-public-access="false"
+          :hide-header="true"
         />
-        <div class="assistent-setting__hint" v-if="!assistent?.isDisabled">
-          Для быстрого сохранения используйте Ctrl+Enter
+      </div>
+      <div v-else class="settings-container">
+        <!-- Содержимое настроек -->
+        <div class="assistent-setting">
+          <div class="assistent-setting__header-wrapper">
+            <div class="assistent-setting__header-back" @click="goBack">
+              <span class="icon icon-arrow-left2" />
+              Назад
+            </div>
+            <TitleWrapper title="Настройка ассистента" />
+          </div>
+          <div class="assistent-setting__section" v-if="assistent">
+            <div class="assistent-detail__container">
+              <img :src="assistent.image" class="assistent-detail__image"/>
+              <div class="assistent-detail__name-wrapper">
+                <div v-if="isEditingName" class="edit-field-container">
+                  <input 
+                    v-model="assistentName" 
+                    @blur="toggleNameEdit" 
+                    @keyup.enter="toggleNameEdit"
+                    ref="nameInput"
+                    class="edit-field"
+                  />
+                </div>
+                <h4 v-else class="assistent-detail__name" @click="toggleNameEdit">
+                  {{ assistent.name }}
+                  <span class="edit-icon">✎</span>
+                </h4>
+                
+              </div>
+              <div class="assistent-detail__button-group">
+                <Button
+                  type="submit"
+                  button-type="danger"
+                  text="Удалить ассистента"
+                  size="medium"
+                  :disabled="assistent.isDisabled"
+                  @click="confirmDeleteAssistent"
+                />
+                <Button
+                  type="submit"
+                  button-type="primary"
+                  :text="isSaving ? 'Сохранение...' : 'Сохранить'"
+                  size="medium"
+                  :disabled="!hasChanges || isSaving || assistent.isDisabled"
+                  @click="saveChanges"
+                  class="save-button"
+                />
+              </div>
+            </div>
+            <div class="assistent-detail__description">
+              <h4 class="assistent-detail__description-title">Описание:</h4>
+              <div v-if="isEditingDescription" class="edit-field-container">
+                <textarea 
+                  v-model="description" 
+                  @blur="toggleDescriptionEdit" 
+                  @keyup.enter="toggleDescriptionEdit"
+                  ref="descriptionInput"
+                  class="edit-field edit-field--textarea"
+                  rows="4"
+                ></textarea>
+              </div>
+              <p v-else class="assistent-detail__description-text" @click="toggleDescriptionEdit">
+                {{ assistent.description }}
+                <span class="edit-icon">✎</span>
+              </p>
+            </div>
+          </div>
+          
+          <div class="assistent-setting__section">
+            <div class="assistent-setting__section-header">
+              <h3 class="assistent-setting__section-title">Инструкции</h3>
+              <div class="assistent-setting__template-select">
+                <SelectField
+                  v-model="selectedTemplate"
+                  id="selectedTemplate"
+                  label=""
+                  :enumObject="AssistentSettingEnum"
+                  placeholder="Выбрать готовое"
+                  :enableSearch="true"
+                  variant="light"
+                  :disabled="assistent?.isDisabled"
+                  @update:modelValue="updateInstructions"
+                />
+              </div>
+            </div>
+            <div class="assistent-setting__form">
+              <TextAreaField
+                v-model="instructions"
+                placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
+                :rows="10"
+                variant="light"
+                :disabled="assistent?.isDisabled"
+                @keydown.ctrl.enter="saveChanges"
+                @input="autoExpandTextarea"
+                class="auto-expand"
+              />
+              <div class="assistent-setting__hint" v-if="!assistent?.isDisabled">
+                Для быстрого сохранения используйте Ctrl+Enter
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-   
+
+    <!-- Правая колонка -->
+    <div class="column column--right">
+      <PublicChat 
+        :selected-assistant="assistent"
+        :is-public-access="false"
+        :hide-header="true"
+      />
+    </div>
   </div>
 </template>
 
@@ -115,6 +157,7 @@ import SkillLevelSlider from '@/components/ui/SkillLevelSlider.vue';
 import { AssistentSettingEnum } from '@/enums/enum';
 import { notifications } from '@/plugins/notifications';
 import type { IAssistent } from '@/stores/useAssistantsStore';
+import PublicChat from '@/components/chat/PublicChat.vue';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
@@ -376,9 +419,73 @@ const toggleDescriptionEdit = () => {
     }
   }
 };
+
+// Добавляем состояние для переключателя
+const activeMode = ref('assistant');
 </script>
 
 <style lang="scss" scoped>
+.two-column-layout {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  height: 100vh;
+  padding: 24px;
+  background: #f5f5f5;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-width: 0;
+  
+  &--left, &--right {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+  }
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: #f0f0f0;
+  padding: 4px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  
+  &__button {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    &--active {
+      background: white;
+      color: #007AFF;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+.chat-container, .settings-container {
+  flex: 1;
+  overflow: auto;
+}
+
 .assistent-setting {
   display: flex;
   flex-direction: column;
@@ -387,9 +494,11 @@ const toggleDescriptionEdit = () => {
   width: 100%;
 
   &__header-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 24px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    padding: 16px 0;
   }
 
   &__header-back {
@@ -415,7 +524,7 @@ const toggleDescriptionEdit = () => {
 
   &__section {
     background-color: rgba(2, 7, 29, 0.0392156863);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 24px;
     border: 1px solid $light-grey-color;
     display: flex;
