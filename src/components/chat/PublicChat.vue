@@ -779,8 +779,8 @@ const updateFormattedText = async (text: string) => {
   align-self: flex-end;
   
   .message__content {
-    background: #1890ff;
-    color: #fff;
+    background-color: #ebf5ff;
+    color: #000000;
     border-radius: 16px 16px 4px 16px;
     
     .message__time {
