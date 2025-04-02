@@ -38,7 +38,7 @@
           :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
         >
           <div class="message__content">
-            <p class="message__text" v-html="formattedMessage"></p>
+            <p class="message__text" v-html="message.text"></p>
             <span class="message__time">{{ formatTime(message.timestamp) }}</span>
           </div>
         </div>
@@ -310,7 +310,6 @@ const handleNewMessage = (response: WebSocketResponse) => {
   console.log('Полное содержимое ответа:', JSON.stringify(response));
   
   // Проверяем тип действия и наличие сообщения
-  // Используем любой подходящий тип, так как сервер может использовать разные значения
   if (response.message !== undefined) {
     let messageText = response.message || '';
     
@@ -325,13 +324,16 @@ const handleNewMessage = (response: WebSocketResponse) => {
     // Останавливаем индикатор загрузки
     chatStore.isLoading = false;
     
-    chatStore.addMessage(messageText, false, chatStore.activeSessionId);
-    
-    // Прокручиваем чат вниз
-        nextTick(() => {
-          if (chatContainer.value) {
-        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-      }
+    // Форматируем сообщение перед добавлением
+    formattedText(messageText).then(formattedMessage => {
+      chatStore.addMessage(formattedMessage, false, chatStore.activeSessionId);
+      
+      // Прокручиваем чат вниз
+      nextTick(() => {
+        if (chatContainer.value) {
+          chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+        }
+      });
     });
   }
 };
@@ -347,13 +349,13 @@ const sendMessage = async () => {
 
   const messageText = newMessage.value.trim();
   
-  // Сохраняем сообщение перед отправкой, чтобы не терять его
+  // Сохраняем сообщение перед отправкой
   const tempMessage = newMessage.value.trim();
   
-  // Очищаем поле ввода сразу, чтобы пользователь видел, что сообщение обрабатывается
+  // Очищаем поле ввода и сбрасываем его высоту
   newMessage.value = '';
   if (messageInput.value) {
-    messageInput.value.style.height = 'auto';
+    messageInput.value.style.height = '44px';
   }
   
   try {
@@ -540,6 +542,13 @@ const handleScroll = () => {
   isHeaderSticky.value = scrollTop > 0
 }
 
+// Следим за изменением newMessage для сброса высоты
+watch(newMessage, (value) => {
+  if (!value && messageInput.value) {
+    messageInput.value.style.height = '44px';
+  }
+});
+
 // Жизненный цикл компонента
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
@@ -595,8 +604,12 @@ const formatTime = (timestamp: string) => {
 // Функция автоматического роста текстового поля
 const autoGrow = () => {
   if (messageInput.value) {
-    messageInput.value.style.height = 'auto'
-    messageInput.value.style.height = messageInput.value.scrollHeight + 'px'
+    // Сначала сбрасываем высоту до минимальной
+    messageInput.value.style.height = '44px';
+    
+    // Затем устанавливаем высоту на основе содержимого
+    const newHeight = Math.min(messageInput.value.scrollHeight, 120);
+    messageInput.value.style.height = `${newHeight}px`;
   }
 }
 
@@ -637,16 +650,9 @@ const createNewSurvey = async () => {
   }
 };
 
-async function updateFormattedText(text: string) {
-  formattedMessage.value = await formattedText(text)
-}
-
-// Используем watch для отслеживания изменений в сообщениях
-watch(() => chatStore.sessionMessages, async () => {
-  if (chatStore.sessionMessages.length > 0) {
-    await updateFormattedText(chatStore.sessionMessages[chatStore.sessionMessages.length - 1].text)
-  }
-}, { immediate: true })
+const updateFormattedText = async (text: string) => {
+  formattedMessage.value = await formattedText(text);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -826,81 +832,81 @@ watch(() => chatStore.sessionMessages, async () => {
   align-items: center;
   gap: 8px;
 
-textarea {
-  flex: 1;
+  textarea {
+    flex: 1;
     padding: 12px;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  resize: none;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    resize: none;
     min-height: 44px;
-  max-height: 120px;
-  background: #fafafa;
-  color: #333;
-  font-size: 14px;
-  line-height: 1.5;
-  transition: all 0.3s ease;
+    max-height: 120px;
+    background: #fafafa;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.3s ease;
 
-  &:hover {
-    border-color: #40a9ff;
-  }
+    &:hover {
+      border-color: #40a9ff;
+    }
 
-  &:focus {
-    outline: none;
-    border-color: #1890ff;
-    background: #fff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
-  }
+    &:focus {
+      outline: none;
+      border-color: #1890ff;
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+    }
 
-  &:disabled {
-    background: #f5f5f5;
-    border-color: #d9d9d9;
-    cursor: not-allowed;
+    &:disabled {
+      background: #f5f5f5;
+      border-color: #d9d9d9;
+      cursor: not-allowed;
     }
   }
-}
 
-.send-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  background: #f0f0f0;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.2s ease;
-  
-  .arrow-icon {
-    display: inline-flex;
+  .send-button {
+    display: flex;
     align-items: center;
     justify-content: center;
-    transform: rotate(0deg) scale(1.2);
-    font-size: 20px;
-    line-height: 1;
-    transition: color 0.2s ease;
-  }
-
-  &:hover {
-    background: #e5e5e5;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  // Активное состояние при наличии текста
-  &:not(:disabled) {
-    background: #007AFF;
-
-.arrow-icon {
-      color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s ease;
+    
+    .arrow-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(0deg) scale(1.2);
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.2s ease;
     }
 
     &:hover {
-      background: #0066DB; // немного темнее при наведении
+      background: #e5e5e5;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    // Активное состояние при наличии текста
+    &:not(:disabled) {
+      background: #007AFF;
+
+      .arrow-icon {
+        color: white;
+      }
+
+      &:hover {
+        background: #0066DB;
+      }
     }
   }
 }
