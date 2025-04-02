@@ -23,7 +23,7 @@
       <!-- Чат или настройки в зависимости от режима -->
       <div v-if="activeMode === 'assistant'" class="chat-container">
         <PublicChat 
-          :selected-assistant="assistent"
+          :selected-assistant="assistent || null"
           :is-public-access="false"
           :hide-header="true"
         />
@@ -136,7 +136,7 @@
     <!-- Правая колонка -->
     <div class="column column--right">
       <PublicChat 
-        :selected-assistant="assistent"
+        :selected-assistant="assistent || null"
         :is-public-access="false"
         :hide-header="true"
       />
