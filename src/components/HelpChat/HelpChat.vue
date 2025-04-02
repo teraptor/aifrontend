@@ -8,6 +8,7 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
+import { formattedText } from '@/utils/messageFormatter'
 
 const props = defineProps({
   width: {
@@ -25,6 +26,18 @@ const messagesContainer = ref<HTMLElement | null>(null)
 const helpChatStore = useHelpChatStore()
 const { messages, newMessage } = storeToRefs(helpChatStore)
 
+const formattedMessage = ref('')
+
+async function updateFormattedText(text: string) {
+  formattedMessage.value = await formattedText(text)
+}
+
+watch(() => messages.value, async () => {
+  if (messages.value.length > 0) {
+    await updateFormattedText(messages.value[messages.value.length - 1].text)
+  }
+}, { immediate: true })
+
 const sendMessage = () => {
   if (!helpChatStore.isWebSocketClosed) helpChatStore.sendMessage()
 }
@@ -33,8 +46,6 @@ const sendSuggestionMessage = (suggestionText: string) => {
   newMessage.value = suggestionText
   sendMessage()
 }
-
-const formattedText = (text: string) => text.replace(/\n/g, '<br />')
 
 const newChat = () => {
   messages.value.splice(0, messages.value.length, {
@@ -76,7 +87,7 @@ watch(messages.value, () => {
           }"
         >
           <p class="message__sender">{{ message.sender }}:</p>
-          <p class="message__text" v-html="formattedText(message.text)"></p>
+          <p class="message__text" v-html="formattedMessage"></p>
           <p class="message__time">
             {{ helpChatStore.formatDate(message.createdAt) }}
           </p>

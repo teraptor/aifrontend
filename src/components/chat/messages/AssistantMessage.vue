@@ -1,88 +1,42 @@
 <template>
   <div class="message message--assistant">
     <div class="message__content">
-      <template v-if="isEditing">
-        <textarea
-          v-model="editedText"
-          class="message__edit-input"
-          @blur="saveEdit"
-          @keydown.enter.prevent="saveEdit"
-          @keydown.esc.prevent="cancelEdit"
-          ref="editInput"
-        ></textarea>
-      </template>
-      <template v-else>
-        <p class="message__text" v-html="formattedText(text)"></p>
-      </template>
+      <div class="message__actions">
+        <i class="fas fa-copy" @click="copyText"></i>
+      </div>
+      <p class="message__text" v-html="formattedMessage"></p>
       <span class="message__time">{{ formatTime(timestamp) }}</span>
-    </div>
-    <div class="message__actions">
-      <i class="fas fa-pencil-alt" @click="startEdit"></i>
-      <i class="fas fa-trash-alt"></i>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { formatTime } from '@/utils/date'
 import { formattedText } from '@/utils/messageFormatter'
-import { Modal } from 'ant-design-vue'
+import { notifications } from '@/plugins/notifications'
 
 const props = defineProps<{
   text: string
   timestamp: string
 }>()
 
-const emit = defineEmits<{
-  (e: 'update:text', value: string): void
-}>()
+const formattedMessage = ref('')
 
-const isEditing = ref(false)
-const editedText = ref('')
-const editInput = ref<HTMLTextAreaElement | null>(null)
-
-const startEdit = () => {
-  editedText.value = props.text
-  isEditing.value = true
-  setTimeout(() => {
-    editInput.value?.focus()
-  })
+async function updateFormattedText() {
+  formattedMessage.value = await formattedText(props.text)
 }
 
-const cancelEdit = () => {
-  isEditing.value = false
-  editedText.value = ''
-}
+watch(() => props.text, updateFormattedText, { immediate: true })
 
-const saveEdit = async () => {
-  const trimmedText = editedText.value.trim()
-  
-  if (!trimmedText) {
-    Modal.error({
-      title: 'Ошибка',
-      content: 'Сообщение не может быть пустым',
-      okText: 'OK'
+const copyText = () => {
+  navigator.clipboard.writeText(props.text)
+    .then(() => {
+      notifications.success('Текст скопирован в буфер обмена');
     })
-    return
-  }
-
-  if (trimmedText !== props.text) {
-    try {
-      await Modal.confirm({
-        title: 'Подтверждение',
-        content: 'Вся история диалога будет изменена и начата с этого места',
-        okText: 'Сохранить',
-        cancelText: 'Отмена',
-        okType: 'primary'
-      })
-      emit('update:text', trimmedText)
-    } catch {
-      // Пользователь отменил сохранение
-    }
-  }
-  
-  isEditing.value = false
+    .catch(() => {
+      notifications.error('Не удалось скопировать текст');
+    });
 }
 </script>
 
@@ -109,12 +63,11 @@ const saveEdit = async () => {
   }
 
   &__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
     opacity: 0;
     transition: opacity 0.2s ease;
-    padding-top: 8px;
 
     i {
       font-size: 14px;
@@ -147,6 +100,38 @@ const saveEdit = async () => {
       display: none;
     }
 
+    :deep(h1) {
+      font-size: 1.5em;
+      margin: 0.5em 0;
+    }
+
+    :deep(h2) {
+      font-size: 1.3em;
+      margin: 0.4em 0;
+    }
+
+    :deep(h3) {
+      font-size: 1.1em;
+      margin: 0.3em 0;
+    }
+
+    :deep(ul) {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
+
+    :deep(li) {
+      margin: 0.2em 0;
+    }
+
+    :deep(strong) {
+      font-weight: 600;
+    }
+
+    :deep(em) {
+      font-style: italic;
+    }
+
     :deep(a) {
       color: #1890ff;
       text-decoration: underline;
@@ -163,6 +148,7 @@ const saveEdit = async () => {
       border-radius: 6px;
       overflow-x: auto;
       margin: 8px 0;
+      font-family: monospace;
     }
 
     :deep(.mermaid-diagram) {
@@ -204,26 +190,6 @@ const saveEdit = async () => {
     position: absolute;
     bottom: 4px;
     right: 8px;
-  }
-
-  &__edit-input {
-    width: 100%;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid #e8e8e8;
-    border-radius: 6px;
-    font-size: 14px;
-    line-height: 1.5;
-    resize: vertical;
-    font-family: inherit;
-    box-sizing: border-box;
-    margin: 0;
-
-    &:focus {
-      outline: none;
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-    }
   }
 }
 </style> 

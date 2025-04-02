@@ -1,17 +1,25 @@
 @use './reset.scss';
 @use './normalize.scss';
-@use './variables.scss';
+@use './variables.scss' as *;
 @use '../icons/connect-icons.scss';
 
-* {
-  font-family: "Manrope", serif;
-  font-optical-sizing: auto;
-  font-size: 16px;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+html {
+  font-size: $font-size-base;
 }
 
 body {
+  font-family: $font-family-base;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-base;
   background-color: #f5f2f0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  font-family: inherit;
 }
 
 

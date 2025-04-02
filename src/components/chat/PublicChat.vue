@@ -38,7 +38,7 @@
           :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
         >
           <div class="message__content">
-            <p class="message__text" v-html="formattedText(message.text)"></p>
+            <p class="message__text" v-html="formattedMessage"></p>
             <span class="message__time">{{ formatTime(message.timestamp) }}</span>
           </div>
         </div>
@@ -81,6 +81,7 @@ import 'katex/dist/katex.min.css'
 import mermaid from 'mermaid'
 import { webSocketService, WebSocketAction, type WebSocketRequest, type WebSocketResponse } from '@/api/services/webSocketService'
 import { useRoute } from 'vue-router'
+import { formattedText } from '@/utils/messageFormatter'
 
 // Инициализация Mermaid
 mermaid.initialize({
@@ -111,6 +112,7 @@ const chatHeader = ref<HTMLElement | null>(null)
 const isHeaderSticky = ref(false)
 const roomId = ref<string | null>(null)
 const isWebSocketConnected = ref(false)
+const formattedMessage = ref('')
 
 // Генерация или получение ID анонимного пользователя
 const getAnonymousUserId = (): string => {
@@ -584,50 +586,6 @@ onMounted(() => {
   });
 });
 
-// Функция форматирования текста сообщений
-const formattedText = (text: string) => {
-  if (!text) return ''
-
-  let formatted = text
-
-  // Форматирование блоков кода
-  formatted = formatted.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const language = lang || ''
-    return `<pre class="code-block ${language}"><code>${code.trim()}</code></pre>`
-  })
-
-  // Форматирование формул KaTeX
-  formatted = formatted.replace(/\$\$(.*?)\$\$/g, (match, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: true })
-    } catch (error) {
-      console.error('KaTeX rendering error:', error)
-      return match
-    }
-  })
-
-  formatted = formatted.replace(/\$(.*?)\$/g, (match, formula) => {
-    try {
-      return katex.renderToString(formula, { displayMode: false })
-    } catch (error) {
-      console.error('KaTeX rendering error:', error)
-      return match
-    }
-  })
-
-  // Форматирование диаграмм Mermaid
-  formatted = formatted.replace(/```mermaid\n([\s\S]*?)```/g, (match, diagram) => {
-    try {
-      return `<div class="mermaid">${diagram}</div>`
-    } catch (error) {
-      console.error('Mermaid rendering error:', error)
-      return match
-    }
-  })
-
-  return formatted
-}
-
 // Функция форматирования времени
 const formatTime = (timestamp: string) => {
   const date = new Date(timestamp)
@@ -678,6 +636,17 @@ const createNewSurvey = async () => {
     chatStore.isLoading = false;
   }
 };
+
+async function updateFormattedText(text: string) {
+  formattedMessage.value = await formattedText(text)
+}
+
+// Используем watch для отслеживания изменений в сообщениях
+watch(() => chatStore.sessionMessages, async () => {
+  if (chatStore.sessionMessages.length > 0) {
+    await updateFormattedText(chatStore.sessionMessages[chatStore.sessionMessages.length - 1].text)
+  }
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
