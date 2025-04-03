@@ -3,6 +3,8 @@ import type { AuthUserResponse } from '../types';
 import type { LoginUserRequest } from '../types';
 import type { RegisterUserRequest } from '../types';
 
+
+
 export const authService = {
     // авторизация
     async login(credentials: LoginUserRequest): Promise<AuthUserResponse> {
@@ -27,7 +29,8 @@ export const authService = {
     async getCurrentUser(): Promise<AuthUserResponse['email']> {
         const response = await apiClient.get<AuthUserResponse['email']>('/v1/auth/me');
         return response.data;
-    }
+    },
+
 }
 
 

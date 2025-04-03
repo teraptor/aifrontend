@@ -1,23 +1,82 @@
 <template>
   <div class="user-profile" :class="{ 'user-profile--collapsed': collapsed }">
     <div class="user-profile__avatar">
-      <span>Y</span>
+      <span>{{ userInitial }}</span>
     </div>
     <div class="user-profile__info" v-if="!collapsed">
       <div class="user-profile__balance">
         <div class="user-profile__balance-label">Баланс:</div>
-        <div class="user-profile__balance-amount">1000 ₽</div>
+        <div class="user-profile__balance-amount">
+          {{ isLoading ? '...' : formatBalance(currentUser?.balance) }}
+        </div>
       </div>
-      <div class="user-profile__name">Yuriy Bedarev</div>
-      <div class="user-profile__link">Перейти в профиль</div>
+      <div class="user-profile__name">{{ currentUser?.email || 'Пользователь' }}</div>
+      <div class="user-profile__link" @click="goToProfile">Перейти в профиль</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { useAuthStore } from '@/stores/useAuthStore';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { RouteNames } from '@/router/routes/routeNames';
+
+const props = defineProps<{
   collapsed?: boolean;
 }>();
+
+const router = useRouter();
+const authStore = useAuthStore();
+const isLoading = ref(false);
+
+// Вычисление профиля пользователя
+const currentUser = computed(() => {
+  if (authStore.currentUserId) {
+    return authStore.getUserProfile(authStore.currentUserId.toString());
+  }
+  return null;
+});
+
+// Вычисление первой буквы имени пользователя
+const userInitial = computed(() => {
+  return currentUser.value?.email.charAt(0).toUpperCase() || 'У';
+});
+
+// Форматирование баланса
+const formatBalance = (balance?: number): string => {
+  return `${balance?.toLocaleString() || 0} ₽`;
+};
+
+// Навигация на страницу профиля
+const goToProfile = () => {
+  router.push({ name: RouteNames.PROFILE });
+};
+
+// Функция для обновления баланса
+const updateBalance = async () => {
+  if (!authStore.isAuthenticated || !authStore.currentUserId) return;
+  
+  try {
+    isLoading.value = true;
+    await authStore.fetchUserBalance(authStore.currentUserId.toString());
+  } catch (error) {
+    console.error('Ошибка при получении баланса:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Обновление баланса при монтировании компонента
+onMounted(() => {
+  updateBalance();
+  const balanceInterval = setInterval(updateBalance, 300000); // обновляем каждые 5 минут
+  
+  // Очищаем интервал при размонтировании
+  onUnmounted(() => {
+    clearInterval(balanceInterval);
+  });
+});
 </script>
 
 <style scoped>

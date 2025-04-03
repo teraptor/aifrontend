@@ -61,16 +61,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Instruments.vue')
   },
   {
-    path: RouteNames.QUESTIONS,
-    name: RouteNames.QUESTIONS,
-    meta: {
-      title: 'Вопросы ассистентов',
-      ...defaultMeta,
-      requiresAuth: true,
-    },
-    component: () => import('@/pages/QuestionsList.vue')
-  },
-  {
     path: RouteNames.CREATE_ASSISTENT,
     name: RouteNames.CREATE_ASSISTENT,
     meta: {
@@ -98,16 +88,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
       requiresAuth: true,
     },
     component: () => import('@/pages/AssistentSetting.vue')
-  },
-  {
-    path: `${RouteNames.QUESTION_DETAIL}/:id`,
-    name: RouteNames.QUESTION_DETAIL,
-    meta: {
-      title: 'Вопросы ассистенту',
-      ...defaultMeta,
-      requiresAuth: true,
-    },
-    component: () => import('@/pages/QuestionDetail.vue')
   },
   {
     path: `${RouteNames.NOT_FOUND}`,

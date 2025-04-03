@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
-import { useSkillsStore } from '@/stores/useSkillsStore';
+import { useSkillsStore } from '@/stores/useToolsStore';
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import InputField from '../ui/InputField.vue';
@@ -213,4 +213,4 @@ const toggleSkills = (): void => {
     }
   }
 }
-</style>@/stores/useAssistantsStore
+</style>

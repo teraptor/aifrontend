@@ -81,11 +81,11 @@ onClickOutside(profileRef, () => {
 
 // Функция для обновления баланса
 const updateBalance = async () => {
-  if (!authStore.isAuthenticated) return;
+  if (!authStore.isAuthenticated || !authStore.currentUserId) return;
   
   try {
     isLoading.value = true;
-    await authStore.getUserProfile(authStore.currentUserId?.toString() || '');
+    await authStore.fetchUserBalance(authStore.currentUserId.toString());
   } catch (error) {
     console.error('Ошибка при получении баланса:', error);
   } finally {

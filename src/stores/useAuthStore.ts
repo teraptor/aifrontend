@@ -1,7 +1,7 @@
 import { notifications } from '@/plugins/notifications';
 import { defineStore } from 'pinia';
 import { authService } from '@/api/services/authService';
-
+import { billingService } from '@/api/services/billingService';
 interface Credentials {
   email: string;
   password: string;
@@ -112,6 +112,30 @@ export const useAuthStore = defineStore('auth', {
     // Получение профиля пользователя
     getUserProfile(userId: string): UserProfile | undefined {
       return this.userProfiles.find(profile => profile.id === userId);
+    },
+
+    // Получение баланса пользователя по API
+    async fetchUserBalance(userId: string) {
+      try {
+        this.isLoading = true;
+        // Запрос к API для получения баланса
+        const response = await billingService.getUserBalance();
+        
+        // Обновляем профиль пользователя с новым балансом
+        const userProfile = this.userProfiles.find(profile => profile.id === userId);
+        if (userProfile) {
+          userProfile.balance = response.balance;
+        }
+        
+        return response.balance;
+      } catch (error: any) {
+        const errorMessage = error.message || 'Ошибка при получении баланса';
+        this.error = errorMessage;
+        notifications.error(errorMessage);
+        throw error;
+      } finally {
+        this.isLoading = false;
+      }
     },
 
     // Добавление профиля пользователя
