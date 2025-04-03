@@ -3,8 +3,6 @@ import { notifications } from "@/plugins/notifications";
 
 export class ApiErrorHandler {
     static handleError(error: any, methodName: string) {
-        console.error(`API Error in ${methodName}:`, error);
-        
         if (error.response) {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx

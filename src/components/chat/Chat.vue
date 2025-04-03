@@ -319,7 +319,6 @@ const handleNewMessage = (response: WebSocketMessage) => {
       }
     }
   } catch (error) {
-    console.error('Ошибка при обработке WebSocket сообщения:', error)
     chatStore.isLoading = false
   }
 }
@@ -471,22 +470,11 @@ onMounted(() => {
 watch(
   [() => chatStore.activeSessionId, () => props.selectedAssistant],
   ([newSessionId, newAssistant], [oldSessionId, oldAssistant]) => {
-    console.log('Chat: Проверка изменений:', { 
-      newSessionId, 
-      oldSessionId,
-      newAssistantId: newAssistant?.id,
-      oldAssistantId: oldAssistant?.id
-    })
-
     // Загружаем только если изменился sessionId или id ассистента
     if (newSessionId && newAssistant && (
       newSessionId !== oldSessionId || 
       newAssistant.id !== oldAssistant?.id
     )) {
-      console.log('Chat: Загрузка истории для новой сессии/ассистента:', {
-        sessionId: newSessionId,
-        assistantId: newAssistant.id
-      })
       chatStore.loadDialogMessages(newAssistant.id, newSessionId)
     }
   },

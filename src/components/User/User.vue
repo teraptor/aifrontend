@@ -56,7 +56,6 @@ const userInitial = computed<string>(() => {
 
 // проверка авторизации
 const isAuthenticated = computed<boolean>(() => {
-  console.log(authStore.isAuthenticated);
   return authStore.isAuthenticated;
 });
 
@@ -87,7 +86,6 @@ const updateBalance = async () => {
     isLoading.value = true;
     await authStore.fetchUserBalance(authStore.currentUserId.toString());
   } catch (error) {
-    console.error('Ошибка при получении баланса:', error);
   } finally {
     isLoading.value = false;
   }

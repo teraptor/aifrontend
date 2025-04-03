@@ -170,7 +170,6 @@ const getSessionFromStorage = () => {
       return JSON.parse(sessionData)
     }
   } catch (error) {
-    console.error('Ошибка при получении сессии из localStorage:', error)
   }
   return null
 }
@@ -180,9 +179,7 @@ const saveSessionToStorage = (sessionData: { roomId: string, sessionId: string }
     const workflowId = getWorkflowIdFromUrl()
     const storageKey = `public_chat_session_${workflowId}`
     localStorage.setItem(storageKey, JSON.stringify(sessionData))
-    console.log('Сессия сохранена в localStorage:', sessionData)
   } catch (error) {
-    console.error('Ошибка при сохранении сессии в localStorage:', error)
   }
 }
 
@@ -190,23 +187,18 @@ const saveSessionToStorage = (sessionData: { roomId: string, sessionId: string }
 const initializeWebSocket = async () => {
   try {
     const workflowId = getWorkflowIdFromUrl()
-    console.log('Инициализация WebSocket для ассистента, workflowId:', workflowId);
-    console.log('ID анонимного пользователя:', userId.value);
     
     // Принудительно переподключаем WebSocket если нужно
     if (!webSocketService.isConnected()) {
-      console.log('WebSocket не подключен, инициируем подключение');
       await webSocketService.connect();
     }
     
     isWebSocketConnected.value = webSocketService.isConnected();
-    console.log('Состояние WebSocket соединения:', isWebSocketConnected.value ? 'Открыто' : 'Закрыто');
     
     // Проверяем наличие сохраненной сессии
     const savedSession = getSessionFromStorage()
     
     if (savedSession && savedSession.roomId && savedSession.sessionId) {
-      console.log('Найдена сохраненная сессия:', savedSession)
       roomId.value = savedSession.roomId
       
       // Устанавливаем активную сессию из сохраненных данных
@@ -234,7 +226,6 @@ const initializeWebSocket = async () => {
       }
       
       // Присоединяемся к существующей комнате
-      console.log('Присоединяемся к существующей комнате:', roomId.value)
       webSocketService.send({
         action: WebSocketAction.JoinRoom,
         workflowId: workflowId,
@@ -242,11 +233,9 @@ const initializeWebSocket = async () => {
         userId: userId.value
       });
     } else {
-      console.log('Сохраненная сессия не найдена, создаем новую');
       
       // Проверяем, активна ли сессия, если нет - создаем новую
       if (!chatStore.activeSessionId) {
-        console.log('Нет активной сессии, создаем новую');
         
         // Для публичного доступа создаем локальную сессию вместо запроса к API
         if (props.isPublicAccess) {
@@ -266,16 +255,13 @@ const initializeWebSocket = async () => {
           // Добавляем сессию в хранилище
           chatStore.sessions.push(localSession);
           chatStore.activeSessionId = localSession.id;
-          console.log('Создана локальная сессия:', localSession);
         } else {
           // Для авторизованных пользователей используем API
           const newSession = await chatStore.createNewSession(workflowId);
-          console.log('Создана новая сессия через API:', newSession);
         }
       }
       
       // Создаем комнату
-      console.log('Отправляем запрос на создание комнаты');
       await webSocketService.send({
         action: WebSocketAction.CreateRoom,
         workflowId: workflowId,
@@ -283,21 +269,17 @@ const initializeWebSocket = async () => {
       });
     }
 
-    console.log('Подписываемся на события WebSocket');
     // Подписываемся на события
     webSocketService.subscribe(WebSocketAction.CreatedRoom, handleRoomCreated);
     webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage);
     webSocketService.subscribe(WebSocketAction.WelcomeMessage, handleNewMessage);
   } catch (error) {
-    console.error('Ошибка при инициализации WebSocket:', error);
   }
 };
 
 const handleRoomCreated = (response: WebSocketResponse) => {
-  console.log('Получен ответ о создании комнаты:', response);
   if (response.roomId) {
     roomId.value = response.roomId;
-    console.log('Комната создана:', roomId.value);
     
     // Сохраняем информацию о сессии в localStorage
     if (chatStore.activeSessionId) {
@@ -319,10 +301,6 @@ const handleRoomCreated = (response: WebSocketResponse) => {
 };
 
 const handleNewMessage = (response: WebSocketResponse) => {
-  console.log('Получено новое сообщение:', response);
-  
-  // Выводим полное сообщение для отладки
-  console.log('Полное содержимое ответа:', JSON.stringify(response));
   
   // Проверяем тип действия и наличие сообщения
   if (response.message !== undefined) {
@@ -330,11 +308,8 @@ const handleNewMessage = (response: WebSocketResponse) => {
     
     // Если сообщение пустое или только 'join', игнорируем его как служебное
     if (!messageText || messageText === 'join') {
-      console.log('Получено служебное сообщение, игнорируем:', messageText);
       return;
     }
-    
-    console.log('Добавляем сообщение в чат:', messageText);
     
     // Останавливаем индикатор загрузки
     chatStore.isLoading = false;
@@ -355,15 +330,8 @@ const handleNewMessage = (response: WebSocketResponse) => {
 
 const sendMessage = async () => {
   if (!newMessage.value.trim() || chatStore.isLoading) return;
-  
   const workflowId = getWorkflowIdFromUrl();
-  console.log('Отправка сообщения. Активная сессия:', chatStore.activeSessionId);
-  console.log('ID комнаты:', roomId.value);
-  console.log('WorkflowId из URL:', workflowId);
-  console.log('ID анонимного пользователя:', userId.value);
-
   const messageText = newMessage.value.trim();
-  
   // Сохраняем сообщение перед отправкой
   const tempMessage = newMessage.value.trim();
   
@@ -376,7 +344,6 @@ const sendMessage = async () => {
   try {
     // Проверяем соединение WebSocket
     if (!webSocketService.isConnected()) {
-      console.log('WebSocket не подключен, пытаемся подключиться');
       await webSocketService.connect();
       
       // Подождем немного, чтобы соединение установилось
@@ -384,14 +351,12 @@ const sendMessage = async () => {
       
       // Если соединение не установлено, выводим ошибку
       if (!webSocketService.isConnected()) {
-        console.error('Не удалось установить соединение WebSocket');
         throw new Error('Не удалось установить соединение с сервером');
       }
     }
     
     // Проверяем, активна ли сессия
     if (!chatStore.activeSessionId) {
-      console.log('Нет активной сессии, создаем новую');
       
       // Для публичного доступа создаем локальную сессию вместо запроса к API
       if (props.isPublicAccess) {
@@ -411,7 +376,6 @@ const sendMessage = async () => {
         // Добавляем сессию в хранилище
         chatStore.sessions.push(localSession);
         chatStore.activeSessionId = localSession.id;
-        console.log('Создана локальная сессия:', localSession);
       } else {
         // Для авторизованных пользователей используем API
         await chatStore.createNewSession(workflowId);
@@ -419,7 +383,6 @@ const sendMessage = async () => {
     }
 
     // Добавляем сообщение в чат
-    console.log('Добавляем сообщение пользователя в чат');
     chatStore.addMessage(messageText, true, chatStore.activeSessionId);
     
     // Устанавливаем состояние загрузки
@@ -434,14 +397,12 @@ const sendMessage = async () => {
 
     // Проверяем состояние WebSocket соединения
     isWebSocketConnected.value = webSocketService.isConnected();
-    console.log('Состояние WebSocket соединения:', isWebSocketConnected.value ? 'Открыто' : 'Закрыто');
 
     // Если нет ID комнаты, пытаемся получить ее из хранилища
     if (!roomId.value) {
       const savedSession = getSessionFromStorage();
       
       if (savedSession && savedSession.roomId) {
-        console.log('Восстановлена сессия из хранилища:', savedSession);
         roomId.value = savedSession.roomId;
         
         // Если нет активной сессии, устанавливаем ее из сохраненных данных
@@ -476,7 +437,6 @@ const sendMessage = async () => {
         });
       } else {
         // Создаем новую комнату, если не нашли сохраненную
-        console.log('Нет ID комнаты, создаем новую комнату');
         
         await webSocketService.send({
           action: WebSocketAction.CreateRoom,
@@ -488,14 +448,12 @@ const sendMessage = async () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         if (!roomId.value) {
-          console.error('Не удалось получить ID комнаты после создания');
           throw new Error('Не удалось получить ID комнаты');
         }
       }
     }
 
     // Отправляем сообщение через WebSocket
-    console.log('Отправляем сообщение через WebSocket в комнату:', roomId.value);
     
     // Дополнительная задержка перед отправкой
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -509,7 +467,6 @@ const sendMessage = async () => {
       userId: userId.value
     };
     
-    console.log('Запрос WebSocket:', JSON.stringify(request));
     
     // Отправляем сообщение
     const sendPromise = webSocketService.send(request);
@@ -520,18 +477,15 @@ const sendMessage = async () => {
     );
     
     await Promise.race([sendPromise, timeoutPromise]);
-    console.log('Сообщение успешно отправлено через WebSocket');
     
     // Устанавливаем таймаут для отмены состояния загрузки через 15 секунд
     const loadingTimeout = setTimeout(() => {
       if (chatStore.isLoading) {
-        console.log('Превышен таймаут ожидания ответа, отменяем состояние загрузки');
         chatStore.isLoading = false;
       }
     }, 15000);
     
   } catch (error) {
-    console.error('Ошибка при отправке сообщения:', error);
     // Если произошла ошибка, можно вернуть текст в поле ввода
     newMessage.value = tempMessage;
     // Отключаем состояние загрузки
@@ -542,7 +496,6 @@ const sendMessage = async () => {
 // Следим за изменением выбранного ассистента и сразу инициализируем
 watch(() => props.selectedAssistant, (newAssistant) => {
   if (newAssistant) {
-    console.log('Выбран новый ассистент, инициализируем WebSocket');
     nextTick(() => {
       initializeWebSocket();
     });
@@ -572,12 +525,10 @@ onMounted(() => {
   const connectionCheckInterval = setInterval(() => {
     const connected = webSocketService.isConnected();
     if (connected !== isWebSocketConnected.value) {
-      console.log('Изменение состояния WebSocket:', connected ? 'Подключено' : 'Отключено');
       isWebSocketConnected.value = connected;
       
       // Если соединение потеряно, пытаемся переподключиться
       if (!connected && props.selectedAssistant) {
-        console.log('Соединение потеряно, пытаемся переподключиться');
         initializeWebSocket();
       }
     }
@@ -630,7 +581,6 @@ const autoGrow = () => {
 
 const createNewSurvey = async () => {
   try {
-    console.log('Создаем новый опрос...');
     chatStore.isLoading = true;
     
     const workflowId = getWorkflowIdFromUrl();
@@ -657,9 +607,7 @@ const createNewSurvey = async () => {
     // Отправляем приветственное сообщение
     chatStore.addMessage('Создан новый опрос', false, chatStore.activeSessionId);
     
-    console.log('Новый опрос создан, история очищена');
   } catch (error) {
-    console.error('Ошибка при создании нового опроса:', error);
   } finally {
     chatStore.isLoading = false;
   }

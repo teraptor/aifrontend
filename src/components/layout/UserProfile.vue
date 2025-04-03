@@ -61,7 +61,6 @@ const updateBalance = async () => {
     isLoading.value = true;
     await authStore.fetchUserBalance(authStore.currentUserId.toString());
   } catch (error) {
-    console.error('Ошибка при получении баланса:', error);
   } finally {
     isLoading.value = false;
   }

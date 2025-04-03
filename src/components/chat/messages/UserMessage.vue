@@ -116,17 +116,6 @@ const saveEdit = async () => {
         // Выбираем все сообщения начиная с редактируемого
         const messagesToDelete = chatStore.sessionMessages.slice(messageIndex)
         
-        console.log('Редактируемое сообщение:', {
-          id: props.id,
-          text: trimmedText,
-          isUser: true
-        })
-        
-        console.log('Сообщения для удаления:', messagesToDelete.map(msg => ({
-          id: msg.id,
-          text: msg.text.substring(0, 50) + '...'
-        })))
-
         // Отправляем WebSocket сообщение
         await webSocketService.send({
           action: WebSocketAction.EditMessage,

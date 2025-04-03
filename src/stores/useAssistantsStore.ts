@@ -125,7 +125,6 @@ export const useAssistentsStore = defineStore('assistents', {
         const response = await agentService.getMyAgents();
         
         if (!response.assistants || !Array.isArray(response.assistants)) {
-          console.warn('No assistants received from API or invalid format');
           this.assistants = [];
           return [];
         }

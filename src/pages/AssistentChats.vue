@@ -87,7 +87,6 @@ const selectSession = async (sessionId: string) => {
       localStorage.setItem(`lastSessionId_${selectedAssistant.value.id}`, sessionId)
     }
   } catch (error) {
-    console.error('AssistentChats: Ошибка при выборе сессии:', error)
   }
 }
 
@@ -155,30 +154,23 @@ const updateSessionTitle = (sessionId: string, newTitle: string) => {
 // Загрузка данных при монтировании
 onMounted(async () => {
   try {
-    console.log('AssistentChats: Компонент монтируется')
-    console.log('AssistentChats: Загрузка ассистентов пользователя')
     await assistentsStore.getMyAssistents()
     
     const savedAssistantId = localStorage.getItem('selectedAssistantId')
-    console.log('AssistentChats: Сохраненный assistantId:', savedAssistantId)
     
     if (assistants.value.length > 0) {
       if (savedAssistantId) {
         const savedAssistant = assistants.value.find(a => a.id === savedAssistantId)
         if (savedAssistant) {
-          console.log('AssistentChats: Найден сохраненный ассистент:', savedAssistant)
           await selectAssistant(savedAssistant)
         } else {
-          console.log('AssistentChats: Сохраненный ассистент не найден, выбираем первого')
           await selectAssistant(assistants.value[0])
         }
       } else {
-        console.log('AssistentChats: Нет сохраненного ассистента, выбираем первого')
         await selectAssistant(assistants.value[0])
       }
     }
   } catch (error) {
-    console.error('AssistentChats: Ошибка при инициализации:', error)
   }
 })
 </script>

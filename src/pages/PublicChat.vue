@@ -32,7 +32,6 @@ const chatId = ref(route.params.id as string);
 const isLoading = ref(true);
 const chatData = ref<{ id: string; title: string } | null>(null);
 
-console.log('Инициализация публичного чата, ID из URL:', chatId.value);
 
 // Используем фиксированные данные ассистента для публичного доступа 
 const selectedAssistant = ref<IAssistent>({
@@ -53,18 +52,14 @@ const selectedAssistant = ref<IAssistent>({
 // Функции для обработки событий чата
 const createNewDialog = () => {
   // Логика создания нового диалога без API запросов
-  console.log('Создание нового публичного диалога');
 };
 
 onMounted(async () => {
-  console.log('Компонент PublicChat смонтирован');
-  
   try {
     isLoading.value = true;
     
     // Проверяем наличие ID чата
     if (chatId.value) {
-      console.log('ID чата найден:', chatId.value);
       
       // Обновляем заголовок страницы
       document.title = `Чат с ассистентом ${chatId.value}`;
@@ -75,11 +70,9 @@ onMounted(async () => {
         title: 'Публичный чат с ассистентом' 
       };
     } else {
-      console.error('ID чата не найден в URL');
       chatData.value = null;
     }
   } catch (error) {
-    console.error('Ошибка при загрузке данных чата:', error);
     chatData.value = null;
   } finally {
     // Короткая задержка для имитации загрузки

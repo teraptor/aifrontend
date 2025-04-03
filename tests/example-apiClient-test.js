@@ -7,7 +7,6 @@
 
 // Пример реализации тестов для apiClient
 function testApiClient() {
-  console.log('Запуск тестов для apiClient...');
   
   // 2. Создание мока для axios
   // const mockAxios = new MockAdapter(apiClient);
@@ -16,7 +15,6 @@ function testApiClient() {
   // localStorage.clear();
   
   // 4. Тест добавления токена авторизации
-  console.log('✅ apiClient: добавляет токен авторизации в заголовки');
   
   // Пример кода:
   /*
@@ -35,7 +33,6 @@ function testApiClient() {
   */
   
   // 5. Тест обработки ошибки 401
-  console.log('✅ apiClient: обрабатывает ошибку 401 и показывает уведомление');
   
   // Пример кода:
   /*
@@ -54,60 +51,9 @@ function testApiClient() {
   */
   
   // 6. Тест обработки ошибки 500
-  console.log('✅ apiClient: обрабатывает ошибку 500 и показывает уведомление');
   
   // 7. Тест при отсутствии ответа от сервера
-  console.log('✅ apiClient: обрабатывает отсутствие ответа от сервера');
-  
-  console.log('Тесты для apiClient успешно завершены\n');
 }
 
 // Выполняем тесты
 testApiClient();
-
-console.log(`
-Для реализации тестов на Jest нужно:
-
-1. Установить зависимости:
-   npm install --save-dev jest ts-jest axios-mock-adapter @types/jest
-
-2. Создать файл apiClient.spec.ts:
-
-   import axios from 'axios';
-   import MockAdapter from 'axios-mock-adapter';
-   import apiClient from '@/api/apiClient';
-   import { notifications } from '@/plugins/notifications';
-   
-   jest.mock('@/plugins/notifications', () => ({
-     notifications: {
-       error: jest.fn()
-     }
-   }));
-   
-   describe('apiClient', () => {
-     let mockAxios;
-     
-     beforeEach(() => {
-       mockAxios = new MockAdapter(apiClient);
-       localStorage.clear();
-     });
-     
-     afterEach(() => {
-       mockAxios.reset();
-     });
-     
-     it('должен добавлять токен авторизации', async () => {
-       localStorage.setItem('accessToken', 'test-token');
-       
-       mockAxios.onGet('/test').reply(config => {
-         expect(config.headers?.Authorization).toBe('Bearer test-token');
-         return [200, { success: true }];
-       });
-       
-       await apiClient.get('/test');
-     });
-   });
-
-3. Запустить тесты:
-   npm test
-`); 

@@ -24,7 +24,6 @@ const loadTemplates = async () => {
     await assistentsStore.fetchAssitantents();
     assistants.value = assistentsStore.filteredAssistents;
   } catch (error) {
-    console.error('Ошибка при загрузке шаблонов ассистентов:', error);
   } finally {
     loading.value = false;
   }

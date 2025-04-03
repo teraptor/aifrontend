@@ -82,7 +82,6 @@
     try {
       await assistentsStore.getMyAssistents();
     } catch (error) {
-      console.error('Ошибка при загрузке ассистентов:', error);
     }
   };
 

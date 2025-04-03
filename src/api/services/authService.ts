@@ -21,8 +21,8 @@ export const authService = {
         await apiClient.post('/auth/logout');
     },
     //рефрешнуть токен
-    async refreshToken(): Promise<AuthUserResponse> {
-        const response = await apiClient.post<AuthUserResponse>('/v1/auth/refresh');
+    async refreshToken(refreshToken: string): Promise<AuthUserResponse> {
+        const response = await apiClient.post<AuthUserResponse>('/v1/auth/refresh', { refresh_token: refreshToken });
         return response.data;
     },
     // получить пользовательские данные

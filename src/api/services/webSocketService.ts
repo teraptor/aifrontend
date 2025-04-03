@@ -48,7 +48,6 @@ class WebSocketService {
   private wasDisconnected: boolean = true; // Флаг для отслеживания предыдущего состояния
 
   constructor() {
-    console.log('WebSocketService: Инициализация...')
     this.connect();
   }
 
@@ -62,7 +61,6 @@ class WebSocketService {
 
   public async connect(): Promise<void> {
     if (this.isConnecting) {
-      console.log('WebSocketService: Соединение уже устанавливается...')
       return this.connectionPromise!;
     }
     
@@ -70,16 +68,13 @@ class WebSocketService {
       try {
         this.isConnecting = true;
         const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8088/v1/connection';
-        console.log('WebSocketService: Попытка подключения к', wsUrl)
         
         this.ws = new WebSocket(wsUrl);
         
         this.ws.onopen = () => {
-          console.log('WebSocketService: Соединение успешно установлено')
           this.isConnecting = false;
           this.reconnectAttempt = 0;
           this.processMessageQueue();
-          this.showNotification('success', 'Соединение с чатом установлено');
           this.wasDisconnected = false; // Сбрасываем флаг после успешного подключения
           resolve();
         };
@@ -87,25 +82,20 @@ class WebSocketService {
         this.ws.onmessage = (event) => {
           try {
             const response: WebSocketResponse = JSON.parse(event.data);
-            console.log('WebSocketService: Получено сообщение:', response)
             const handlers = this.messageHandlers.get(response.action);
             if (handlers) {
               handlers.forEach(handler => handler(response));
             }
           } catch (error) {
-            console.error('WebSocketService: Ошибка при обработке сообщения:', error);
           }
         };
 
         this.ws.onerror = (error) => {
-          console.error('WebSocketService: Ошибка соединения:', error);
           this.isConnecting = false;
-          this.showNotification('error', 'Ошибка соединения с чатом');
           reject(error);
         };
 
         this.ws.onclose = (event) => {
-          console.log(`WebSocketService: Соединение закрыто с кодом ${event.code}:`, event.reason);
           this.isConnecting = false;
           this.connectionPromise = null;
           this.wasDisconnected = true; // Устанавливаем флаг при отключении
@@ -113,7 +103,6 @@ class WebSocketService {
           if (event.code !== 1000) {
             this.reconnectAttempt++;
             const timeout = this.reconnectTimeout * Math.min(this.reconnectAttempt, 3);
-            console.log(`WebSocketService: Попытка переподключения ${this.reconnectAttempt} через ${timeout}мс...`);
             
             // Показываем уведомление только каждую третью попытку
             if (this.reconnectAttempt % 3 === 0) {
@@ -125,7 +114,6 @@ class WebSocketService {
           reject(new Error('WebSocket closed'));
         };
       } catch (error) {
-        console.error('WebSocketService: Ошибка при подключении:', error);
         this.isConnecting = false;
         this.connectionPromise = null;
         
@@ -139,15 +127,12 @@ class WebSocketService {
   }
 
   private async processMessageQueue() {
-    console.log('WebSocketService: Обработка очереди сообщений:', this.messageQueue.length)
     while (this.messageQueue.length > 0) {
       const request = this.messageQueue.shift();
       if (request && this.ws?.readyState === WebSocket.OPEN) {
         try {
-          console.log('WebSocketService: Отправка отложенного сообщения:', request)
           this.ws.send(JSON.stringify(request));
         } catch (error) {
-          console.error('WebSocketService: Ошибка при отправке отложенного сообщения:', error);
           // Возвращаем сообщение в очередь при ошибке
           this.messageQueue.unshift(request);
           break;
@@ -157,21 +142,14 @@ class WebSocketService {
   }
 
   public async send(request: WebSocketRequest) {
-    console.log('WebSocketService: Состояние соединения перед отправкой:', {
-      readyState: this.ws?.readyState,
-      readyStateText: this.ws ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][this.ws.readyState] : 'NO_CONNECTION'
-    })
 
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
-        console.log('WebSocketService: Отправка сообщения:', request)
         this.ws.send(JSON.stringify(request));
       } catch (error) {
-        console.error('WebSocketService: Ошибка при отправке сообщения:', error);
         this.messageQueue.push(request);
       }
     } else {
-      console.log('WebSocketService: Добавление сообщения в очередь:', request);
       this.messageQueue.push(request);
       await this.connect();
     }

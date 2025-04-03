@@ -2,6 +2,8 @@ import { notifications } from '@/plugins/notifications';
 import { defineStore } from 'pinia';
 import { authService } from '@/api/services/authService';
 import { billingService } from '@/api/services/billingService';
+import Cookies from 'js-cookie';
+
 interface Credentials {
   email: string;
   password: string;
@@ -39,6 +41,7 @@ export const useAuthStore = defineStore('auth', {
     users: [] as Array<User>,
     userProfiles: [    ] as Array<UserProfile>,
     nextUserId: 1,
+    refreshTokenInterval: null as number | null,
   }),
   getters: {
     userRole: (state) => state.user?.role,
@@ -50,6 +53,59 @@ export const useAuthStore = defineStore('auth', {
     },
   },
   actions: {
+    // Обновление токенов
+    async refreshTokens() {
+      try {
+        if (!this.refreshToken || !this.isAuthenticated) return;
+        
+        const response = await authService.refreshToken(this.refreshToken);
+        
+        // Обновляем токены
+        this.token = response.access_token;
+        this.refreshToken = response.refresh_token;
+        
+        // Сохраняем токены
+        localStorage.setItem('accessToken', this.token);
+        Cookies.set('refreshToken', this.refreshToken, {
+          secure: true,
+          sameSite: 'strict',
+          expires: 30
+        });
+        
+        return true;
+      } catch (error: any) {
+        // Если произошла ошибка при обновлении токенов, возможно токен устарел
+        // В этом случае выходим из аккаунта
+        if (error.response && error.response.status === 401) {
+          this.logout();
+          notifications.error('Сессия истекла. Пожалуйста, войдите снова.');
+        }
+        return false;
+      }
+    },
+    
+    // Запуск автоматического обновления токенов
+    startTokenRefresh() {
+      // Сначала останавливаем предыдущий интервал, если он существует
+      this.stopTokenRefresh();
+      
+      // 15 минут в миллисекундах
+      const fifteenMinutes = 15 * 60 * 1000;
+      
+      // Запускаем новый интервал
+      this.refreshTokenInterval = window.setInterval(() => {
+        this.refreshTokens();
+      }, fifteenMinutes);
+    },
+    
+    // Остановка автоматического обновления токенов
+    stopTokenRefresh() {
+      if (this.refreshTokenInterval !== null) {
+        window.clearInterval(this.refreshTokenInterval);
+        this.refreshTokenInterval = null;
+      }
+    },
+    
     // Вход в систему
     async login(credentials: Credentials) {
       try {
@@ -63,8 +119,15 @@ export const useAuthStore = defineStore('auth', {
         this.currentUserId = parseInt(response.user_id);
 
         localStorage.setItem('accessToken', this.token);
-        localStorage.setItem('refreshToken', this.refreshToken);
+        // Сохраняем refreshToken в cookie с флагом secure и expires
+        Cookies.set('refreshToken', this.refreshToken, { 
+          secure: true, 
+          sameSite: 'strict',
+          expires: 30 // срок действия 30 дней
+        });
 
+        // Запускаем автоматическое обновление токенов
+        this.startTokenRefresh();
 
         const userProfile = this.userProfiles.find(
           profile => profile.email = credentials.email
@@ -87,6 +150,10 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.isAuthenticated = false;
       this.currentUserId = null;
+      localStorage.removeItem('accessToken');
+      Cookies.remove('refreshToken');
+      // Останавливаем обновление токенов
+      this.stopTokenRefresh();
     },
     
     // Регистрация пользователя
@@ -146,6 +213,24 @@ export const useAuthStore = defineStore('auth', {
     // Инициализация хранилища
     async init() {
       try {
+        // Попытка восстановить refreshToken из cookie
+        const savedRefreshToken = Cookies.get('refreshToken');
+        if (savedRefreshToken) {
+          this.refreshToken = savedRefreshToken;
+          
+          // Восстанавливаем токен из localStorage
+          const savedAccessToken = localStorage.getItem('accessToken');
+          if (savedAccessToken) {
+            this.token = savedAccessToken;
+            this.isAuthenticated = true;
+            
+            // Запускаем автоматическое обновление токенов
+            this.startTokenRefresh();
+            
+            // Сразу обновляем токены при инициализации
+            await this.refreshTokens();
+          }
+        }
       } catch (error: any) {
         this.error = error.message || 'Произошла ошибка';
         notifications.error(error.message);

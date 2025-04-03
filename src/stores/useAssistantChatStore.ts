@@ -182,7 +182,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
                   (msg.created_at || msg.CreatedAt);
                 
                 if (!hasRequiredFields) {
-                  console.warn('Пропущено невалидное сообщение:', msg);
                 }
                 return hasRequiredFields;
               })
@@ -225,7 +224,6 @@ export const useAssistentChatStore = defineStore('assistentChat', {
     async loadDialogs(agentId: string) {
       try {
         const response = await agentService.getDialogs(agentId);
-        console.log('loadDialogs: response', response);
         if (response && Array.isArray(response)) {
           // Удаляем старые диалоги этого ассистента
           this.sessions = this.sessions.filter(session => session.agentId !== agentId);
@@ -242,14 +240,12 @@ export const useAssistentChatStore = defineStore('assistentChat', {
           this.sessions.push(...sessions);
         }
       } catch (error) {
-        console.error(`Ошибка при загрузке диалогов для ассистента ${agentId}:`, error);
       }
     },
 
     // обновление названия диалога в хранилище
     updateSessionTitle(sessionId: string, newTitle: string) {
       const session = this.sessions.find(s => s.id === sessionId);
-      console.log('Обновляем название диалога:', newTitle);
       if (session) {
         session.title = newTitle;
       }

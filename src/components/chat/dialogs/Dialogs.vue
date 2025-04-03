@@ -248,7 +248,6 @@ const saveDialogTitle = async () => {
         newTitle = response.name;
       }
       
-      console.log('Итоговое название:', newTitle);
       // Обновляем название в хранилище
       assistantChatStore.updateSessionTitle(editingDialogId.value, newTitle);
       
@@ -263,7 +262,6 @@ const saveDialogTitle = async () => {
         }, 100);
       }
     } catch (error) {
-      console.error('Ошибка при обновлении названия диалога:', error);
     }
   }
   
@@ -368,7 +366,6 @@ const deleteDialog = async (session: any) => {
       await assistantChatStore.loadDialogs(props.selectedAssistant.id);
     }
   } catch (error) {
-    console.error('Ошибка при удалении диалога:', error);
   }
 }
 </script>

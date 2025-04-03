@@ -90,7 +90,6 @@ const closeAddModal = () => {
 
 // TODO: добавить выбор ассистента
 const handleAssistantSelect = (assistantId: string) => {
-  console.log('Selected assistant:', assistantId);
 }
 
 const isLoading = computed(() => assistentsStore.isLoading);
@@ -119,7 +118,6 @@ const loadAssistents = async () => {
   try {
     await assistentsStore.fetchAssitantents();
   } catch (e) {
-    console.error('Ошибка при загрузке ассистентов:', e);
   }
 };
 
@@ -127,7 +125,6 @@ onMounted(() => {
   try {
     loadAssistents();
   } catch (error) {
-    console.error('Ошибка в onMounted:', error);
   }
 })
 </script>

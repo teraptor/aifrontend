@@ -68,7 +68,6 @@ const copyLink = async () => {
     notifications.success('Ссылка скопирована')
     close()
   } catch (error) {
-    console.error('Ошибка при копировании ссылки:', error)
     notifications.error('Не удалось скопировать ссылку')
   }
 }
@@ -83,7 +82,6 @@ const shareViaWebShare = async () => {
       })
     }
   } catch (error) {
-    console.error('Ошибка при попытке поделиться:', error)
   }
 }
 

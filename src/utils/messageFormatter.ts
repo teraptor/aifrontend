@@ -56,7 +56,6 @@ export async function formattedText(text: string): Promise<string> {
       try {
         return `<div class="math-block">${katex.renderToString(formula, { displayMode: true })}</div>`;
       } catch (error) {
-        console.error('Error rendering math formula:', error);
         return match;
       }
     })
@@ -64,7 +63,6 @@ export async function formattedText(text: string): Promise<string> {
       try {
         return `<span class="math-inline">${katex.renderToString(formula, { displayMode: false })}</span>`;
       } catch (error) {
-        console.error('Error rendering math formula:', error);
         return match;
       }
     })
@@ -82,7 +80,6 @@ export async function formattedText(text: string): Promise<string> {
       const { svg } = await mermaid.render(id, diagram.trim());
       formatted = formatted.replace(match, `<div class="mermaid-diagram">${svg}</div>`);
     } catch (error) {
-      console.error('Error rendering mermaid diagram:', error);
     }
   }
 

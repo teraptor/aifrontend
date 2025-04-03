@@ -80,7 +80,6 @@ const submitForm = async () => {
       emit('success', formData.value.email);
     }
   } catch (error) {
-    console.error('Ошибка при регистрации:', error);
   }
 };
 
