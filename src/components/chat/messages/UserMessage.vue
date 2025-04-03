@@ -1,8 +1,12 @@
 <template>
   <div class="message message--user">
     <div class="message__content">
-      <div class="message__actions">
-        <i class="fas fa-pencil-alt" @click="startEdit"></i>
+      <div class="message__actions" v-if="isAuthenticated">
+        <button class="action-button" @click="startEdit" title="Редактировать">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.5 2.5L13.5 4.5M10.5 13.5H14M2.5 10.5L10.5858 2.41421C11.3668 1.63316 12.6332 1.63317 13.4142 2.41421V2.41421C14.1953 3.19526 14.1953 4.46159 13.4142 5.24264L5.32843 13.3284C5.14317 13.5137 4.91678 13.6466 4.67082 13.7142L2.5 14L2.78579 11.8292C2.85337 11.5832 2.98632 11.3568 3.17157 11.1716L3.17157 11.1716Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
       <template v-if="isEditing">
         <textarea
@@ -32,16 +36,24 @@ import { ref, onMounted, watch } from 'vue'
 import { formatTime } from '@/utils/date'
 import { formattedText } from '@/utils/messageFormatter'
 import { Modal } from 'ant-design-vue'
+import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
+import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 
 const props = defineProps<{
   text: string
   timestamp: string
+  isAuthenticated: boolean
+  id: string
+  messagesAfterCount: number
+  workflowId: string
+  sessionId: string
 }>()
 
 const emit = defineEmits<{
   (e: 'update:text', value: string): void
 }>()
 
+const chatStore = useAssistentChatStore()
 const isEditing = ref(false)
 const editedText = ref('')
 const editInput = ref<HTMLTextAreaElement | null>(null)
@@ -81,13 +93,56 @@ const saveEdit = async () => {
   if (trimmedText !== props.text) {
     try {
       await Modal.confirm({
-        title: 'Подтверждение',
-        content: 'Вся история диалога будет изменена и начата с этого места',
-        okText: 'Сохранить',
+        title: 'Редактирование сообщения',
+        content: `После редактирования этого сообщения будет удалено ${props.messagesAfterCount} последующих сообщений. Это действие нельзя отменить. Продолжить?`,
+        okText: 'Применить',
         cancelText: 'Отмена',
-        okType: 'primary'
+        okType: 'primary',
+        class: 'edit-confirmation-modal',
+        okButtonProps: {
+          type: 'primary',
+          danger: false
+        },
+        cancelButtonProps: {
+          type: 'primary',
+          danger: true
+        }
       })
-      emit('update:text', trimmedText)
+
+      // Находим индекс редактируемого сообщения
+      const messageIndex = chatStore.sessionMessages.findIndex(msg => msg.id === props.id)
+      
+      if (messageIndex !== -1) {
+        // Выбираем все сообщения начиная с редактируемого
+        const messagesToDelete = chatStore.sessionMessages.slice(messageIndex)
+        
+        console.log('Редактируемое сообщение:', {
+          id: props.id,
+          text: trimmedText,
+          isUser: true
+        })
+        
+        console.log('Сообщения для удаления:', messagesToDelete.map(msg => ({
+          id: msg.id,
+          text: msg.text.substring(0, 50) + '...'
+        })))
+
+        // Отправляем WebSocket сообщение
+        await webSocketService.send({
+          action: WebSocketAction.EditMessage,
+          workflowId: props.workflowId,
+          roomId: props.sessionId,
+          message: trimmedText,
+          editMessageId: props.id,
+          messageIdsToDelete: messagesToDelete.map(msg => msg.id)
+        })
+
+        // Обновляем текст сообщения локально
+        emit('update:text', trimmedText)
+        
+        // Перезагружаем сообщения
+        await chatStore.loadDialogMessages(props.workflowId, props.sessionId)
+      }
     } catch {
       // Пользователь отменил сохранение
     }
@@ -123,19 +178,11 @@ const saveEdit = async () => {
     position: absolute;
     top: 8px;
     right: 8px;
+    display: flex;
+    gap: 8px;
     opacity: 0;
     transition: opacity 0.2s ease;
-
-    i {
-      font-size: 14px;
-      color: rgba(#ffffff, 0.8);
-      cursor: pointer;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: #ffffff;
-      }
-    }
+    z-index: 1;
   }
 
   &:hover {
@@ -217,7 +264,7 @@ const saveEdit = async () => {
 
   &__time {
     font-size: 10px;
-    color: rgba(#ffffff, 0.8);
+    color: rgba(#000000, 0.45);
     position: absolute;
     bottom: 4px;
     right: 8px;
@@ -227,7 +274,7 @@ const saveEdit = async () => {
     width: 100%;
     min-height: 44px;
     padding: 8px 12px;
-    border: 1px solid rgba(#ffffff, 0.3);
+    border: 1px solid rgba(#000000, 0.1);
     border-radius: 6px;
     font-size: 14px;
     line-height: 1.5;
@@ -235,14 +282,14 @@ const saveEdit = async () => {
     font-family: inherit;
     box-sizing: border-box;
     margin: 0;
-    background-color: rgba(#ffffff, 0.1);
-    color: #ffffff;
+    background-color: #ffffff;
+    color: #000000;
     margin-bottom: 8px;
 
     &:focus {
       outline: none;
-      border-color: #ffffff;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
     }
   }
 
@@ -261,21 +308,61 @@ const saveEdit = async () => {
     border: none;
 
     &--cancel {
-      background-color: rgba(#ffffff, 0.1);
+      background-color: #ff4d4f;
       color: #ffffff;
 
       &:hover {
-        background-color: rgba(#ffffff, 0.2);
+        background-color: #ff7875;
       }
     }
 
     &--apply {
-      background-color: #ffffff;
-      color: #1890ff;
+      background-color: #52c41a;
+      color: #ffffff;
 
       &:hover {
-        background-color: rgba(#ffffff, 0.9);
+        background-color: #73d13d;
       }
+    }
+  }
+}
+
+.action-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+
+  &:hover {
+    color: #1890ff;
+    background: rgba(24, 144, 255, 0.1);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+</style>
+
+<style lang="scss">
+// Глобальные стили для модального окна
+.edit-confirmation-modal {
+  .ant-btn-primary:not(.ant-btn-dangerous) {
+    background-color: #52c41a;
+    border-color: #52c41a;
+
+    &:hover {
+      background-color: #73d13d;
+      border-color: #73d13d;
     }
   }
 }

@@ -2,10 +2,12 @@
   <div class="message message--assistant">
     <div class="message__content">
       <div class="message__actions">
-        <i class="fas fa-copy" @click="copyText"></i>
+        <button class="action-button" @click="copyText" title="Копировать">
+          <i class="fas fa-copy"></i>
+        </button>
       </div>
       <p class="message__text" v-html="formattedMessage"></p>
-      <span class="message__time">{{ formatTime(timestamp) }}</span>
+      <span class="message__time">{{ formatTime(props.timestamp) }}</span>
     </div>
   </div>
 </template>
@@ -15,10 +17,12 @@ import { ref, watch } from 'vue'
 import { formatTime } from '@/utils/date'
 import { formattedText } from '@/utils/messageFormatter'
 import { notifications } from '@/plugins/notifications'
+import '@fortawesome/fontawesome-free/css/all.css'
 
 const props = defineProps<{
   text: string
   timestamp: string
+  isAuthenticated: boolean
 }>()
 
 const formattedMessage = ref('')
@@ -37,6 +41,10 @@ const copyText = () => {
     .catch(() => {
       notifications.error('Не удалось скопировать текст');
     });
+}
+
+const regenerateResponse = () => {
+  // Implementation of regenerateResponse function
 }
 </script>
 
@@ -66,29 +74,20 @@ const copyText = () => {
     position: absolute;
     top: 8px;
     right: 8px;
+    display: flex;
+    gap: 8px;
     opacity: 0;
     transition: opacity 0.2s ease;
-
-    i {
-      font-size: 14px;
-      color: #999;
-      cursor: pointer;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: #1890ff;
-      }
-    }
+    z-index: 1;
   }
 
-  &:hover {
-    .message__actions {
-      opacity: 1;
-    }
+  &__content:hover .message__actions {
+    opacity: 1;
   }
 
   &__text {
     margin: 0;
+    padding-right: 40px;
     font-size: 14px;
     line-height: 1.5;
     white-space: pre-wrap;
@@ -190,6 +189,30 @@ const copyText = () => {
     position: absolute;
     bottom: 4px;
     right: 8px;
+  }
+}
+
+.action-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+
+  &:hover {
+    color: #1890ff;
+    background: rgba(24, 144, 255, 0.1);
+  }
+
+  i {
+    font-size: 14px;
   }
 }
 </style> 

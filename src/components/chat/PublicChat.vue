@@ -24,7 +24,11 @@
               </p>
             </div>
           </div>
-          <button class="new-survey-button" @click="createNewSurvey">
+          <button 
+            class="new-survey-button" 
+            @click="createNewSurvey"
+            v-if="isAuthenticated"
+          >
             <span class="new-survey-icon">+</span>
             <span class="new-survey-text">Новый опрос</span>
           </button>
@@ -32,27 +36,22 @@
       </div>
 
       <div class="chat-messages" ref="chatContainer">
-        <div
-          v-for="message in chatStore.sessionMessages"
-          :key="message.id"
-          :class="['message', message.isUser ? 'message--user' : 'message--assistant']"
-        >
-          <div class="message__content">
-            <p class="message__text" v-html="message.text"></p>
-            <span class="message__time">{{ formatTime(message.timestamp) }}</span>
-          </div>
-        </div>
+        <template v-for="message in chatStore.sessionMessages" :key="message.id">
+          <UserMessage
+            v-if="message.isUser"
+            :text="message.text"
+            :timestamp="message.timestamp"
+            :is-authenticated="isAuthenticated"
+          />
+          <AssistantMessage
+            v-else
+            :text="message.text"
+            :timestamp="message.timestamp"
+            :is-authenticated="isAuthenticated"
+          />
+        </template>
 
-        <div v-if="chatStore.isLoading" class="message message--assistant message--typing">
-          <div class="message__content typing-indicator">
-            <div class="typing-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <p class="message__text typing-text">Печатает ответ...</p>
-          </div>
-        </div>
+        <TypingIndicator v-if="chatStore.isLoading" />
       </div>
     </div>
     <div class="fixed-chat-input">
@@ -62,10 +61,14 @@
         placeholder="Напишите сообщение..."
         @keydown.ctrl.enter.prevent="sendMessage"
         @input="autoGrow"
-        :disabled="chatStore.isLoading"
+        :disabled="chatStore.isLoading || !isAuthenticated"
         rows="1"
       ></textarea>
-      <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
+      <button 
+        class="send-button" 
+        @click="sendMessage" 
+        :disabled="!newMessage.trim() || chatStore.isLoading || !isAuthenticated"
+      >
         <span class="arrow-icon">↵</span>
       </button>
     </div>
@@ -73,8 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -82,6 +86,9 @@ import mermaid from 'mermaid'
 import { webSocketService, WebSocketAction, type WebSocketRequest, type WebSocketResponse } from '@/api/services/webSocketService'
 import { useRoute } from 'vue-router'
 import { formattedText } from '@/utils/messageFormatter'
+import UserMessage from './messages/UserMessage.vue'
+import AssistantMessage from './messages/AssistantMessage.vue'
+import TypingIndicator from './messages/TypingIndicator.vue'
 
 // Инициализация Mermaid
 mermaid.initialize({
@@ -102,8 +109,9 @@ const emit = defineEmits<{
   (e: 'createNewDialog'): void
 }>()
 
-// Инициализация хранилища
+// Инициализация хранилищ
 const chatStore = useAssistentChatStore()
+const authStore = useAuthStore()
 const route = useRoute()
 const newMessage = ref('')
 const messageInput = ref<HTMLTextAreaElement | null>(null)
@@ -113,6 +121,9 @@ const isHeaderSticky = ref(false)
 const roomId = ref<string | null>(null)
 const isWebSocketConnected = ref(false)
 const formattedMessage = ref('')
+
+// Проверка авторизации
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // Генерация или получение ID анонимного пользователя
 const getAnonymousUserId = (): string => {
@@ -663,12 +674,11 @@ const updateFormattedText = async (text: string) => {
   background: #fff;
 
   &__container {
-    // Добавим условные стили для контейнера без шапки
     &:not(:has(.chat-header)) {
       padding-top: 0;
       
       .chat-messages {
-        height: calc(100vh - 120px); // Корректируем высоту для чата без шапки
+        height: calc(100vh - 120px);
       }
     }
   }
@@ -769,61 +779,6 @@ const updateFormattedText = async (text: string) => {
   background: #fafafa;
 }
 
-.message {
-  max-width: 85%;
-  display: flex;
-  flex-direction: column;
-}
-
-.message--user {
-  align-self: flex-end;
-  
-  .message__content {
-    background-color: #ebf5ff;
-    color: #000000;
-    border-radius: 16px 16px 4px 16px;
-    
-    .message__time {
-      color: rgba(255, 255, 255, 0.75);
-    }
-  }
-}
-
-.message--assistant {
-  align-self: flex-start;
-  
-  .message__content {
-    background: #fff;
-    color: #333;
-    border-radius: 16px 16px 16px 4px;
-    border: 1px solid #f0f0f0;
-    
-    .message__time {
-      color: #999;
-    }
-  }
-}
-
-.message__content {
-  position: relative;
-  padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.message__text {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.message__time {
-  font-size: 12px;
-  margin-top: 4px;
-  text-align: right;
-}
-
 .fixed-chat-input {
   padding: 8px;
   background: #fff;
@@ -861,6 +816,11 @@ const updateFormattedText = async (text: string) => {
       background: #f5f5f5;
       border-color: #d9d9d9;
       cursor: not-allowed;
+      color: #999;
+      
+      &::placeholder {
+        color: #999;
+      }
     }
   }
 
@@ -894,9 +854,13 @@ const updateFormattedText = async (text: string) => {
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      background: #f0f0f0;
+      
+      .arrow-icon {
+        color: #999;
+      }
     }
 
-    // Активное состояние при наличии текста
     &:not(:disabled) {
       background: #007AFF;
 
@@ -909,77 +873,6 @@ const updateFormattedText = async (text: string) => {
       }
     }
   }
-}
-
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-}
-
-.typing-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.typing-dots span {
-  width: 6px;
-  height: 6px;
-  background: #999;
-  border-radius: 50%;
-  animation: typing 1s infinite;
-}
-
-.typing-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-.typing-text {
-  font-size: 13px;
-  color: #999;
-}
-
-@keyframes typing {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.code-block {
-  background: #f8f9fa;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-family: monospace;
-  overflow-x: auto;
-  margin: 8px 0;
-  border: 1px solid #eee;
-}
-
-:deep(.mermaid) {
-  margin: 12px 0;
-  text-align: center;
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #eee;
-}
-
-.no-dialog-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #999;
-  font-size: 14px;
-  background: #fafafa;
 }
 
 .new-survey-button {

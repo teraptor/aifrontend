@@ -63,6 +63,7 @@ const goToAssistentDetails = () => {
     router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
   }
 };
+
 const goToSetting = (event: MouseEvent) => {
   event.stopPropagation();
   router.push({ name: RouteNames.ASSISTENT_SETTING, params: { id: assistents.id } });

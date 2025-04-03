@@ -11,7 +11,8 @@ export enum WebSocketAction {
   NewMessage = 'newMessage',
   LeaveRoom = 'leaveRoom',
   LeftRoom = 'leftRoom',
-  WelcomeMessage = 'welcomeMessage'
+  WelcomeMessage = 'welcomeMessage',
+  EditMessage = 'editMessage'
 }
 
 // Интерфейс запроса
@@ -21,6 +22,8 @@ export interface WebSocketRequest {
   roomId?: string;
   userId?: string;
   message?: string;
+  editMessageId?: string;
+  messageIdsToDelete?: string[];
 }
 
 // Интерфейс ответа

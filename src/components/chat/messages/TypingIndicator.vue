@@ -13,50 +13,46 @@
 
 <style lang="scss" scoped>
 .message {
+  max-width: 85%;
   display: flex;
-  max-width: 80%;
-  width: 100%;
-  align-self: flex-start;
-  opacity: 0.8;
+  flex-direction: column;
 
-  &__content {
-    padding: 12px 16px;
-    border-radius: 12px;
-    position: relative;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #f5f7fa;
-    border-bottom-left-radius: 4px;
-    padding-bottom: 8px;
+  &--assistant {
+    align-self: flex-start;
+  }
+
+  &--typing {
+    .message__content {
+      padding: 8px 12px;
+    }
   }
 }
 
+.message__content {
+  background: #fff;
+  color: #333;
+  border-radius: 16px 16px 16px 4px;
+  border: 1px solid #f0f0f0;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
 .typing-indicator {
-  background-color: #f5f7fa;
-  border-bottom-left-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .typing-dots {
   display: flex;
-  align-items: center;
   gap: 4px;
-  padding: 4px 0;
 
   span {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    background-color: #999;
+    width: 6px;
+    height: 6px;
+    background: #999;
     border-radius: 50%;
-    opacity: 0.6;
-    animation: typing 1s infinite ease-in-out;
-
-    &:nth-child(1) {
-      animation-delay: 0s;
-    }
+    animation: typing 1s infinite;
 
     &:nth-child(2) {
       animation-delay: 0.2s;
@@ -69,23 +65,17 @@
 }
 
 .typing-text {
-  font-size: 14px;
-  color: #666;
-  margin: 4px 0 0 0;
+  margin: 0;
+  font-size: 13px;
+  color: #999;
 }
 
 @keyframes typing {
-  0% {
+  0%, 100% {
     transform: translateY(0);
-    opacity: 0.6;
   }
   50% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0.6;
+    transform: translateY(-4px);
   }
 }
 </style> 

@@ -91,11 +91,17 @@
             v-if="message.isUser"
             :text="message.text || ''"
             :timestamp="message.timestamp"
+            :is-authenticated="isAuthenticated"
+            :id="message.id"
+            :messages-after-count="getMessagesAfterCount(message.id)"
+            :workflow-id="selectedAssistant?.id"
+            :session-id="chatStore.activeSessionId"
           />
           <AssistantMessage
             v-else
             :text="message.text || ''"
             :timestamp="message.timestamp"
+            :is-authenticated="isAuthenticated"
           />
         </template>
 
@@ -139,9 +145,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch, computed } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
 import ShareModal from './share/ShareModal.vue'
@@ -149,6 +156,7 @@ import UserMessage from './messages/UserMessage.vue'
 import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
 import ModeMenu from './modalMenu/ModeMenu.vue'
+import { Modal } from 'ant-design-vue'
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -190,8 +198,12 @@ const emit = defineEmits<{
   (e: 'changeChatMode', mode: string): void
 }>()
 
-// Инициализация хранилища
+// Инициализация хранилищ
 const chatStore = useAssistentChatStore()
+const authStore = useAuthStore()
+
+// Проверка авторизации
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // Локальные переменные для UI
 const newMessage = ref('')
@@ -431,11 +443,6 @@ onMounted(() => {
   // Подписываемся на события WebSocket
   webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage)
 
-  // Загружаем историю диалога если есть активная сессия
-  if (chatStore.activeSessionId && props.selectedAssistant) {
-    chatStore.loadDialogMessages(props.selectedAssistant.id, chatStore.activeSessionId)
-  }
-
   // Настраиваем MutationObserver для отслеживания изменений в чате
   if (chatContainer.value) {
     observer.value = new MutationObserver(() => {
@@ -460,29 +467,31 @@ onMounted(() => {
   window.addEventListener('scroll', checkHeaderVisibility)
 })
 
-// Следим за изменением активной сессии
-watch(() => chatStore.activeSessionId, (newSessionId) => {
-  console.log('Chat: Изменение активной сессии:', newSessionId)
-  if (newSessionId && props.selectedAssistant) {
-    console.log('Chat: Загрузка истории для новой сессии:', {
-      sessionId: newSessionId,
-      assistantId: props.selectedAssistant.id
+// Следим за изменением активной сессии и ассистента
+watch(
+  [() => chatStore.activeSessionId, () => props.selectedAssistant],
+  ([newSessionId, newAssistant], [oldSessionId, oldAssistant]) => {
+    console.log('Chat: Проверка изменений:', { 
+      newSessionId, 
+      oldSessionId,
+      newAssistantId: newAssistant?.id,
+      oldAssistantId: oldAssistant?.id
     })
-    chatStore.loadDialogMessages(props.selectedAssistant.id, newSessionId)
-  }
-})
 
-// Следим за изменением выбранного ассистента
-watch(() => props.selectedAssistant, (newAssistant) => {
-  console.log('Chat: Изменение выбранного ассистента:', newAssistant)
-  if (newAssistant && chatStore.activeSessionId) {
-    console.log('Chat: Загрузка истории для нового ассистента:', {
-      sessionId: chatStore.activeSessionId,
-      assistantId: newAssistant.id
-    })
-    chatStore.loadDialogMessages(newAssistant.id, chatStore.activeSessionId)
-  }
-})
+    // Загружаем только если изменился sessionId или id ассистента
+    if (newSessionId && newAssistant && (
+      newSessionId !== oldSessionId || 
+      newAssistant.id !== oldAssistant?.id
+    )) {
+      console.log('Chat: Загрузка истории для новой сессии/ассистента:', {
+        sessionId: newSessionId,
+        assistantId: newAssistant.id
+      })
+      chatStore.loadDialogMessages(newAssistant.id, newSessionId)
+    }
+  },
+  { immediate: true }
+)
 
 // Отписываемся от WebSocket событий при размонтировании компонента
 onUnmounted(() => {
@@ -505,6 +514,13 @@ const shareAssistant = () => {
 
 const closeShareModal = () => {
   isShareModalOpen.value = false
+}
+
+// Добавляем функцию подсчета сообщений
+const getMessagesAfterCount = (messageId: string): number => {
+  const messageIndex = chatStore.sessionMessages.findIndex(msg => msg.id === messageId)
+  if (messageIndex === -1) return 0
+  return chatStore.sessionMessages.length - messageIndex - 1
 }
 </script>
 
