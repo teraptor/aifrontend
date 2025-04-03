@@ -341,7 +341,7 @@ onUnmounted(() => {
 const selectAssistant = async (assistant: IAssistent) => {
   emit('select-assistant', assistant)
   // Загружаем диалоги для выбранного ассистента
-  await assistantChatStore.loadDialogs(assistant.id)
+  // await assistantChatStore.loadDialogs(assistant.id)
 }
 
 const createNewDialog = () => {
