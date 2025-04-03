@@ -176,7 +176,6 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import SideMenu from '@/components/layout/SideMenu.vue';
-import WorkflowConnection from '@/components/WorkflowConnection.vue';
 import { IconEdit, IconUpload, IconImage, IconCalendar, IconGoogle, IconJira, IconSlack, IconCondition } from '@/components/icons';
 
 const router = useRouter();
