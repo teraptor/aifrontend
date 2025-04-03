@@ -1,11 +1,13 @@
 <template>
   <div ref="profileRef" class="profile" @click="toggleMenu">
     <div class="profile__avatar">
-      {{ currentUser?.email?.charAt(0) }}
+      {{ userInitial }}
     </div>
     <div class="profile__info">
       <div class="profile__info-name">{{ currentUser?.email }}</div>
-      <div class="profile__info-balance">Баланс: {{ currentUser?.balance }} ₽</div>
+      <div class="profile__info-balance">
+        Баланс: {{ isLoading ? '...' : formatBalance(currentUser?.balance) }}
+      </div>
     </div>
 
     <div v-if="isMenuOpen" class="profile-menu">
@@ -24,7 +26,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'vue-router';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { RouteNames } from '@/router/routes/routeNames';
 
@@ -32,6 +34,12 @@ const router = useRouter();
 const authStore = useAuthStore();
 const isMenuOpen = ref<boolean>(false);
 const profileRef = ref<HTMLElement | null>(null);
+const isLoading = ref<boolean>(false);
+
+// Форматирование баланса
+const formatBalance = (balance?: number): string => {
+  return `${balance?.toLocaleString() || 0} ₽`;
+};
 
 // вычисление профиля пользователя
 const currentUser = computed(() => {
@@ -69,6 +77,31 @@ const toggleMenu = (): void => {
 
 onClickOutside(profileRef, () => {
   isMenuOpen.value = false;
+});
+
+// Функция для обновления баланса
+const updateBalance = async () => {
+  if (!authStore.isAuthenticated) return;
+  
+  try {
+    isLoading.value = true;
+    await authStore.fetchUserBalance();
+  } catch (error) {
+    console.error('Ошибка при получении баланса:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Lifecycle hooks
+onMounted(() => {
+  updateBalance();
+  const balanceInterval = setInterval(updateBalance, 300000);
+  
+  // Очищаем интервал при размонтировании
+  onUnmounted(() => {
+    clearInterval(balanceInterval);
+  });
 });
 </script>
 
