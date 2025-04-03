@@ -42,6 +42,10 @@
             :text="message.text"
             :timestamp="message.timestamp"
             :is-authenticated="isAuthenticated"
+            :id="message.id"
+            :messages-after-count="0"
+            :workflow-id="''"
+            :session-id="chatStore.activeSessionId"
           />
           <AssistantMessage
             v-else
