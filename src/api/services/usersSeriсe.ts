@@ -4,7 +4,7 @@ import type { ProfileUserResponse } from "../types";
 
 
 export const userUservice = {
-
+  
   // получение профиля пользователя
   async fetchUserProfile(): Promise<ProfileUserResponse> {
     try {

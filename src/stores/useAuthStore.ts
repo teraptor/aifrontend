@@ -21,6 +21,7 @@ interface UserProfile {
   email: string;
   role: 'admin' | 'contractor' | 'company';
   balance: number;
+  assistant_responses: number;
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -36,35 +37,7 @@ export const useAuthStore = defineStore('auth', {
     error: null as string | null,
     currentUserId: null as number | null,
     users: [] as Array<User>,
-    userProfiles: [
-      {
-        id: '1',
-        email: 'admin@example.com',
-        role: 'admin',
-        company_id: 'company-123',
-        balance: 1000,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      },
-      {
-        id: '2',
-        email: 'contractor@example.com',
-        role: 'contractor',
-        company_id: 'company-456',
-        balance: 1000,
-        created_at: '2023-01-02T00:00:00Z',
-        updated_at: '2023-01-02T00:00:00Z',
-      },
-      {
-        id: '3',
-        email: 'company@example.com',
-        role: 'company',
-        company_id: 'company-789',
-        balance: 1000,
-        created_at: '2023-01-03T00:00:00Z',
-        updated_at: '2023-01-03T00:00:00Z',
-      },
-    ] as Array<UserProfile>,
+    userProfiles: [    ] as Array<UserProfile>,
     nextUserId: 1,
   }),
   getters: {
