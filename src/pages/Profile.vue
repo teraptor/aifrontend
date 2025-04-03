@@ -43,7 +43,7 @@ const currentUser = computed(() => {
         <div class="profile-card__details">
           <div class="profile-card__detail">
             <span class="profile-card__label">Баланс</span>
-            <span class="profile-card__value">{{ currentUser.balance }} ₽</span>
+            <span class="profile-card__value">{{ currentUser.balance }} </span>
           </div>
           <div class="profile-card__detail">
             <span class="profile-card__label">Создан:</span>

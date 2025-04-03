@@ -45,7 +45,7 @@ const userInitial = computed(() => {
 
 // Форматирование баланса
 const formatBalance = (balance?: number): string => {
-  return `${balance?.toLocaleString() || 0} ₽`;
+  return `${balance?.toLocaleString() || 0}`;
 };
 
 // Навигация на страницу профиля

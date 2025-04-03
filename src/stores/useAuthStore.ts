@@ -187,7 +187,6 @@ export const useAuthStore = defineStore('auth', {
         this.isLoading = true;
         // Запрос к API для получения баланса
         const response = await billingService.getUserBalance();
-        
         // Обновляем профиль пользователя с новым балансом
         const userProfile = this.userProfiles.find(profile => profile.id === userId);
         if (userProfile) {
