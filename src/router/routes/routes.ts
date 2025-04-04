@@ -51,16 +51,6 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     component: () => import('@/pages/Profile.vue')
   },
   {
-    path: RouteNames.INSTRUMENTS,
-    name: RouteNames.INSTRUMENTS,
-    meta: {
-      title: 'Инструменты',
-      ...defaultMeta,
-      requiresAuth: true,
-    },
-    component: () => import('@/pages/Instruments.vue')
-  },
-  {
     path: RouteNames.CREATE_ASSISTENT,
     name: RouteNames.CREATE_ASSISTENT,
     meta: {
