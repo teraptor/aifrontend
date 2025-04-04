@@ -11,7 +11,7 @@
           <div class="assistant-header__info">
             <h2 class="assistant-header__name">
               {{ selectedAssistant.name }}
-              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
+              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.status }"></span>
               <span class="dropdown-icon">▼</span>
             </h2>
             <div class="assistant-header__description-container">
@@ -68,7 +68,7 @@
           <div class="assistant-header__info">
             <h2 class="assistant-header__name">
               {{ selectedAssistant.name }}
-              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
+              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.status }"></span>
               <span class="dropdown-icon">▼</span>
             </h2>
             <div class="assistant-header__description-container">

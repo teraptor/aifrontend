@@ -63,7 +63,7 @@
                   button-type="danger"
                   text="Удалить ассистента"
                   size="medium"
-                  :disabled="assistent.isDisabled"
+                  :disabled="assistent.status"
                   @click="confirmDeleteAssistent"
                 />
                 <Button
@@ -71,7 +71,7 @@
                   button-type="primary"
                   :text="isSaving ? 'Сохранение...' : 'Сохранить'"
                   size="medium"
-                  :disabled="!hasChanges || isSaving || assistent.isDisabled"
+                  :disabled="!hasChanges || isSaving || assistent.status"
                   @click="saveChanges"
                   class="save-button"
                 />
@@ -108,7 +108,7 @@
                   placeholder="Выбрать готовое"
                   :enableSearch="true"
                   variant="light"
-                  :disabled="assistent?.isDisabled"
+                  :disabled="assistent?.status"
                   @update:modelValue="updateInstructions"
                 />
               </div>
@@ -119,12 +119,12 @@
                 placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
                 :rows="10"
                 variant="light"
-                :disabled="assistent?.isDisabled"
+                :disabled="assistent?.status"
                 @keydown.ctrl.enter="saveChanges"
                 @input="autoExpandTextarea"
                 class="auto-expand"
               />
-              <div class="assistent-setting__hint" v-if="!assistent?.isDisabled">
+              <div class="assistent-setting__hint" v-if="!assistent?.status">
                 Для быстрого сохранения используйте Ctrl+Enter
               </div>
             </div>
@@ -350,7 +350,7 @@ const updateInstructions = (value: string) => {
       hasChanges.value = true;
       
       // Добавляем автоматическое сохранение при выборе шаблона
-      if (assistent.value && !assistent.value.isDisabled) {
+      if (assistent.value && !assistent.value.status) {
         saveChanges();
       } else {
         notifications.success('Шаблон применен');

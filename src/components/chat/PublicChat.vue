@@ -16,7 +16,7 @@
           <div class="assistant-header__info">
             <h2 class="assistant-header__name">
               {{ selectedAssistant.name }}
-              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.isActive }"></span>
+              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.status }"></span>
             </h2>
             <div class="assistant-header__description-container">
               <p class="assistant-header__description">

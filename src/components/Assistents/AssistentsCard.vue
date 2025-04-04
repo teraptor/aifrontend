@@ -44,20 +44,18 @@ const { assistents } = props;
 const cardClass = computed(() => {
   if (!assistents) return '';
   return !authStore.isAuthenticated
-    ? (assistents.isLocked || assistents.isDisabled ? 'assistents-card--locked' : '')
-    : (assistents.isDisabled ? 'assistents-card--disabled' : assistents.isLocked ? 'assistents-card--locked' : '');
+    ? (!assistents.status ? 'assistents-card--locked' : '')
+    : (!assistents.status ? 'assistents-card--disabled' : '');
 });
 
 const statusClass = computed(() => {
   if (!assistents) return '';
-  return assistents.status === true ? 'assistents-card__footer-status--active' : 
-  assistents.status === false ? 'assistents-card__footer-status--inactive' : 
-  'assistents-card__footer-status--disabled';
+  return assistents.status ? 'assistents-card__footer-status--active' : 'assistents-card__footer-status--inactive';
 });
 
 const statusText = computed(() => {
   if (!assistents) return '';
-  return assistents.status === true ? 'Активный' : 'Неактивный';
+  return assistents.status ? 'Активный' : 'Неактивный';
 });
 
 const goToAssistentDetails = () => {

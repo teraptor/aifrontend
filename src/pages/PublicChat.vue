@@ -41,12 +41,10 @@ const selectedAssistant = ref<IAssistent>({
   summary: 'Публичный чат',
   image: '',
   call_name: 'public_assistant',
-  isActive: true,
-  isLocked: false,
-  isDisabled: false,
   created_at: new Date().toISOString(),
   business: false,
-  author_id: 'public'
+  author_id: 'public',
+  status: true
 });
 
 // Функции для обработки событий чата
