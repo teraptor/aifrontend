@@ -190,13 +190,15 @@ describe('agentService', () => {
             id: '1',
             name: 'Agent 1',
             description: 'Description 1',
-            created_at: '2023-01-01'
+            created_at: '2023-01-01',
+            status: true
           },
           {
             id: '2',
             name: 'Agent 2',
             description: 'Description 2',
-            created_at: '2023-01-02'
+            created_at: '2023-01-02',
+            status: false
           }
         ]
       };

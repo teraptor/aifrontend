@@ -4,6 +4,7 @@ import avatarImage from '@/assets/cl1_45.png';
 import { useAuthStore } from './useAuthStore';
 import { agentService } from '@/api/services/agentService';
 import { notifications } from '@/plugins/notifications';
+import { L } from 'vitest/dist/chunks/reporters.QZ837uWx.js';
 
 // Интерфейс для ответа API
 interface ApiAssistant {
@@ -26,9 +27,7 @@ interface MyAgentsResponse {
     name: string;
     description?: string;
     image?: string;
-    isLocked?: boolean;
-    isActive?: boolean;
-    isDisabled?: boolean;
+    status: boolean;
     created_at?: string;
     business?: boolean;
     author_id?: string;
@@ -42,9 +41,7 @@ export interface IAssistent {
   summary: string;
   image: string;
   call_name: string;
-  isLocked: boolean;
-  isActive: boolean;
-  isDisabled: boolean;
+  status: boolean;
   created_at: string;
   business: boolean;
   author_id: string;
@@ -104,9 +101,7 @@ export const useAssistentsStore = defineStore('assistents', {
             summary: template.description ? template.description.substring(0, 50) + '...' : '',
             image: avatarImage,
             call_name: template.name,
-            isLocked: false,
-            isActive: template.status,
-            isDisabled: false,
+            status: template.status,
             created_at: new Date().toISOString(),
             business: false,
             author_id: '1'
@@ -129,8 +124,11 @@ export const useAssistentsStore = defineStore('assistents', {
           return [];
         }
 
+        console.log(response.assistants);
+
         // Преобразуем массив ассистентов из API в наш формат
-        this.assistants = response.assistants.map(assistant => ({
+        this.assistants = response.assistants.map(assistant => (
+          {
           id: assistant.id || '',
           name: assistant.name || '',
           description: assistant.description || '',
@@ -138,9 +136,7 @@ export const useAssistentsStore = defineStore('assistents', {
           image: assistant.image || avatarImage,
           call_name: assistant.name || '',
           instructions: '',
-          isLocked: assistant.isLocked || false,
-          isActive: assistant.isActive || false,
-          isDisabled: assistant.isDisabled || false,
+          status: assistant.status || false,
           created_at: assistant.created_at || new Date().toISOString(),
           business: assistant.business || false,
           author_id: assistant.author_id || '1'
@@ -227,7 +223,7 @@ export const useAssistentsStore = defineStore('assistents', {
     sortedAssistents(state): IAssistent[] {
       const sortMap: Record<SortOption, (a: IAssistent, b: IAssistent) => number> = {
         new: (a, b) => dayjs(b.created_at).unix() - dayjs(a.created_at).unix(),
-        popular: (a, b) => (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0)
+        popular: (a, b) => (b.status ? 1 : 0) - (a.status ? 1 : 0)
       };
 
       return this.filteredAssistents.sort(sortMap[state.sortOption]);

@@ -64,9 +64,7 @@ export interface MyAgentsResponse {
     name: string;
     description?: string;
     image?: string;
-    isLocked?: boolean;
-    isActive?: boolean;
-    isDisabled?: boolean;
+    status: boolean;
     created_at?: string;
     business?: boolean;
     author_id?: string;

@@ -50,12 +50,14 @@ const cardClass = computed(() => {
 
 const statusClass = computed(() => {
   if (!assistents) return '';
-  return assistents.isDisabled ? 'assistents-card__footer-status--disabled' : assistents.isActive ? 'assistents-card__footer-status--active' : 'assistents-card__footer-status--inactive';
+  return assistents.status === true ? 'assistents-card__footer-status--active' : 
+  assistents.status === false ? 'assistents-card__footer-status--inactive' : 
+  'assistents-card__footer-status--disabled';
 });
 
 const statusText = computed(() => {
   if (!assistents) return '';
-  return assistents.isDisabled ? 'Заблокирован' : assistents.isActive ? 'Активный' : 'Неактивный';
+  return assistents.status === true ? 'Активный' : 'Неактивный';
 });
 
 const goToAssistentDetails = () => {
