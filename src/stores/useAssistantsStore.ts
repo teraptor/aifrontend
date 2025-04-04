@@ -4,7 +4,6 @@ import avatarImage from '@/assets/cl1_45.png';
 import { useAuthStore } from './useAuthStore';
 import { agentService } from '@/api/services/agentService';
 import { notifications } from '@/plugins/notifications';
-import { L } from 'vitest/dist/chunks/reporters.QZ837uWx.js';
 
 // Интерфейс для ответа API
 interface ApiAssistant {
