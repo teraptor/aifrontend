@@ -69,7 +69,5 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
-          export GITHUB_SHA=${{ github.sha }}
           cd /home/ai_assists
-          docker compose pull
-          docker compose up --force-recreate -d
+          docker compose pull && docker compose up --force-recreate -d
