@@ -887,12 +887,50 @@ const getMessagesAfterCount = (messageId: string): number => {
 .mode-menu-component {
   display: flex;
   align-items: center;
-  height: 44px;
   padding: 0 2px;
   z-index: 5;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 4px;
+
+  .mode-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background-color: #f5f5f5;
+    color: #333;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &:hover {
+      background-color: #e6e6e6;
+    }
+
+    &--active {
+      background-color: #2f3542;
+      color: white;
+
+      &:hover {
+        background-color: #1e2532;
+      }
+    }
+
+    .mode-icon {
+      font-size: 14px;
+    }
+
+    .mode-shortcut {
+      font-size: 11px;
+      color: #999;
+      margin-left: 4px;
+    }
+  }
 }
 </style>
 
