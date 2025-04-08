@@ -72,4 +72,4 @@ jobs:
           export GITHUB_SHA=${{ github.sha }}
           cd /home/ai_assists
           docker compose pull
-          docker-compose -f /home/ai_assists/docker-compose.yml up -d --force-recreate
+          docker compose up --force-recreate -d
