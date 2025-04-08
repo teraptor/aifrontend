@@ -15,13 +15,21 @@
           <p class="assistent-detail__summary"> {{ assistent.summary }}</p>
         </div>
         <Button
-            v-if="authStore.isAuthenticated"
+            v-if="authStore.isAuthenticated && assistent.status"
             button-type="secondary"
             text="Установить"
             type="button"
             size="medium"
             icon="icon icon-arrow-right2"
             @click="installAssistentWithRedirect(assistent.id)"
+          />
+        <Button
+            v-else-if="!assistent.status"
+            button-type="secondary"
+            text="Ассистент неактивен"
+            type="button"
+            size="medium"
+            disabled
           />
         <Button
             v-else
