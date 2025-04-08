@@ -112,16 +112,7 @@
       <p>Выберите ассистента и диалог или создайте новый</p>
     </div>
     <div class="fixed-chat-input">
-      <div class="input-wrapper">
-        <textarea
-          ref="messageInput"
-          v-model="newMessage"
-          placeholder="Напишите сообщение..."
-          @keydown.ctrl.enter.prevent="sendMessage"
-          @input="autoGrow"
-          :disabled="chatStore.isLoading"
-          rows="1"
-        ></textarea>
+      <div class="mode-menu-container">
         <ModeMenu
           class="mode-menu-component"
           :modes="chatModes"
@@ -130,9 +121,22 @@
           @update:current-mode="handleModeChange"
         />
       </div>
-      <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-        <span class="arrow-icon">↑</span>
-      </button>
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea
+            ref="messageInput"
+            v-model="newMessage"
+            placeholder="Напишите сообщение..."
+            @keydown.ctrl.enter.prevent="sendMessage"
+            @input="autoGrow"
+            :disabled="chatStore.isLoading"
+            rows="1"
+          ></textarea>
+        </div>
+        <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
+          <span class="arrow-icon">↑</span>
+        </button>
+      </div>
     </div>
     <ShareModal
       :is-open="isShareModalOpen"
@@ -687,9 +691,22 @@ const getMessagesAfterCount = (messageId: string): number => {
   z-index: 100;
   width: 50%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   padding: 20px;
   box-sizing: border-box;
+
+  .mode-menu-container {
+    margin-bottom: 8px;
+    align-self: flex-end;
+  }
+
+  .input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+  }
 
   .input-wrapper {
     position: relative;
@@ -701,15 +718,6 @@ const getMessagesAfterCount = (messageId: string): number => {
     border: 1px solid rgba($help-color, 0.2);
     padding-right: 8px;
     box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .mode-menu-component {
-    display: flex;
-    align-items: center;
-    height: 44px;
-    padding: 0 2px;
-    margin-left: 5px;
-    z-index: 5;
   }
   
   textarea {
@@ -874,6 +882,17 @@ const getMessagesAfterCount = (messageId: string): number => {
   .share-icon {
     font-size: 12px;
   }
+}
+
+.mode-menu-component {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 2px;
+  z-index: 5;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 </style>
 

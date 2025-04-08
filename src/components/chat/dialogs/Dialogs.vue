@@ -462,8 +462,6 @@ const deleteDialog = async (session: any) => {
   }
   
   &__menu-icon {
-    opacity: 0;
-    transition: opacity 0.2s;
     margin-left: 8px;
     cursor: pointer;
     display: flex;
@@ -473,12 +471,12 @@ const deleteDialog = async (session: any) => {
     border-radius: 4px;
     
     .dots-icon {
-      font-size: 14px;
-      color: #666;
+      font-size: 16px;
+      color: #333;
+      font-weight: bold;
     }
     
     &:hover {
-      opacity: 1;
       background-color: #f5f5f5;
     }
   }
