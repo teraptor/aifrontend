@@ -70,6 +70,6 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           export GITHUB_SHA=${{ github.sha }}
-          docker-compose -f /home/ai_assists/docker-compose.prod.yml pull
-          docker-compose -f /home/ai_assists/docker-compose.prod.yml down
-          docker-compose -f /home/ai_assists/docker-compose.prod.yml up -d --force-recreate
+          cd /home/ai_assists
+          docker compose pull
+          docker-compose -f /home/ai_assists/docker-compose.yml up -d --force-recreate
