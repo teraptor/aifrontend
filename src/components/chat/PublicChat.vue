@@ -301,7 +301,6 @@ const handleRoomCreated = (response: WebSocketResponse) => {
 };
 
 const handleNewMessage = (response: WebSocketResponse) => {
-  
   // Проверяем тип действия и наличие сообщения
   if (response.message !== undefined) {
     let messageText = response.message || '';
@@ -310,9 +309,6 @@ const handleNewMessage = (response: WebSocketResponse) => {
     if (!messageText || messageText === 'join') {
       return;
     }
-    
-    // Останавливаем индикатор загрузки
-    chatStore.isLoading = false;
     
     // Форматируем сообщение перед добавлением
     formattedText(messageText).then(formattedMessage => {
@@ -325,6 +321,11 @@ const handleNewMessage = (response: WebSocketResponse) => {
         }
       });
     });
+  }
+  
+  // Останавливаем индикатор загрузки только если это не приветственное сообщение
+  if (response.action !== WebSocketAction.WelcomeMessage) {
+    chatStore.isLoading = false;
   }
 };
 
@@ -604,11 +605,11 @@ const createNewSurvey = async () => {
       userId: userId.value
     });
     
-    // Отправляем приветственное сообщение
-    chatStore.addMessage('Создан новый опрос', false, chatStore.activeSessionId);
+    // Устанавливаем состояние загрузки для отображения индикатора набора текста
+    chatStore.isLoading = true;
     
   } catch (error) {
-  } finally {
+    // В случае ошибки, все равно отключаем индикатор
     chatStore.isLoading = false;
   }
 };

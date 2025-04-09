@@ -473,13 +473,25 @@ onMounted(() => {
 // Следим за изменением активной сессии и ассистента
 watch(
   [() => chatStore.activeSessionId, () => props.selectedAssistant],
-  ([newSessionId, newAssistant], [oldSessionId, oldAssistant]) => {
+  async ([newSessionId, newAssistant], [oldSessionId, oldAssistant]) => {
     // Загружаем только если изменился sessionId или id ассистента
     if (newSessionId && newAssistant && (
       newSessionId !== oldSessionId || 
       newAssistant.id !== oldAssistant?.id
     )) {
-      chatStore.loadDialogMessages(newAssistant.id, newSessionId)
+      await chatStore.loadDialogMessages(newAssistant.id, newSessionId)
+      
+      // Если история диалога пустая, отправляем запрос на WelcomeMessage
+      if (chatStore.sessionMessages.length === 0) {
+        // Устанавливаем состояние загрузки
+        chatStore.isLoading = true
+        
+        webSocketService.send({
+          action: WebSocketAction.WelcomeMessage,
+          workflowId: newAssistant.id,
+          roomId: newSessionId
+        })
+      }
     }
   },
   { immediate: true }
