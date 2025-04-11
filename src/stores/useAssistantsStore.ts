@@ -196,6 +196,17 @@ export const useAssistentsStore = defineStore('assistents', {
     setSearchQuery(query: string) {
       this.searchQuery = query;
     },
+
+    // получение списка инструментов
+    async getToolsList() {
+      try {
+        const response = await agentService.getToolsList();
+        return response;
+      } catch(error) {
+        this.error = error instanceof Error ? error.message : 'Произошла ошибка при загрузке инструментов';
+        throw error;
+      }
+    },
   },
 
   getters: {

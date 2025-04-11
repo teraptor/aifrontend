@@ -79,3 +79,14 @@ export interface ProfileUserResponse {
       balance: number;
     };
 }
+
+export interface ToolsListResponse {
+    tools: Tool[];
+}
+export interface Tool {
+    id: string,
+    name: string,
+    description: string,
+    icon: string,
+}
+  

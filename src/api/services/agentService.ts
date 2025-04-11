@@ -5,7 +5,8 @@ import type {
   GetAgentTemplateListResponse, 
   CreateAgentResponse,
   MyAgentsResponse,
-  Message
+  Message,
+  ToolsListResponse
 } from "../types";
 
 const API_BASE = '/v1'
@@ -210,6 +211,18 @@ export const agentService = {
       await apiClient.delete<void>(`${API_BASE}/conversation/${agentId}/${conversationId}`);
     } catch (error) {
       ApiErrorHandler.handleError(error, 'deleteDialog');
+      throw error;
+    }
+  },
+
+  // получение списка инструментов
+  // GET /v1/tools
+  async getToolsList(): Promise<ToolsListResponse> {
+    try {
+      const response = await apiClient.get<ToolsListResponse>(`${API_BASE}/agents/tools`);
+      return response.data;
+    } catch (error) {
+      ApiErrorHandler.handleError(error, 'getToolsList');
       throw error;
     }
   }
