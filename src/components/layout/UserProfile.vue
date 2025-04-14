@@ -69,7 +69,7 @@ const updateBalance = async () => {
 // Обновление баланса при монтировании компонента
 onMounted(() => {
   updateBalance();
-  const balanceInterval = setInterval(updateBalance, 300000); // обновляем каждые 5 минут
+  const balanceInterval = setInterval(updateBalance, 30000); // обновляем каждые 30 секунд
   
   // Очищаем интервал при размонтировании
   onUnmounted(() => {
