@@ -20,11 +20,11 @@
               </p>
             </div>
           </div>
-          <div class="assistant-header__share-button">
-            <button class="share-button" @click.stop="shareAssistant">
-              <span class="share-icon">Share</span>
-            </button>
-          </div>
+          <ChatTools
+            :assistant-name="selectedAssistant.name"
+            :assistant-description="selectedAssistant.description"
+            :assistant-id="selectedAssistant.id"
+          />
         </div>
 
         <div class="assistant-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
@@ -45,11 +45,11 @@
               {{ selectedAssistant.description }}
             </p>
           </div>
-          <div class="assistant-header__share-button">
-            <button class="share-button" @click.stop="shareAssistant">
-              <span class="share-icon">Share</span>
-            </button>
-          </div>
+          <ChatTools
+            :assistant-name="selectedAssistant.name"
+            :assistant-description="selectedAssistant.description"
+            :assistant-id="selectedAssistant.id"
+          />
         </div>
       </div>
 
@@ -76,11 +76,6 @@
                 {{ selectedAssistant.description }}
               </p>
             </div>
-          </div>
-          <div class="assistant-header__share-button">
-            <button class="share-button" @click.stop="shareAssistant">
-              <span class="share-icon">Share</span>
-            </button>
           </div>
         </div>
       </div>
@@ -138,13 +133,6 @@
         </button>
       </div>
     </div>
-    <ShareModal
-      :is-open="isShareModalOpen"
-      :assistant-name="selectedAssistant?.name"
-      :assistant-description="selectedAssistant?.description"
-      :assistant-id="selectedAssistant?.id"
-      @close="closeShareModal"
-    />
   </div>
 </template>
 
@@ -161,6 +149,7 @@ import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
 import ModeMenu from './modalMenu/ModeMenu.vue'
 import { Modal } from 'ant-design-vue'
+import ChatTools from './tools/ChatTools.vue'
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -224,7 +213,6 @@ const stickyHeaderStyle = ref({
   left: '0px',
   width: '0px'
 })
-const isShareModalOpen = ref(false)
 const currentMode = ref('agent')
 const activeModel = ref('claude-3')
 const observer = ref<MutationObserver | null>(null)
@@ -499,15 +487,6 @@ onUnmounted(() => {
   }
 })
 
-// Обновляем функцию shareAssistant
-const shareAssistant = () => {
-  isShareModalOpen.value = true
-}
-
-const closeShareModal = () => {
-  isShareModalOpen.value = false
-}
-
 // Добавляем функцию подсчета сообщений
 const getMessagesAfterCount = (messageId: string): number => {
   const messageIndex = chatStore.sessionMessages.findIndex(msg => msg.id === messageId)
@@ -614,12 +593,6 @@ const getMessagesAfterCount = (messageId: string): number => {
     font-size: 10px;
     color: #666;
     margin: 0;
-  }
-
-  &__share-button {
-    margin-left: 8px;
-    display: flex;
-    align-items: center;
   }
 }
 
@@ -852,35 +825,6 @@ const getMessagesAfterCount = (messageId: string): number => {
     &:hover {
       background-color: rgba(#1890ff, 0.05);
     }
-  }
-}
-
-.assistant-header__share-button {
-  margin-left: auto;
-  padding-left: 8px;
-}
-
-.share-button {
-  background: rgba(24, 144, 255, 0.1);
-  border: none;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  color: #1890ff;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 500;
-  white-space: nowrap;
-
-  &:hover {
-    background: rgba(24, 144, 255, 0.15);
-  }
-
-  .share-icon {
-    font-size: 12px;
   }
 }
 
