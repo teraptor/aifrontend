@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
+import { notifications } from '@/plugins/notifications';
 
 const props = defineProps<{
   collapsed?: boolean;
@@ -40,12 +41,21 @@ const currentUser = computed(() => {
 
 // Вычисление первой буквы имени пользователя
 const userInitial = computed(() => {
-  return currentUser.value?.email.charAt(0).toUpperCase() || 'У';
+  return currentUser.value?.email?.charAt(0).toUpperCase() || 'У';
 });
 
 // Форматирование баланса
 const formatBalance = (balance?: number): string => {
-  return `${balance?.toLocaleString() || 0}`;
+  if (balance === undefined || balance === null) return '0';
+  try {
+    return balance.toLocaleString('ru-RU', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  } catch (error) {
+    console.error('Ошибка форматирования баланса:', error);
+    return '0';
+  }
 };
 
 // Навигация на страницу профиля
@@ -61,6 +71,8 @@ const updateBalance = async () => {
     isLoading.value = true;
     await authStore.fetchUserBalance(authStore.currentUserId.toString());
   } catch (error) {
+    console.error('Ошибка при обновлении баланса:', error);
+    notifications.error('Не удалось обновить баланс');
   } finally {
     isLoading.value = false;
   }
@@ -73,7 +85,9 @@ onMounted(() => {
   
   // Очищаем интервал при размонтировании
   onUnmounted(() => {
-    clearInterval(balanceInterval);
+    if (balanceInterval) {
+      clearInterval(balanceInterval);
+    }
   });
 });
 </script>
