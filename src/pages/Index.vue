@@ -598,6 +598,10 @@ const openLoginModal = () => {
   margin: 0;
   align-self: flex-end;
   flex-shrink: 0;
+
+  &:has(.pdf) {
+    align-self: flex-start;
+  }
 }
 
 .file-icon {
@@ -612,6 +616,7 @@ const openLoginModal = () => {
   &.pdf {
     background: #ff856a;
     color: #010503;
+    align-self: flex-start;
     &::before {
       content: '📄';
     }
