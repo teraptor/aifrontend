@@ -74,6 +74,7 @@ defineExpose({ openModal, closeModal });
   text-align: center;
   line-height: 1.5;
   margin-bottom: 16px;
+  color: black;
 }
 
 .modal__close {

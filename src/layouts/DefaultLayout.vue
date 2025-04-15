@@ -33,8 +33,9 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 .layout {
   display: flex;
   min-height: 100vh;
-  max-width: 1920px;
+  max-width: 100%;
   margin: 0 auto;
+  // background: linear-gradient(180deg, #0A0F1C 0%, #1A1F2E 100%);
 }
 
 .content-wrapper {
@@ -50,10 +51,10 @@ const { SidebarIsOpen, RightSidebarIsOpen } = storeToRefs(layoutStore);
 }
 
 .main-content {
-  margin-top: 20px;
+  // margin-top: 20px;
   flex-grow: 1;
   display: flex;
   justify-content: center;
-  width: 75rem;
+  width: 100%;
 }
 </style>

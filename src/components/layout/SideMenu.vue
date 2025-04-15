@@ -1,7 +1,7 @@
 <template>
   <aside class="side-menu" :class="{ 'side-menu--collapsed': SidebarIsOpen }">
     <div class="side-menu__header">
-      <h1 v-show="!SidebarIsOpen">redAIst</h1>
+      <h1 v-show="!SidebarIsOpen" class="side-menu__logo">Red<span>Ai</span>st</h1>
       <button class="toggle-button" @click="toggleSidebar">
         <span class="toggle-icon"></span>
       </button>
@@ -80,6 +80,19 @@ const { toggleSidebar } = layoutStore;
     display: flex;
     flex-direction: column;
     height: 100%;
+  }
+
+  &__logo {
+    font-family: sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+    
+    span {
+      color: #00F0C9;
+    }
   }
 }
 
