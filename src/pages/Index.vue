@@ -1,9 +1,34 @@
 <script setup lang="ts">
 import FAQ from '@/components/FAQ/FAQ.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import LoginModal from '@/components/Modal/LoginModal.vue';
 
 const currentSlide = ref(1);
+const selectedPeriod = ref(1);
+
+// Базовые цены за месяц
+const basePrices = {
+  basic: 1990,
+  pro: 3990,
+} as const;
+
+// Скидки в зависимости от периода
+const discounts: Record<number, number> = {
+  1: 0,
+  3: 0.05, // 5%
+  6: 0.10, // 10%
+  12: 0.30 // 30%
+};
+
+// Вычисляем цены с учетом скидок
+const calculatedPrices = computed(() => {
+  const discount = discounts[selectedPeriod.value] || 0;
+  return {
+    basic: Math.round(basePrices.basic * (1 - discount)),
+    pro: Math.round(basePrices.pro * (1 - discount))
+  };
+});
+
 const slides = [
   {
     title: 'RedAist HR',
@@ -154,6 +179,25 @@ const openLoginModal = () => {
     <div class="pricing">
       <h2 class="pricing__title">Выберите свой тариф</h2>
       <p class="pricing__subtitle">Начните бесплатно или выберите план, который подходит вам</p>
+      
+      <div class="period-selector">
+        <button class="period-btn" :class="{ active: selectedPeriod === 1 }" @click="selectedPeriod = 1">
+          1 месяц
+        </button>
+        <button class="period-btn" :class="{ active: selectedPeriod === 3 }" @click="selectedPeriod = 3">
+          3 месяца
+          <span class="discount">5% скидка</span>
+        </button>
+        <button class="period-btn" :class="{ active: selectedPeriod === 6 }" @click="selectedPeriod = 6">
+          6 месяцев
+          <span class="discount">10% скидка</span>
+        </button>
+        <button class="period-btn" :class="{ active: selectedPeriod === 12 }" @click="selectedPeriod = 12">
+          12 месяцев
+          <span class="discount">30% скидка</span>
+        </button>
+      </div>
+
       <div class="pricing-grid">
         <!-- Card 0: Trial -->
         <div class="pricing-card trial">
@@ -168,10 +212,13 @@ const openLoginModal = () => {
         </div>
         <!-- Card 1: Basic -->
         <div class="pricing-card basic">
+          <div class="popular-badge">🏆 Популярный выбор</div>
           <h3>Базовый</h3>
-          <div class="price"><span>0</span> ₽/мес</div>
+          <div class="price">
+            <span>{{ calculatedPrices.basic }}</span> ₽/{{ selectedPeriod > 1 ? selectedPeriod + ' мес' : 'мес' }}
+          </div>
           <ul>
-            <li>Доступ к базовым функциям</li>
+            <li>Доступ к базовым функциям Pro</li>
             <li>Ограниченное количество запросов</li>
             <li>Поддержка по email</li>
           </ul>
@@ -180,7 +227,9 @@ const openLoginModal = () => {
         <!-- Card 2: Pro -->
         <div class="pricing-card pro">
           <h3>Про</h3>
-          <div class="price"><span>999</span> ₽/мес</div>
+          <div class="price">
+            <span>{{ calculatedPrices.pro }}</span> ₽/{{ selectedPeriod > 1 ? selectedPeriod + ' мес' : 'мес' }}
+          </div>
            <ul>
             <li>Все функции Базового тарифа</li>
             <li>Увеличенный лимит запросов</li>
@@ -191,8 +240,10 @@ const openLoginModal = () => {
         </div>
         <!-- Card 3: Max -->
         <div class="pricing-card max">
-          <h3>Макс</h3>
-           <div class="price"><span>1999</span> ₽/мес</div>
+          <h3>Enterprise</h3>
+          <div class="price">
+            <span>По запросу</span>
+          </div>
            <ul>
             <li>Все функции Про тарифа</li>
             <li>Неограниченные запросы</li>
@@ -882,6 +933,7 @@ const openLoginModal = () => {
 }
 
 .pricing-card {
+  position: relative;
   background: #1A1F2E;
   border-radius: 20px;
   padding: 35px;
@@ -961,5 +1013,76 @@ const openLoginModal = () => {
       }
     }
   }
+
+  &.basic {
+    border-color: #FFD700;
+    background: linear-gradient(180deg, #2a3142 0%, #1A1F2E 100%);
+    transform: scale(1.05);
+    z-index: 1;
+
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFD700;
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+    }
+
+    &:hover {
+      transform: scale(1.08);
+      box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
+    }
+
+    .try-button {
+      background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
+      font-weight: 600;
+
+      &:hover {
+        background: linear-gradient(90deg, #FFA500 0%, #FFD700 100%);
+      }
+    }
+  }
+}
+
+.period-selector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.period-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &.active {
+    background: #407BFF;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.discount {
+  background: #FF6B4A;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>
