@@ -85,9 +85,8 @@ const openLoginModal = () => {
           <div class="chat-input-wrapper">
             <input type="text" placeholder="Сообщение" class="chat-input" />
             <div class="chat-actions">
-              <button class="action-button">🔗</button>
               <button class="action-button mic-button">
-                <span class="mic-icon">🎤</span>
+                <span class="mic-icon">▶</span>
               </button>
             </div>
           </div>
@@ -152,6 +151,59 @@ const openLoginModal = () => {
       <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
     </div>
 
+    <div class="pricing">
+      <h2 class="pricing__title">Выберите свой тариф</h2>
+      <p class="pricing__subtitle">Начните бесплатно или выберите план, который подходит вам</p>
+      <div class="pricing-grid">
+        <!-- Card 0: Trial -->
+        <div class="pricing-card trial">
+          <h3>7 дней бесплатно</h3>
+          <div class="price"><span>Пробный период</span></div>
+           <ul>
+            <li>Доступ ко всем Pro функциям</li>
+            <li>Без ограничений на запросы</li>
+            <li>Поддержка в чате</li>
+          </ul>
+          <button class="try-button" @click="openLoginModal">Попробовать бесплатно</button>
+        </div>
+        <!-- Card 1: Basic -->
+        <div class="pricing-card basic">
+          <h3>Базовый</h3>
+          <div class="price"><span>0</span> ₽/мес</div>
+          <ul>
+            <li>Доступ к базовым функциям</li>
+            <li>Ограниченное количество запросов</li>
+            <li>Поддержка по email</li>
+          </ul>
+          <button class="try-button" @click="openLoginModal">Начать бесплатно</button>
+        </div>
+        <!-- Card 2: Pro -->
+        <div class="pricing-card pro">
+          <h3>Про</h3>
+          <div class="price"><span>999</span> ₽/мес</div>
+           <ul>
+            <li>Все функции Базового тарифа</li>
+            <li>Увеличенный лимит запросов</li>
+            <li>Приоритетная поддержка</li>
+            <li>Доступ к API</li>
+          </ul>
+          <button class="try-button" @click="openLoginModal">Выбрать Про</button>
+        </div>
+        <!-- Card 3: Max -->
+        <div class="pricing-card max">
+          <h3>Макс</h3>
+           <div class="price"><span>1999</span> ₽/мес</div>
+           <ul>
+            <li>Все функции Про тарифа</li>
+            <li>Неограниченные запросы</li>
+            <li>Персональный менеджер</li>
+            <li>Ранний доступ к новым функциям</li>
+          </ul>
+          <button class="try-button" @click="openLoginModal">Выбрать Макс</button>
+        </div>
+      </div>
+    </div>
+
     <LoginModal ref="loginModal" />
   </div>
 </template>
@@ -163,7 +215,7 @@ const openLoginModal = () => {
   display: flex;
   flex-direction: column;
   gap: 80px;
-  background: linear-gradient(180deg, #0A0F1C 0%, #1A1F2E 100%);
+  background: linear-gradient(180deg, #0A0F1C 0%, #000000 100%);
   color: white;
   padding: 40px 20px;
 }
@@ -224,12 +276,12 @@ const openLoginModal = () => {
 
   &::before {
     left: 0;
-    background: linear-gradient(to right, rgba(10, 15, 28, 1) 0%, rgba(10, 15, 28, 0.9) 30%, rgba(10, 15, 28, 0) 100%);
+    background: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.337) 100%);
   }
 
   &::after {
     right: 0;
-    background: linear-gradient(to left, rgba(10, 15, 28, 1) 0%, rgba(10, 15, 28, 0.9) 30%, rgba(10, 15, 28, 0) 100%);
+    background: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0) 100%);
   }
 }
 
@@ -357,11 +409,13 @@ const openLoginModal = () => {
   }
   
   &.mic-button {
-    background: #1C1F26;
+    background: white;
     color: #00F0C9;
-    
+    border: none;
+
     &:hover {
-      background: #2A2F3A;
+      background: #f0f0f0;
+      color: #00d0b0;
     }
   }
 }
@@ -437,7 +491,7 @@ const openLoginModal = () => {
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0 auto 40px;
   padding: 0 20px;
 }
 
@@ -685,7 +739,7 @@ const openLoginModal = () => {
   font-family: sans-serif;
   font-weight: 800;
   letter-spacing: 1px;
-  font-size: 20px;
+  font-size: 25px;
   color: white;
   
   span {
@@ -732,6 +786,34 @@ const openLoginModal = () => {
 .chat-actions {
   display: flex;
   gap: 12px;
+
+  .action-button {
+    // background: rgba(255, 255, 255, 0.1);
+    // border: 1px solid rgba(255, 255, 255, 0.2);
+    // color: white;
+    border-radius: 25%;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    &.mic-button {
+      // background: rgba(255, 255, 255, 0.1);
+      color: rgb(125, 227, 255);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
 }
 
 .arrow-icon {
@@ -759,9 +841,125 @@ const openLoginModal = () => {
   }
 }
 
+@media (max-width: 1400px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 1200px) {
   .features-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.pricing {
+  text-align: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.pricing__title {
+  font-size: 42px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+.pricing__subtitle {
+  font-size: 25px;
+  color: #6B7280;
+  margin-bottom: 60px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.pricing-card {
+  background: #1A1F2E;
+  border-radius: 20px;
+  padding: 35px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 240, 201, 0.1);
+  }
+
+  h3 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: white;
+  }
+
+  .price {
+    font-size: 24px;
+    color: #6B7280;
+    margin-bottom: 30px;
+
+    span {
+      font-size: 42px;
+      font-weight: 700;
+      color: white;
+      margin-right: 8px;
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 40px 0;
+    text-align: left;
+    width: 100%;
+    color: #bdc7d9;
+    font-size: 15px;
+
+    li {
+      margin-bottom: 12px;
+      padding-left: 25px;
+      position: relative;
+
+      &::before {
+        content: '✓';
+        color: #00F0C9;
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .try-button {
+    margin-top: auto;
+    width: 100%;
+  }
+
+  &.trial {
+    border-color: #407BFF;
+    background: #2a3142;
+
+    .price span {
+       font-size: 24px;
+       color: #00F0C9;
+    }
+
+    .try-button {
+      background: #407BFF;
+      &:hover {
+        background: #2D5FE3;
+      }
+    }
   }
 }
 </style>

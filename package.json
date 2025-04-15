@@ -36,6 +36,7 @@
     "shepherd.js": "^14.5.0",
     "swiper": "^11.2.4",
     "vue": "^3.5.13",
+    "vue-carousel-3d": "^1.0.1",
     "vue-gravatar": "^1.4.1",
     "vue-router": "^4.5.0"
   },

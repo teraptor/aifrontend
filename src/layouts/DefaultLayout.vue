@@ -17,7 +17,6 @@
 import { RouteNames } from '@/router/routes/routeNames';
 import SideMenu from '@/components/layout/SideMenu.vue';
 import RightSideMenu from '@/components/layout/RightSideMenu.vue';
-import Footer from '@/components/layout/Footer.vue';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router'
