@@ -190,6 +190,7 @@ const integrations = ref([
       </div>
       <div class="hero">
         <h1>Напарник в работе,<br>который умеет ещё больше</h1>
+        <p>Делегируй задачи, <br> чтобы сосредоточиться на главном</p>
         <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
       </div>
     </div>
@@ -477,13 +478,19 @@ const integrations = ref([
   margin: 0 auto;
   padding: 0;
   position: relative;
-  z-index: 3; // Ensure hero content is above integration forms
+  z-index: 3;
 
   h1 {
     font-size: 82px;
     font-weight: 500;
     margin-bottom: 40px;
     line-height: 1.4;
+  }
+
+  p {
+    font-size: 30px;
+    color: #1A1E23;
+    margin-bottom: 0;
   }
 }
 

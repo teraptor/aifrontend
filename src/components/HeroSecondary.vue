@@ -12,7 +12,7 @@
 
     <div class="chat-form">
       <div class="chat-header">
-        <span class="logo-text">Red<span>Ai</span>st</span>
+        <span class="logo-text">Red<span>Ai</span>st</span> Сайт → aiОпросер → Sheets
         <button class="info-button">ⓘ</button>
       </div>
       <div class="chat-input-wrapper">
