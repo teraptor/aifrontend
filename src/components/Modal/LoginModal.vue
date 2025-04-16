@@ -60,14 +60,15 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 
-const submitForm = () => {
+const submitForm = async () => {
   if (!isFormValid.value) {
     return;
   }
-  authStore.login(formData.value);
+  await authStore.login(formData.value);
 
   if (authStore.isAuthenticated) {
     modal.value?.closeModal();
+    window.location.reload();
   }
 };
 

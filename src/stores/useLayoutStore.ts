@@ -75,7 +75,7 @@ export const useLayoutStore = defineStore('Layout', {
         id: '2',
         icon: 'icon icon-menu',
         link_name: 'Ассистенты',
-        link: RouteNames.MAIN.name,
+        link: RouteNames.ASSISTENT_LIST,
       },
       // {
       //   id: '3',

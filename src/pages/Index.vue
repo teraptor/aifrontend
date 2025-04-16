@@ -1,8 +1,22 @@
 <script setup lang="ts">
-import FAQ from '@/components/FAQ/FAQ.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import LoginModal from '@/components/Modal/LoginModal.vue';
 import HeroSecondary from '@/components/HeroSecondary.vue';
+import { useAuthStore } from '@/stores/useAuthStore';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+onMounted(async () => {
+  // Инициализируем хранилище auth
+  await authStore.init();
+  
+  // Проверяем авторизацию
+  if (authStore.isAuthenticated) {
+    router.push('/assistents');
+  }
+});
 
 const currentSlide = ref(1);
 const selectedPeriod = ref(1);
@@ -189,7 +203,7 @@ const integrations = ref([
         </div>
       </div>
       <div class="hero">
-        <h1>Напарник в работе,<br>который умеет ещё больше</h1>
+        <h1>ai интеллект,<br>который умеет больше</h1>
         <p>Делегируй задачи, <br> чтобы сосредоточиться на главном</p>
         <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
       </div>
