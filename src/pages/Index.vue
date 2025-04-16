@@ -89,35 +89,66 @@ const getConfettiStyle = (i: number) => {
 const integrations = ref([
   {
     id: 1,
-    title: 'amoCRM → Яндекс Метрика',
-    description: 'Отправить событие конверсии в Яндекс Метрику при изменении статуса сделки в amoCRM',
-    icons: ['#4A90E2', '#FFD700'], // Example icon colors
+    title: 'Телеграм → aiОпросер → Sheets',
+    description: 'Проведи опросы и собери результаты в Google Таблицы',
+    icons: ['#4A90E2', '#FFD700'],
     position: { top: '15%', left: '10%' },
-    rotation: -10
+    rotation: -10,
+    size: 'medium'
   },
   {
     id: 2,
-    title: 'Google Sheets → Telegram',
-    description: 'Уведомление в Telegram о новой строке в Google Таблицах',
+    title: 'aiРекрутер → Telegram',
+    description: 'Уведомление в Telegram о новом кандидате',
     icons: ['#34A853', '#0088CC'],
-    position: { top: '30%', right: '5%' },
-    rotation: 15
+    position: { top: '25%', right: '5%' },
+    rotation: 15,
+    size: 'large'
   },
   {
     id: 3,
-    title: 'Tilda → Mailchimp',
-    description: 'Добавить подписчика в Mailchimp из формы на Tilda',
+    title: 'aiСРО → Я',
+    description: 'Составь квартальный план по описанию',
     icons: ['#E67E22', '#2C3E50'],
     position: { bottom: '20%', left: '18%' },
-    rotation: 5
+    rotation: 5,
+    size: 'medium'
   },
   {
     id: 4,
-    title: 'Slack → Asana',
-    description: 'Создать задачу в Asana из сообщения в Slack канале',
+    title: 'aiРекрутер → Я',
+    description: 'проводи скоринг кандидатов',
     icons: ['#ECB22E', '#F06A6A'],
-    position: { bottom: '10%', right: '15%' },
-    rotation: -8
+    position: { bottom: '15%', right: '15%' },
+    rotation: -8,
+    size: 'small'
+  },
+  {
+    id: 5,
+    title: 'aiМаркетолог → Я',
+    description: 'Создай маркетинговый план, запуска промо акций',
+    icons: ['#000000', '#7289DA'],
+    position: { top: '40%', left: '5%' },
+    rotation: 12,
+    size: 'small'
+  },
+  {
+    id: 6,
+    title: 'aiSMM-ик → Я',
+    description: 'Создай план публикаций в соцсетях, с учетом трендов и временных рамок',
+    icons: ['#171515', '#0052CC'],
+    position: { top: '10%', right: '20%' },
+    rotation: -5,
+    size: 'small'
+  },
+  {
+    id: 7,
+    title: 'aiCTO → Я',
+    description: 'Создай план развития компании, проведи анализ зрелости команд',
+    icons: ['#0079BF', '#4A154B'],
+    position: { bottom: '35%', right: '8%' },
+    rotation: 8,
+    size: 'medium'
   },
 ]);
 </script>
@@ -138,6 +169,7 @@ const integrations = ref([
           v-for="integration in integrations"
           :key="integration.id"
           class="integration-form"
+          :class="integration.size"
           :style="{
             top: integration.position.top,
             left: integration.position.left,
@@ -360,19 +392,52 @@ const integrations = ref([
   border-radius: 12px;
   padding: 12px 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  width: 280px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  pointer-events: auto; // Enable pointer events for the forms
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  pointer-events: auto;
+  transition: all 0.3s ease;
   border: 1px solid #eee;
+
+  &.small {
+    width: 220px;
+    padding: 10px 14px;
+    
+    .integration-text {
+      h4 { font-size: 12px; }
+      p { font-size: 11px; }
+    }
+    
+    .integration-icons .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &.medium {
+    width: 280px;
+  }
+
+  &.large {
+    width: 320px;
+    padding: 16px 20px;
+    
+    .integration-text {
+      h4 { font-size: 16px; }
+      p { font-size: 13px; }
+    }
+    
+    .integration-icons .icon {
+      width: 28px;
+      height: 28px;
+    }
+  }
 
   &:hover {
     transform-origin: center center;
-    transform: scale(1.05) rotate(0deg); // Scale up and reset rotation slightly
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-    z-index: 10; // Bring hovered form to front
+    transform: scale(1.05) rotate(0deg) translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 10;
   }
 }
 
