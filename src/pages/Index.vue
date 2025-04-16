@@ -203,7 +203,7 @@ const integrations = ref([
         </div>
       </div>
       <div class="hero">
-        <h1>ai интеллект,<br>который умеет больше</h1>
+        <h1>AI-интеллект,<br>который умеет больше</h1>
         <p>Делегируй задачи, <br> чтобы сосредоточиться на главном</p>
         <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
       </div>
@@ -647,7 +647,7 @@ const integrations = ref([
 .feature-example {
   border-radius: 20px;
   padding: 24px;
-  height: 380px;
+  height: 390px;
   display: flex;
   flex-direction: column;
   gap: 20px;
