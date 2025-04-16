@@ -429,6 +429,7 @@ const activeMode = ref('assistant');
   height: 100vh;
   padding: 24px;
   background: #f5f5f5;
+  padding: 13px 20px;
 }
 
 .column {

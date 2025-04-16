@@ -148,13 +148,14 @@ watch(internalValue, newValue => {
   }
 
   &-input {
-    background: $light-grey-color;
+    background: #FFFFFF;
     padding: 10px 10px 10px 36px;
-    border: none;
+    border: 1px solid #F0F2F5;
     border-radius: 12px;
     font-size: 14px;
-    font-weight: 300;
+    font-weight: 400;
     box-sizing: border-box;
+    color: #1A1E23;
 
     &--basic {
       padding: 10px 10px 10px 15px;

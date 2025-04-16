@@ -584,6 +584,7 @@ const toggleSection = (section: keyof typeof expandedSections.value) => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  padding: 13px 20px;
 
   :deep(.content-wrapper) {
     padding: 0;

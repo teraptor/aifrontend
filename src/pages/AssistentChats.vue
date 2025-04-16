@@ -182,7 +182,7 @@ onMounted(async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 13px 20px;
   overflow: hidden;
   position: relative;
   margin-bottom: 100px;

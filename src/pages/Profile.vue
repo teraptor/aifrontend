@@ -99,7 +99,7 @@ const currentUser = computed(() => {
   width: 100%;
   align-items: stretch;
   gap: 24px;
-
+  padding: 13px 20px;
   &__header {
     display: flex;
     justify-content: space-between;

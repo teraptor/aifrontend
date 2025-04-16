@@ -22,32 +22,38 @@
 .not-found {
   display: flex;
   justify-content: center;
-  padding-top: 120px 16px 0;
-  height: 100vh;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0 16px;
+  background-color: #FFFFFF;
 
   &__inner {
     max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
     text-align: center;
     line-height: 1.5;
+    padding: 40px;
   }
 
   &__logo {
     max-width: 250px;
+    margin-bottom: 20px;
   }
 
   &__title {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 600;
     text-transform: uppercase;
+    color: #1A1E23;
   }
 
   &__image {
-    height: 150px;
-    width: 170px;
+    height: 200px;
+    width: 220px;
+    margin: 20px 0;
   }
 
   .logo {
@@ -56,14 +62,21 @@
   }
 
   &__description {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 400;
-    color: $help-color;
+    color: #6B7280;
+    margin-top: 20px;
   }
 
   &__link {
-    color: $main-color;
+    color: #FF6B4A;
     text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #E55A3D;
+    }
   }
 }
 </style>

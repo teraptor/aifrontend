@@ -14,5 +14,6 @@ import FAQ from '@/components/FAQ/FAQ.vue';
   display: flex;
   flex-direction: column;
   gap: 40px;
+  padding: 15px 20px;
 }
 </style>

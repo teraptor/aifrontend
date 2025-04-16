@@ -18,15 +18,6 @@
           @click="navigateToCreateAssistent"
         />
       </div>
-      <div class="assistents__input-container" v-else>
-        <InputField
-          icon='icon icon-search'
-          size="large"
-          placeholder="Найти ассистента"
-          v-model="searchQuery"
-          @input="handleSearch"
-        />
-      </div>
     </div>
     <div class="assistents__list">
       <template v-if="filteredAssistents.length">

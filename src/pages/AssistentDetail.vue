@@ -156,6 +156,7 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 24px;
   width: 100%;
+  padding: 13px 20px;
 
   &__header-wrapper {
     display: flex;

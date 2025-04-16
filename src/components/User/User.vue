@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useRouter } from 'vue-router';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { RouteNames } from '@/router/routes/routeNames';
 
@@ -35,6 +35,7 @@ const authStore = useAuthStore();
 const isMenuOpen = ref<boolean>(false);
 const profileRef = ref<HTMLElement | null>(null);
 const isLoading = ref<boolean>(false);
+const isProfileEmpty = ref<boolean>(false);
 
 // Форматирование баланса
 const formatBalance = (balance?: number): string => {
@@ -91,15 +92,48 @@ const updateBalance = async () => {
   }
 };
 
+// Функция проверки пустого профиля
+const checkEmptyProfile = (user: any): boolean => {
+  return !user || !user.email;
+};
+
+// Функция обновления профиля
+const updateProfile = async () => {
+  if (!authStore.isAuthenticated || !authStore.currentUserId) return;
+  
+  try {
+    isLoading.value = true;
+    await authStore.fetchUserProfile(authStore.currentUserId.toString());
+    isProfileEmpty.value = checkEmptyProfile(currentUser.value);
+    
+    if (isProfileEmpty.value) {
+      router.push(RouteNames.PROFILE);
+    }
+  } catch (error) {
+    console.error('Ошибка при обновлении профиля:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 // Lifecycle hooks
 onMounted(() => {
   updateBalance();
+  updateProfile();
   const balanceInterval = setInterval(updateBalance, 300000);
   
   // Очищаем интервал при размонтировании
   onUnmounted(() => {
     clearInterval(balanceInterval);
   });
+});
+
+// Следим за изменениями в профиле
+watch(currentUser, (newUser) => {
+  isProfileEmpty.value = checkEmptyProfile(newUser);
+  if (isProfileEmpty.value) {
+    router.push(RouteNames.PROFILE);
+  }
 });
 </script>
 

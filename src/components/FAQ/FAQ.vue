@@ -37,7 +37,12 @@ const openFAQ = (id: string):void => {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-
+    background-color: $light-color;
+    padding: 13px 20px;
+    border-radius: 12px;
+    border: 1px solid #e6e8ec;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
     &__items {
       display: flex;
       flex-direction: column;

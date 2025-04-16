@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { authService } from '@/api/services/authService';
 import { billingService } from '@/api/services/billingService';
 import Cookies from 'js-cookie';
+import { userUservice } from '@/api/services/usersSeriсe'
 
 interface Credentials {
   email: string;
@@ -233,6 +234,44 @@ export const useAuthStore = defineStore('auth', {
       } catch (error: any) {
         this.error = error.message || 'Произошла ошибка';
         notifications.error(error.message);
+        throw error;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // Получение профиля пользователя по API
+    async fetchUserProfile(userId: string) {
+      try {
+        this.isLoading = true;
+        const response = await userUservice.fetchUserProfile();
+        const profileData = response.data;
+        
+        // Обновляем профиль пользователя в хранилище
+        const userProfile = this.userProfiles.find(profile => profile.id === userId);
+        if (userProfile) {
+          // Обновляем только существующие поля
+          userProfile.email = profileData.email;
+          userProfile.balance = profileData.balance;
+        } else {
+          // Создаем новый профиль с обязательными полями
+          this.userProfiles.push({
+            id: userId,
+            email: profileData.email,
+            role: 'contractor', // Значение по умолчанию
+            balance: profileData.balance,
+            assistant_responses: 0,
+            company_id: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+        
+        return response;
+      } catch (error: any) {
+        const errorMessage = error.message || 'Ошибка при получении профиля';
+        this.error = errorMessage;
+        notifications.error(errorMessage);
         throw error;
       } finally {
         this.isLoading = false;

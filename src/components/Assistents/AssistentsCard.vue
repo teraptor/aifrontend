@@ -84,7 +84,7 @@ const goToSetting = (event: MouseEvent) => {
   border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
-  border: 1px solid $border-light;
+  border: 1px solid #e6e8ec;
   box-shadow: $box-shadow-small;
 
   &:hover {

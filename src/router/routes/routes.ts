@@ -25,6 +25,7 @@ export const MAIN_ROUTES: RouteRecordRaw[] = [
     meta: {
       title: 'Ассистенты',
       ...defaultMeta,
+      requiresAuth: true,
     },
     component: () => import('@/pages/AssistentList.vue')
   },

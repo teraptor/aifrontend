@@ -87,6 +87,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 40px;
+  padding: 13px 20px;
+  max-width: 1920px;
 }
 
 .chat-container {

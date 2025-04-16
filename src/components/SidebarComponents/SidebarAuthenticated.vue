@@ -67,7 +67,6 @@ const navigateToRoute = (routeName: string):void => {
   width: 100%;
   height: 100%;
   padding: 0;
-  border-right: 1px solid #FF6B4A;
 
   &__nav {
     width: 100%;

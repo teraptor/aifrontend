@@ -106,34 +106,23 @@
     <div v-else class="no-dialog-selected">
       <p>Выберите ассистента и диалог или создайте новый</p>
     </div>
-    <div class="fixed-chat-input">
-      <div class="mode-menu-container">
-        <ModeMenu
-          class="mode-menu-component"
-          :modes="chatModes"
-          :current-mode="currentMode"
-          :model="activeModel"
-          @update:current-mode="handleModeChange"
-        />
-      </div>
-      <div class="input-container">
-        <div class="input-wrapper">
-          <textarea
-            ref="messageInput"
-            v-model="newMessage"
-            placeholder="Напишите сообщение..."
-            @keydown.ctrl.enter.prevent="sendMessage"
-            @input="autoGrow"
-            :disabled="chatStore.isLoading"
-            rows="1"
-          ></textarea>
-        </div>
-        <button class="send-button" @click="sendMessage" :disabled="!newMessage.trim() || chatStore.isLoading">
-          <span class="arrow-icon">↑</span>
-        </button>
-      </div>
-    </div>
+
   </div>
+  <ChatForm
+      :is-loading="chatStore.isLoading"
+      :modes="chatModes"
+      :current-mode="currentMode"
+      :model="activeModel"
+      :show-header="false"
+      @send="sendMessage"
+      @update:current-mode="handleModeChange"
+      @tools-click="toggleAssistentMenu"
+    />
+    
+    <ToolsModal
+      :is-open="isToolsModalOpen"
+      @close="toggleAssistentMenu"
+    />
 </template>
 
 <script setup lang="ts">
@@ -143,13 +132,12 @@ import { useAssistentChatStore } from '@/stores/useAssistantChatStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { IAssistent } from '@/stores/useAssistantsStore'
 import { webSocketService, WebSocketAction } from '@/api/services/webSocketService'
-import ShareModal from './share/ShareModal.vue'
 import UserMessage from './messages/UserMessage.vue'
 import AssistantMessage from './messages/AssistantMessage.vue'
 import TypingIndicator from './messages/TypingIndicator.vue'
-import ModeMenu from './modalMenu/ModeMenu.vue'
-import { Modal } from 'ant-design-vue'
 import ChatTools from './tools/ChatTools.vue'
+import ChatForm from './form/ChatForm.vue'
+import ToolsModal from './tools/ToolsModal.vue'
 
 // Интерфейсы для меню
 interface MenuItem {
@@ -199,8 +187,6 @@ const authStore = useAuthStore()
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // Локальные переменные для UI
-const newMessage = ref('')
-const messageInput = ref<HTMLTextAreaElement | null>(null)
 const chatContainer = ref<HTMLElement | null>(null)
 const isAssistentMenuOpen = ref(false)
 const assistentMenuTrigger = ref<HTMLElement | null>(null)
@@ -217,6 +203,7 @@ const currentMode = ref('agent')
 const activeModel = ref('claude-3')
 const observer = ref<MutationObserver | null>(null)
 const resizeObserver = ref<ResizeObserver | null>(null)
+const isToolsModalOpen = ref(false)
 
 // Режимы чата
 const chatModes = ref([
@@ -315,22 +302,12 @@ const handleNewMessage = (response: WebSocketMessage) => {
   }
 }
 
-// Отправка сообщения
-const sendMessage = async () => {
-  if (!newMessage.value.trim() || chatStore.isLoading || !chatStore.activeSessionId || !props.selectedAssistant) return
+// Обновляем функцию sendMessage
+const sendMessage = async (messageText: string) => {
+  if (chatStore.isLoading || !chatStore.activeSessionId || !props.selectedAssistant) return
 
   try {
-    // Устанавливаем состояние загрузки
     chatStore.isLoading = true
-
-    // Сохраняем текст сообщения в переменную
-    const messageText = newMessage.value
-
-    // Очищаем поле ввода и сбрасываем его высоту
-    newMessage.value = ''
-    if (messageInput.value) {
-      messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
-    }
 
     // Добавляем сообщение в локальное хранилище
     await chatStore.addMessage(messageText, true, chatStore.activeSessionId)
@@ -341,14 +318,10 @@ const sendMessage = async () => {
       roomId: chatStore.activeSessionId,
       message: messageText
     }
-    // Отправляем сообщение через WebSocket
+    
     webSocketService.send(msg)
 
-    // Фокус на поле ввода и прокрутка вниз
     nextTick(() => {
-      if (messageInput.value) {
-        messageInput.value.focus()
-      }
       scrollToBottom()
     })
   } catch (error) {
@@ -358,7 +331,7 @@ const sendMessage = async () => {
 
 // Переключение меню ассистента
 const toggleAssistentMenu = () => {
-  isAssistentMenuOpen.value = !isAssistentMenuOpen.value
+  isToolsModalOpen.value = !isToolsModalOpen.value
 }
 
 // Форматирование времени
@@ -387,18 +360,6 @@ const scrollToBottom = () => {
 watch(() => chatStore.sessionMessages, () => {
   scrollToBottom()
 }, { deep: true })
-
-// Автоматически увеличиваем высоту поля ввода сообщения
-const autoGrow = () => {
-  if (!messageInput.value) return
-
-  // Сбрасываем высоту для корректного расчета
-  messageInput.value.style.height = '44px' // Устанавливаем минимальную высоту
-
-  // Устанавливаем высоту на основе содержимого, но не более 150px
-  const newHeight = Math.min(messageInput.value.scrollHeight, 150)
-  messageInput.value.style.height = `${newHeight}px`
-}
 
 // Функция для проверки видимости шапки
 const checkHeaderVisibility = () => {
@@ -513,7 +474,7 @@ const getMessagesAfterCount = (messageId: string): number => {
     display: flex;
     flex-direction: column;
     position: relative;
-    padding-bottom: 84px;
+    padding-bottom: 120px;
   }
 }
 
@@ -656,127 +617,7 @@ const getMessagesAfterCount = (messageId: string): number => {
   gap: 16px;
   height: calc(100% - 60px);
   padding-bottom: 20px;
-}
-
-.fixed-chat-input {
-  position: fixed;
-  bottom: 0;
-  z-index: 100;
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 20px;
-  box-sizing: border-box;
-
-  .mode-menu-container {
-    margin-bottom: 8px;
-    align-self: flex-end;
-  }
-
-  .input-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .input-wrapper {
-    position: relative;
-    display: flex;
-    flex: 1;
-    align-items: center;
-    background-color: $light-color;
-    border-radius: 20px;
-    border: 1px solid rgba($help-color, 0.2);
-    padding-right: 8px;
-    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  textarea {
-    flex: 1;
-    border: none;
-    border-radius: 20px;
-    background-color: transparent;
-    font-family: inherit;
-    font-size: 14px;
-    min-height: 50px;
-    max-height: 250px;
-    resize: none;
-    overflow-y: auto;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    display: block;
-    box-sizing: border-box;
-    padding: 11px 16px;
-    vertical-align: middle;
-
-    &:focus {
-      outline: none;
-      background-color: transparent;
-    }
-
-    &::placeholder {
-      color: #999;
-      vertical-align: middle;
-    }
-
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: #c0c0c0;
-      border-radius: 2px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background-color: transparent;
-    }
-  }
-
-  .send-button {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 50%;
-    background-color: #40c4dd;
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-    margin-left: 10px;
-
-    &:hover {
-      background-color: #33b5ce;
-    }
-
-    &:disabled {
-      background-color: #d9d9d9;
-      cursor: not-allowed;
-    }
-
-    .arrow-icon {
-      font-size: 18px;
-    }
-  }
-}
-
-.assistant-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #1890ff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 18px;
+  margin-bottom: 20px;
 }
 
 .no-dialog-selected {
