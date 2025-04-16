@@ -21,7 +21,7 @@
           rows="1"
           class="chat-input"
         ></textarea>
-        <button class="enter-button" :disabled="!message.trim() || isLoading">
+        <button class="enter-button" :disabled="!message.trim() || isLoading" @click="handleSend">
           Enter
         </button>
       </div>
