@@ -112,8 +112,8 @@ watch(internalValue, newValue => {
 .form__group {
   display: flex;
   flex-direction: column;
-  font-weight: 300;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 15px;
 
   &--checkbox {
     display: flex;
