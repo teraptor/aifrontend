@@ -46,7 +46,7 @@ const { toggleSidebar } = layoutStore;
   top: 0;
   left: 0;
   z-index: 10;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #fcb3a3;
 
   &--collapsed {
     width: 72px;
@@ -62,7 +62,6 @@ const { toggleSidebar } = layoutStore;
     padding: 0 1rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     position: relative;
   }
 
@@ -86,12 +85,14 @@ const { toggleSidebar } = layoutStore;
     font-family: sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #000000;
+    color: #FF6B4A;
     margin: 0;
     padding: 0;
+    flex-grow: 1;
+    text-align: center;
     
     span {
-      color: #00F0C9;
+      color: #03c9a8;
     }
   }
 }

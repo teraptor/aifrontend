@@ -151,7 +151,9 @@ const image = computed(() => {
   color: $dark-color;
 
   &:hover {
-    background-color: $light-grey-color;
+    background-color: #303030;
+    color: #FFFFFF;
+    border-color: #303030;
   }
 
   &:disabled {
@@ -163,6 +165,11 @@ const image = computed(() => {
     background-color: $light-grey-color;
     border-color: $main-color;
     color: $main-color;
+  }
+
+  .btn-content__img {
+    filter: none;
+    filter: invert(58%) sepia(53%) saturate(3118%) hue-rotate(339deg) brightness(103%) contrast(101%);
   }
 }
 
@@ -180,6 +187,11 @@ const image = computed(() => {
 
   &.active {
     background-color: color.scale($main-color, $lightness: -10%);
+  }
+
+  .btn-content__img {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -250,6 +262,38 @@ const image = computed(() => {
   &.active {
     background-color: color.scale($success-color, $lightness: -10%);
   }
+}
+
+.btn-orange {
+  background-color: #FF6B4A;
+  color: #FFFFFF;
+  border: none;
+
+  &:hover {
+    background-color: #303030;
+    color: #FFFFFF;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    background-color: #FF6B4A;
+  }
+
+  &.active {
+    background-color: #D04A2C;
+  }
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-content__img {
+  width: 18px;
+  height: 18px;
 }
 
 .btn-light,

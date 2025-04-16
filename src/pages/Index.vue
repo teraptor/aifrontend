@@ -2,6 +2,7 @@
 import FAQ from '@/components/FAQ/FAQ.vue';
 import { ref, computed } from 'vue';
 import LoginModal from '@/components/Modal/LoginModal.vue';
+import HeroSecondary from '@/components/HeroSecondary.vue';
 
 const currentSlide = ref(1);
 const selectedPeriod = ref(1);
@@ -17,7 +18,7 @@ const discounts: Record<number, number> = {
   1: 0,
   3: 0.05, // 5%
   6: 0.10, // 10%
-  12: 0.30 // 30%
+  12: 0.15 // 15%
 };
 
 // Вычисляем цены с учетом скидок
@@ -61,64 +62,106 @@ const loginModal = ref<InstanceType<typeof LoginModal> | null>(null);
 const openLoginModal = () => {
   loginModal.value?.openModal();
 };
+
+const confettiCount = ref(150); // Количество конфетти
+const confettiColors = ['#FF6B4A', '#00F0C9', '#FFD700', '#E8F3FF', '#FFEDE8', '#7DE3FF', '#00B37D'];
+
+const getRandom = (min: number, max: number) => Math.random() * (max - min) + min;
+
+const getConfettiStyle = (i: number) => {
+  const size = getRandom(6, 12);
+  const left = getRandom(0, 100);
+  const top = getRandom(0, 100);
+  const rotation = getRandom(-45, 45);
+  const backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+
+  return {
+    width: `${size}px`,
+    height: `${size / 1.5}px`,
+    left: `${left}%`,
+    top: `${top}%`,
+    backgroundColor: backgroundColor,
+    transform: `rotate(${rotation}deg)`
+  };
+};
+
+// Data for the integration forms
+const integrations = ref([
+  {
+    id: 1,
+    title: 'amoCRM → Яндекс Метрика',
+    description: 'Отправить событие конверсии в Яндекс Метрику при изменении статуса сделки в amoCRM',
+    icons: ['#4A90E2', '#FFD700'], // Example icon colors
+    position: { top: '15%', left: '10%' },
+    rotation: -10
+  },
+  {
+    id: 2,
+    title: 'Google Sheets → Telegram',
+    description: 'Уведомление в Telegram о новой строке в Google Таблицах',
+    icons: ['#34A853', '#0088CC'],
+    position: { top: '30%', right: '5%' },
+    rotation: 15
+  },
+  {
+    id: 3,
+    title: 'Tilda → Mailchimp',
+    description: 'Добавить подписчика в Mailchimp из формы на Tilda',
+    icons: ['#E67E22', '#2C3E50'],
+    position: { bottom: '20%', left: '18%' },
+    rotation: 5
+  },
+  {
+    id: 4,
+    title: 'Slack → Asana',
+    description: 'Создать задачу в Asana из сообщения в Slack канале',
+    icons: ['#ECB22E', '#F06A6A'],
+    position: { bottom: '10%', right: '15%' },
+    rotation: -8
+  },
+]);
 </script>
 
 <template>
   <div class="main">
-    <div class="hero">
-      <div class="logo">Red<span>Ai</span>st</div>
-      <h1>Напарник в работе,<br>который умеет ещё больше</h1>
-      <div class="slider-container">
-        <button class="nav-button prev" @click="prevSlide">←</button>
-        <div class="slider">
-          <div class="slides" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
-            <div v-for="(slide, index) in slides" :key="index" class="slide-card" :class="slide.class" :active="isActive(index)">
-              <h3>{{ slide.title }}</h3>
-              <p>{{ slide.description }}</p>
-              <div class="chat-interface">
-                <div class="input-area">
-                  <span class="model-name">{{ slide.title }}</span>
-                  <span class="search-text">Искать в сети</span>
-                  <div class="action-buttons">
-                    <button class="link-btn">🔗</button>
-                    <button class="play-btn">▶</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button class="nav-button next" @click="nextSlide">→</button>
+    <div class="hero-wrapper">
+      <div class="confetti-container">
+        <div
+          v-for="i in confettiCount"
+          :key="i"
+          class="confetti-piece"
+          :style="getConfettiStyle(i)"
+        ></div>
       </div>
-      <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
-      <div class="hero-secondary">
-        <h1 class="big-title">ОБЩАЙТЕСЬ КАК<br>С ЧЕЛОВЕКОМ</h1>
-        <div class="subtitle-wrapper">
-          <p class="subtitle-text">
-            Попробуйте RedAist — AI-ассистент
-            <span class="vpn-badge">БЕЗ VPN</span>
-            на русском языке
-          </p>
-          <img src="@/assets/arrow-down-right.svg" alt="Arrow pointing to chat form" class="arrow-icon" />
-        </div>
-
-        <div class="chat-form">
-          <div class="chat-header">
-            <span class="chat-logo">Red<span>Ai</span>st</span>
-            <button class="info-button">ⓘ</button>
+      <div class="integration-forms-container">
+        <div
+          v-for="integration in integrations"
+          :key="integration.id"
+          class="integration-form"
+          :style="{
+            top: integration.position.top,
+            left: integration.position.left,
+            right: integration.position.right,
+            bottom: integration.position.bottom,
+            transform: `rotate(${integration.rotation}deg)`
+          }"
+        >
+          <div class="integration-icons">
+            <div class="icon" :style="{ backgroundColor: integration.icons[0] }"></div>
+            <div class="icon" :style="{ backgroundColor: integration.icons[1] }"></div>
           </div>
-          <div class="chat-input-wrapper">
-            <input type="text" placeholder="Сообщение" class="chat-input" />
-            <div class="chat-actions">
-              <button class="action-button mic-button">
-                <span class="mic-icon">▶</span>
-              </button>
-            </div>
+          <div class="integration-text">
+            <h4>{{ integration.title }}</h4>
+            <p>{{ integration.description }}</p>
           </div>
         </div>
       </div>
-      <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
+      <div class="hero">
+        <h1>Напарник в работе,<br>который умеет ещё больше</h1>
+        <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
+      </div>
     </div>
+    <HeroSecondary />
 
     <div class="features">
       <h2 class="features__title">Легко начать<br>
@@ -127,7 +170,7 @@ const openLoginModal = () => {
       
       <div class="features-grid">
         <div class="feature-block">
-          <h2>Умеет <span class="highlight-cyan">анализировать</span><br>текст <span class="highlight-cyan">по ссылкам</span></h2>
+          <h2>Умеет <br><span class="highlight-cyan">анализировать</span><br>текст <span class="highlight-cyan">по ссылкам</span></h2>
           <div class="feature-example">
             <div class="example-text">— Сделай cкрининг<br>СV по откликам</div>
             <div class="file-icons">
@@ -172,13 +215,15 @@ const openLoginModal = () => {
             </div>
           </div>
         </div>
+        <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
       </div>
-      <button class="try-button" @click="openLoginModal">Войти и попробовать</button>
     </div>
 
     <div class="pricing">
       <h2 class="pricing__title">Выберите свой тариф</h2>
-      <p class="pricing__subtitle">Начните бесплатно или выберите план, который подходит вам</p>
+      <p class="pricing__subtitle">
+        <span class="highlight-free">Начните бесплатно</span> или выберите план, который подходит вам
+      </p>
       
       <div class="period-selector">
         <button class="period-btn" :class="{ active: selectedPeriod === 1 }" @click="selectedPeriod = 1">
@@ -194,21 +239,24 @@ const openLoginModal = () => {
         </button>
         <button class="period-btn" :class="{ active: selectedPeriod === 12 }" @click="selectedPeriod = 12">
           12 месяцев
-          <span class="discount">30% скидка</span>
+          <span class="discount">15% скидка</span>
         </button>
       </div>
 
       <div class="pricing-grid">
-        <!-- Card 0: Trial -->
-        <div class="pricing-card trial">
-          <h3>7 дней бесплатно</h3>
-          <div class="price"><span>Пробный период</span></div>
+        <!-- Card 3: Max -->
+        <div class="pricing-card max">
+          <h3>Enterprise</h3>
+          <div class="price">
+            <span>По запросу</span>
+          </div>
            <ul>
-            <li>Доступ ко всем Pro функциям</li>
-            <li>Без ограничений на запросы</li>
-            <li>Поддержка в чате</li>
+            <li>Все функции Про тарифа</li>
+            <li>Неограниченные запросы</li>
+            <li>Персональный менеджер</li>
+            <li>Ранний доступ к новым функциям</li>
           </ul>
-          <button class="try-button" @click="openLoginModal">Попробовать бесплатно</button>
+          <button class="try-button" @click="openLoginModal">Выбрать Макс</button>
         </div>
         <!-- Card 1: Basic -->
         <div class="pricing-card basic">
@@ -222,7 +270,7 @@ const openLoginModal = () => {
             <li>Ограниченное количество запросов</li>
             <li>Поддержка по email</li>
           </ul>
-          <button class="try-button" @click="openLoginModal">Начать бесплатно</button>
+          <button class="try-button" @click="openLoginModal">7 дней триал</button>
         </div>
         <!-- Card 2: Pro -->
         <div class="pricing-card pro">
@@ -238,20 +286,7 @@ const openLoginModal = () => {
           </ul>
           <button class="try-button" @click="openLoginModal">Выбрать Про</button>
         </div>
-        <!-- Card 3: Max -->
-        <div class="pricing-card max">
-          <h3>Enterprise</h3>
-          <div class="price">
-            <span>По запросу</span>
-          </div>
-           <ul>
-            <li>Все функции Про тарифа</li>
-            <li>Неограниченные запросы</li>
-            <li>Персональный менеджер</li>
-            <li>Ранний доступ к новым функциям</li>
-          </ul>
-          <button class="try-button" @click="openLoginModal">Выбрать Макс</button>
-        </div>
+        
       </div>
     </div>
 
@@ -265,10 +300,9 @@ const openLoginModal = () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 80px;
-  background: linear-gradient(180deg, #0A0F1C 0%, #000000 100%);
-  color: white;
-  padding: 40px 20px;
+  gap: 0;
+  background-color: #FFFFFF;
+  color: #1A1E23;
 }
 
 .logo {
@@ -282,252 +316,185 @@ const openLoginModal = () => {
   }
 }
 
+.hero-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #bfede6;
+  padding: 60px 20px;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.confetti-piece {
+  position: absolute;
+  border-radius: 2px;
+  will-change: transform;
+}
+
+.integration-forms-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; // Allow interaction with elements below, forms themselves will enable it
+  z-index: 2; // Above confetti, below hero text
+}
+
+.integration-form {
+  position: absolute;
+  background-color: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  width: 280px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: auto; // Enable pointer events for the forms
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #eee;
+
+  &:hover {
+    transform-origin: center center;
+    transform: scale(1.05) rotate(0deg); // Scale up and reset rotation slightly
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    z-index: 10; // Bring hovered form to front
+  }
+}
+
+.integration-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 4px;
+
+  .icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    // Background color set inline
+  }
+}
+
+.integration-text {
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A1E23;
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+  }
+  p {
+    font-size: 12px;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
 .hero {
   text-align: center;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 60px 0;
+  padding: 0;
+  position: relative;
+  z-index: 3; // Ensure hero content is above integration forms
 
   h1 {
-    font-size: 36px;
+    font-size: 82px;
     font-weight: 500;
     margin-bottom: 40px;
     line-height: 1.4;
   }
-
-  h2 {
-    font-size: 32px;
-    margin: 40px 0 16px;
-  }
-
-  .subtitle {
-    color: #8F9BB3;
-    font-size: 18px;
-    margin-bottom: 40px;
-  }
-}
-
-.slider-container {
-  position: relative;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 0;
-  overflow: hidden;
-
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 200px;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  &::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.337) 100%);
-  }
-
-  &::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0) 100%);
-  }
-}
-
-.slider {
-  position: relative;
-  margin: 0;
-  padding: 0 20%;
-  overflow: hidden;
-}
-
-.slides {
-  display: flex;
-  transition: transform 0.5s ease;
-  gap: 30px;
-}
-
-.slide-card {
-  flex: 0 0 100%;
-  padding: 40px;
-  background: #FFFFFF;
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  transform: scale(0.85);
-  opacity: 0.9;
-  transition: all 0.5s ease;
-  
-  &.active {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  h3 {
-    font-size: 32px;
-    margin-bottom: 16px;
-    color: #000000;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .version {
-      color: #00F0C9;
-      font-weight: 500;
-    }
-  }
-
-  p {
-    font-size: 25px;
-    color: #6B7280;
-    margin-bottom: 32px;
-  }
-}
-
-.chat-interface {
-  margin-top: 30px;
-  background: #F5F7FA;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.input-area {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  .model-name {
-    font-size: 16px;
-    color: #00F0C9;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-
-    &::after {
-      content: '2 MAX';
-      color: #00F0C9;
-    }
-  }
-
-  .search-text {
-    color: #9CA3AF;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-
-    &::after {
-      content: 'beta';
-      font-size: 12px;
-      padding: 2px 6px;
-      background: rgba(156, 163, 175, 0.1);
-      border-radius: 4px;
-    }
-  }
-
-  .action-buttons {
-    margin-left: auto;
-    display: flex;
-    gap: 12px;
-  }
-}
-
-.action-button {
-  background: none;
-  border: none;
-  color: #9CA3AF;
-  cursor: pointer;
-  padding: 10px;
-  font-size: 18px;
-  border-radius: 10px;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #6B7280;
-  }
-  
-  &.mic-button {
-    background: white;
-    color: #00F0C9;
-    border: none;
-
-    &:hover {
-      background: #f0f0f0;
-      color: #00d0b0;
-    }
-  }
-}
-
-.nav-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  &.prev {
-    left: 10%;
-  }
-
-  &.next {
-    right: 10%;
-  }
 }
 
 .try-button {
-  background: #407BFF;
+  background: #FF6B4A;
   color: white;
   border: none;
-  padding: 16px 32px;
-  border-radius: 8px;
-  font-size: 18px;
+  padding: 20px 48px;
+  border-radius: 16px;
+  font-size: 20px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   margin-top: 40px;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.25);
   
   &:hover {
-    background: #2D5FE3;
+    background: #E55A3D;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(255, 107, 74, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 20px rgba(255, 107, 74, 0.2);
   }
 }
 
 .features {
   text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 0;
+  position: relative;
+
+  .try-button {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @media (max-width: 1200px) {
+    padding: 40px 0 120px;
+    
+    .try-button {
+      bottom: 40px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 30px 0 100px;
+
+    &__title {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    &__subtitle {
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+  }
 
   &__title {
     font-size: 42px;
     line-height: 1.2;
     margin-bottom: 20px;
     font-weight: 600;
-    color: white;
+    color: #1A1E23;
   }
 
   &__subtitle {
@@ -542,22 +509,44 @@ const openLoginModal = () => {
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   max-width: 1400px;
-  margin: 0 auto 40px;
+  margin: 0 auto;
+  height:700px;
   padding: 0 20px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 900px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    gap: 20px;
+  }
 }
 
 .feature-block {
-  color: white;
+  color: #1A1E23;
   
   h2 {
     font-size: 42px;
     line-height: 1.2;
     margin-bottom: 40px;
     font-weight: 600;
+
+    @media (max-width: 1200px) {
+      font-size: 36px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
   }
 
   .highlight-cyan {
-    color: #00F0C9;
+    color: #03c9a8;
   }
 
   .highlight-orange {
@@ -565,12 +554,11 @@ const openLoginModal = () => {
   }
 
   .highlight-white {
-    color: white;
+    color: #1A1E23;
   }
 }
 
 .feature-example {
-  background: #FFFFFF;
   border-radius: 20px;
   padding: 24px;
   height: 380px;
@@ -578,12 +566,20 @@ const openLoginModal = () => {
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 5px solid #F0F2F5;
+
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: 300px;
+    padding: 20px;
+    gap: 15px;
+  }
 }
 
 .example-text {
   font-size: 18px;
   color: #1A1E23;
-  background: #F0F2F5;
+  background: #E8F3FF;
   padding: 16px 20px;
   border-radius: 16px;
   align-self: flex-end;
@@ -652,7 +648,7 @@ const openLoginModal = () => {
     font-size: 16px;
     line-height: 1.5;
     color: #1A1E23;
-    background: #F0F2F5;
+    background: #FFEDE8;
     padding: 16px 20px;
     border-radius: 16px;
     flex: 1;
@@ -692,228 +688,15 @@ const openLoginModal = () => {
   font-size: 14px;
 }
 
-.hero-secondary {
-  text-align: center;
-  margin: 0 auto;
-  max-width: 1200px;
-  padding: 20px 20px;
-  position: relative;
-  overflow: visible;
-}
-
-.big-title {
-  font-size: 82px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  margin-bottom: 40px;
-  background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.9) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.subtitle-wrapper {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  font-size: 28px;
-  color: rgba(255, 255, 255, 0.9);
-  padding-right: 50px;
-}
-
-.subtitle-text {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 400;
-  font-size: 24px;
-}
-
-.vpn-badge {
-  background: #00F167;
-  color: #000000;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 24px;
-}
-
-.chat-form {
-  position: relative;
-  max-width: 800px;
-  margin: 80px auto;
-  background: rgba(18, 21, 25, 0.7);
-  border-radius: 24px;
-  padding: 16px;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -150%;
-    left: -50%;
-    right: -50%;
-    bottom: -150%;
-    background: radial-gradient(
-      ellipse at 50% 50%,
-      rgba(255, 215, 0, 0.1),
-      rgba(255, 215, 0, 0) 70%
-    );
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 24px;
-    background: linear-gradient(180deg, 
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    z-index: -1;
-  }
-}
-
-.chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 0 8px;
-}
-
-.chat-logo {
-  font-family: sans-serif;
-  font-weight: 800;
-  letter-spacing: 1px;
-  font-size: 25px;
-  color: white;
-  
-  span {
-    color: #00F0C9;
-  }
-}
-
-.info-button {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px;
-  
-  &:hover {
-    color: rgba(255, 255, 255, 0.8);
-  }
-}
-
-.chat-input-wrapper {
-  background: rgba(23, 26, 31, 0.9);
-  border-radius: 16px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.chat-input {
-  flex: 1;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  outline: none;
-  
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-}
-
-.chat-actions {
-  display: flex;
-  gap: 12px;
-
-  .action-button {
-    // background: rgba(255, 255, 255, 0.1);
-    // border: 1px solid rgba(255, 255, 255, 0.2);
-    // color: white;
-    border-radius: 25%;
-    width: 45px;
-    height: 45px;
-    padding: 0;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    &.mic-button {
-      // background: rgba(255, 255, 255, 0.1);
-      color: rgb(125, 227, 255);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-    }
-  }
-}
-
-.arrow-icon {
-  position: absolute;
-  right: 214px;
-  bottom: -88px;
-  width: 85px;
-  height: 155px;
-  pointer-events: none;
-  transform: rotate(25deg);
-}
-
-@media (max-width: 768px) {
-  .big-title {
-    font-size: 48px;
-  }
-
-  .subtitle-wrapper {
-    font-size: 20px;
-    flex-direction: column;
-  }
-
-  .vpn-badge {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 1400px) {
-  .pricing-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1200px) {
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .pricing {
   text-align: center;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 60px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .pricing__title {
@@ -921,7 +704,7 @@ const openLoginModal = () => {
   line-height: 1.2;
   margin-bottom: 20px;
   font-weight: 600;
-  color: white;
+  color: #1A1E23;
 }
 
 .pricing__subtitle {
@@ -932,21 +715,25 @@ const openLoginModal = () => {
 
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 25px;
-  margin-bottom: 40px;
+  margin: 0 auto 40px;
+  max-width: 1200px;
+  justify-content: center;
+  align-items: start;
 }
 
 .pricing-card {
   position: relative;
-  background: #1A1F2E;
+  background: #F0F2F5;
   border-radius: 20px;
   padding: 35px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 500px;
 
   &:hover {
     transform: translateY(-10px);
@@ -957,7 +744,7 @@ const openLoginModal = () => {
     font-size: 26px;
     margin-bottom: 20px;
     font-weight: 600;
-    color: white;
+    color: #1A1E23;
   }
 
   .price {
@@ -968,7 +755,7 @@ const openLoginModal = () => {
     span {
       font-size: 42px;
       font-weight: 700;
-      color: white;
+      color: #1A1E23;
       margin-right: 8px;
     }
   }
@@ -979,7 +766,7 @@ const openLoginModal = () => {
     margin: 0 0 40px 0;
     text-align: left;
     width: 100%;
-    color: #bdc7d9;
+    color: #6B7280;
     font-size: 15px;
 
     li {
@@ -1000,30 +787,34 @@ const openLoginModal = () => {
   .try-button {
     margin-top: auto;
     width: 100%;
+    padding: 16px 32px;
+    font-size: 18px;
+    border-radius: 12px;
   }
 
   &.trial {
-    border-color: #407BFF;
-    background: #2a3142;
+    border-color: #FF6B4A;
+    background: #fff1ee;
 
     .price span {
-       font-size: 24px;
-       color: #00F0C9;
+      font-size: 24px;
+      color: #FF6B4A;
     }
 
     .try-button {
-      background: #407BFF;
+      background: #FF6B4A;
       &:hover {
-        background: #2D5FE3;
+        background: #E55A3D;
       }
     }
   }
 
   &.basic {
     border-color: #FFD700;
-    background: linear-gradient(180deg, #2a3142 0%, #1A1F2E 100%);
+    background: linear-gradient(180deg, #fffbeb 0%, #F0F2F5 100%);
     transform: scale(1.05);
     z-index: 1;
+    height: 500px;
 
     .popular-badge {
       position: absolute;
@@ -1041,7 +832,7 @@ const openLoginModal = () => {
     }
 
     &:hover {
-      transform: scale(1.08);
+      transform: scale(1.07);
       box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);
     }
 
@@ -1049,9 +840,15 @@ const openLoginModal = () => {
       background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
       color: #000;
       font-weight: 600;
+      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.25);
 
       &:hover {
         background: linear-gradient(90deg, #FFA500 0%, #FFD700 100%);
+        box-shadow: 0 12px 28px rgba(255, 215, 0, 0.3);
+      }
+
+      &:active {
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
       }
     }
   }
@@ -1060,34 +857,84 @@ const openLoginModal = () => {
 .period-selector {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 40px;
+  gap: 15px;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+  padding: 0 20px;
+
+  @media (max-width: 768px) {
+    gap: 10px;
+    margin-bottom: 40px;
+  }
 }
 
 .period-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 18px;
-  padding: 12px 24px;
-  border-radius: 8px;
+  position: relative;
+  background: #f0f2f5;
+  border: 1px solid #ced4da;
+  color: #495057;
+  font-size: 16px;
+  padding: 10px 25px;
+  border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
 
   &.active {
-    background: #407BFF;
+    background: #343a40;
+    color: white;
+    border-color: #343a40;
   }
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
+  &:hover:not(.active) {
+  }
+
+  @media (max-width: 768px) {
+    width: calc(50% - 5px);
+    padding: 8px 15px;
+    font-size: 14px;
+
+    .discount {
+      font-size: 10px;
+      padding: 3px 6px;
+      top: -15px;
+    }
   }
 }
 
 .discount {
-  background: #FF6B4A;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-5deg);
+  background: #ffe8e0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
+  color: #FF6B4A;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  .period-btn:nth-child(4) & {
+      background: #FF6B4A;
+      color: white;
+  }
+}
+
+.period-btn:first-child .discount {
+  display: none;
+}
+
+.highlight-free {
+  background: #00F167;
+  color: #000000;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8em;
+  display: inline-block;
+  vertical-align: baseline;
+  margin-left: 5px;
 }
 </style>

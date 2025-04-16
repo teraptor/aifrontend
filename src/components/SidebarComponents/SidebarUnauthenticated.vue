@@ -25,8 +25,8 @@
       <Button
         type="button"
         @click="openAuthModal"
-        button-type="text"
-        text="Зарегистрироваться"
+        button-type="orange"
+        text="Регистрация"
         size="big"
       />
     </div>
@@ -99,6 +99,12 @@ const handleSwitchToLogin = (email?: string) => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    width: 100%;
+    align-items: center;
+
+    :deep(.btn) { 
+      font-size: 17px;
+    }
   }
 
   &__divider {
@@ -165,5 +171,13 @@ const handleSwitchToLogin = (email?: string) => {
 
 .login-password:hover {
   color: #111827;
+}
+
+.sidebar {
+  border-right: 1px solid #FF6B4A;
+}
+
+.side-menu {
+  border-right: 1px solid #FF6B4A;
 }
 </style> 
