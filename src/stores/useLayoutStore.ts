@@ -58,13 +58,6 @@ export const useLayoutStore = defineStore('Layout', {
       },
     ],
     sidebarAuthNav: [
-
-      {
-        id: '2',
-        icon: 'icon icon-activity',
-        link_name: 'Чаты',
-        link: RouteNames.Chats,
-      },
       {
         id: '1',
         icon: 'icon icon-users',
@@ -73,10 +66,17 @@ export const useLayoutStore = defineStore('Layout', {
       },
       {
         id: '2',
-        icon: 'icon icon-menu',
-        link_name: 'Ассистенты',
-        link: RouteNames.ASSISTENT_LIST,
+        icon: 'icon icon-activity',
+        link_name: 'Чаты',
+        link: RouteNames.Chats,
       },
+      
+      // {
+      //   id: '2',
+      //   icon: 'icon icon-menu',
+      //   link_name: 'Ассистенты',
+      //   link: RouteNames.ASSISTENT_LIST,
+      // },
       // {
       //   id: '3',
       //   icon: 'icon icon-activity',

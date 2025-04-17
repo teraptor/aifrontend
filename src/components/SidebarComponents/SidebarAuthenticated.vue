@@ -23,7 +23,6 @@ import { useLayoutStore } from '@/stores/useLayoutStore';
 import User from '../User/User.vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
-import { computed } from 'vue';
 import { RouteNames } from '@/router/routes/routeNames';
 
 const router = useRouter();

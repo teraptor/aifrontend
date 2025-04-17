@@ -73,7 +73,7 @@ const goToSetting = (event: MouseEvent) => {
 <style lang="scss" scoped>
 .assistents-card {
   position: relative;
-  max-width: 350px;
+  max-width: 280px;
   width: 100%;
   min-height: 120px;
   display: flex;
@@ -85,7 +85,6 @@ const goToSetting = (event: MouseEvent) => {
   transition: all 0.2s ease;
   cursor: pointer;
   border: 1px solid #e6e8ec;
-  box-shadow: $box-shadow-small;
 
   &:hover {
     transform: translateY(-2px);
@@ -153,8 +152,8 @@ const goToSetting = (event: MouseEvent) => {
   }
 
   &__image {
-    width: 40px;
-    height: 40px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -168,8 +167,8 @@ const goToSetting = (event: MouseEvent) => {
   }
 
   &__name {
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 500;
+    font-size: 18px;
     line-height: 1.4;
     color: $dark-color;
     margin: 0;

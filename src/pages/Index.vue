@@ -14,7 +14,7 @@ onMounted(async () => {
   
   // Проверяем авторизацию
   if (authStore.isAuthenticated) {
-    router.push('/assistents');
+    router.push('/my');
   }
 });
 

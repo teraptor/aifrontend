@@ -88,7 +88,7 @@ const regenerateResponse = () => {
   &__text {
     margin: 0;
     padding-right: 40px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
     white-space: pre-wrap;
     word-wrap: break-word;

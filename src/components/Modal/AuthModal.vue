@@ -104,7 +104,7 @@ defineExpose({ openModal: () => modal.value?.openModal() });
 
 .login-link {
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 15px;
   color: #666;
 }
 

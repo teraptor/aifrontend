@@ -67,8 +67,8 @@ const openFAQ = (id: string):void => {
       }
 
       &-icon-wrapper {
-        width: 22px;
-        height: 22px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         border: 1px solid rgba($help-color, 0.15);
         background: transparent;
@@ -84,7 +84,7 @@ const openFAQ = (id: string):void => {
       &-title {
         font-weight: 500;
         line-height: 1.5;
-        font-size: 14px;
+        font-size: 20px;
       }
 
       &-description {

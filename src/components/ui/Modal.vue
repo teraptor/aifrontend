@@ -62,14 +62,14 @@ defineExpose({ openModal, closeModal });
   box-shadow: $box-shadow-large;
   position: relative;
   width: 380px;
-  height: 380px;
+  height: auto;
   display: flex;
   flex-direction: column;
 }
 
 .modal__content-title {
   width: 100%;
-  font-weight: 600;
+  font-weight: 00;
   font-size: 20px;
   text-align: center;
   line-height: 1.5;
