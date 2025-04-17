@@ -21,7 +21,7 @@
     </div>
     <div class="assistents__list">
       <template v-if="filteredAssistents.length">
-        <AssistentsCard
+        <AssistentsCardTemplate
           v-for="item in filteredAssistents"
           :key="item.id"
           :assistents="item"
@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
 import TitleWrapper from '../ui/TitleWrapper.vue';
-import AssistentsCard from './AssistentsCard.vue';
+import AssistentsCardTemplate from './AssistentsCardTemplate.vue';
 import { useAssistentsStore } from '@/stores/useAssistantsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { SortOption, FilterOption } from '@/stores/useAssistantsStore';
