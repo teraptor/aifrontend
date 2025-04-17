@@ -111,10 +111,6 @@
                 <span class="dialog-dropdown__action-icon">✏️</span>
                 <span class="dialog-dropdown__action-title">Изменить название</span>
               </div>
-              <div class="dialog-dropdown__action" @click="openShareModal(); dialogMenuOpen = null">
-                <span class="dialog-dropdown__action-icon">🔗</span>
-                <span class="dialog-dropdown__action-title">Поделиться</span>
-              </div>
               <div class="dialog-dropdown__action" @click="deleteDialog(session)">
                 <span class="dialog-dropdown__action-icon">🗑️</span>
                 <span class="dialog-dropdown__action-title">Удалить диалог</span>
