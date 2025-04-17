@@ -258,48 +258,74 @@ const formatTime = (dateString: string) => {
 const scrollToBottom = () => {
   nextTick(() => {
     if (chatContainer.value) {
-      const scrollHeight = chatContainer.value.scrollHeight
-      const clientHeight = chatContainer.value.clientHeight
-      const maxScroll = scrollHeight - clientHeight
-      
-      chatContainer.value.scrollTo({
-        top: maxScroll,
+      const height = chatContainer.value.clientHeight;
+      const scrollHeight = chatContainer.value.scrollHeight;
+      console.log('Container height:', height);
+      console.log('Scroll height:', scrollHeight);
+      window.scrollTo({
+        top: window.scrollY + scrollHeight,
         behavior: 'smooth'
-      })
+      });
     }
   })
 }
 
-// Наблюдаем за изменениями в сообщениях
-watch(() => chatStore.sessionMessages, () => {
+// Следим за появлением контейнера
+const initContainer = () => {
+  if (!chatContainer.value) {
+    console.log('Ожидание появления chatContainer...');
+    return;
+  }
+
+  console.log('chatContainer найден:', chatContainer.value);
+
+  // Настраиваем MutationObserver для отслеживания изменений в чате
+  observer.value = new MutationObserver((mutations) => {
+    console.log('MutationObserver triggered', mutations);
+    if (chatContainer.value) {
+      const scrollHeight = chatContainer.value.scrollHeight;
+      window.scrollTo({
+        top: window.scrollY + scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  });
+
+  observer.value.observe(chatContainer.value, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+
+  // Добавляем ResizeObserver для отслеживания изменений высоты
+  resizeObserver.value = new ResizeObserver(() => {
+    // Прокрутка при изменении размера не нужна
+  });
+
+  resizeObserver.value.observe(chatContainer.value);
+
+  // Прокрутка при открытии/обновлении чата
   scrollToBottom()
-}, { deep: true })
+}
 
 // Загрузка данных при монтировании
 onMounted(() => {
   // Подписываемся на события WebSocket
   webSocketService.subscribe(WebSocketAction.NewMessage, handleNewMessage)
 
-  // Настраиваем MutationObserver для отслеживания изменений в чате
-  if (chatContainer.value) {
-    observer.value = new MutationObserver(() => {
-      scrollToBottom()
-    });
-
-    observer.value.observe(chatContainer.value, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    // Добавляем ResizeObserver для отслеживания изменений высоты
-    resizeObserver.value = new ResizeObserver(() => {
-      scrollToBottom()
-    });
-
-    resizeObserver.value.observe(chatContainer.value);
-  }
+  // Запускаем инициализацию
+  nextTick(() => {
+    initContainer()
+  })
 })
+
+// Следим за появлением контейнера
+watch(chatContainer, (newVal) => {
+  if (newVal) {
+    console.log('chatContainer появился в watch');
+    initContainer()
+  }
+}, { immediate: true })
 
 // Следим за изменением активной сессии и ассистента
 watch(
@@ -311,6 +337,10 @@ watch(
       newAssistant.id !== oldAssistant?.id
     )) {
       chatStore.loadDialogMessages(newAssistant.id, newSessionId)
+      // Прокрутка после загрузки сообщений
+      nextTick(() => {
+        scrollToBottom()
+      })
     }
   },
   { immediate: true }
