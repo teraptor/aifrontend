@@ -394,7 +394,7 @@ const deleteDialog = async (session: any) => {
   &-container {
     position: fixed;
     height: 82vh;
-    // width: 20%;
+    width: 20%;
     border-radius: 8px;
     background: #fff;
     border: 1px solid #eaeaea;

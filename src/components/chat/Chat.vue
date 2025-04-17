@@ -526,7 +526,7 @@ const getMessagesAfterCount = (messageId: string): number => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(100% - 60px);
+  min-height: 200px;
   padding-bottom: 20px;
   margin-bottom: 20px;
 }
