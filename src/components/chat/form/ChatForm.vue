@@ -27,7 +27,7 @@
       </div>
       <div class="chat-actions">
         <div class="mode-buttons">
-          <button 
+          <button v-if="showAgents"
             v-for="mode in modes" 
             :key="mode.id"
             class="mode-button"
@@ -40,7 +40,7 @@
           </button>
         </div>
         <div class="action-buttons">
-          <button class="tools-button" @click="$emit('tools-click')">
+          <button v-if="showTools" class="tools-button" @click="$emit('tools-click')">
             <span class="tools-icon">🔧</span>
             Tools
           </button>
@@ -67,12 +67,16 @@ const props = defineProps<{
   path?: string
   showHeader?: boolean
   showInfo?: boolean
+  showTools?: boolean
+  showAgents?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'send', message: string): void
   (e: 'update:current-mode', mode: string): void
   (e: 'tools-click'): void
+  (e: 'agents-click'): void
+  (e: 'ask-click'): void
 }>()
 
 const message = ref('')

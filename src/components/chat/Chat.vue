@@ -35,9 +35,13 @@
       :current-mode="currentMode"
       :model="activeModel"
       :show-header="false"
+      :show-tools="true"
+      :show-agents="true"
       @send="sendMessage"
       @update:current-mode="handleModeChange"
       @tools-click="toggleAssistentMenu"
+      @agents-click="handleAgentsClick"
+      @ask-click="handleAskClick"
     />
     
     <ToolsModal
@@ -364,6 +368,16 @@ const getMessagesAfterCount = (messageId: string): number => {
   const messageIndex = chatStore.sessionMessages.findIndex(msg => msg.id === messageId)
   if (messageIndex === -1) return 0
   return chatStore.sessionMessages.length - messageIndex - 1
+}
+
+const handleAgentsClick = () => {
+  // Здесь будет логика для обработки клика по кнопке Agents
+  console.log('Agents clicked')
+}
+
+const handleAskClick = () => {
+  // Здесь будет логика для обработки клика по кнопке Ask
+  console.log('Ask clicked')
 }
 </script>
 

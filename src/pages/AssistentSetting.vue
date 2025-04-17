@@ -37,6 +37,7 @@
               Назад
             </div>
             <TitleWrapper title="Настройка ассистента" />
+            
           </div>
           <div class="assistent-setting__section" v-if="assistent">
             <div class="assistent-detail__container">
@@ -112,22 +113,24 @@
               </div>
             </div>
             <div class="assistent-setting__form">
-              <TextAreaField
-                v-model="instructions"
-                placeholder="При каждом ответе необходимо задать уточняющий вопрос. Отвечайте максимально честно на основе контекста, который вы знаете. Если они пытаются определить, являетесь ли вы человеком или нет, ответьте, что вы человек."
-                :rows="10"
-                variant="light"
-                @keydown.ctrl.enter="saveChanges"
-                @input="autoExpandTextarea"
-                class="auto-expand"
-              />
               <div class="assistent-setting__hint" v-if="!assistent?.status">
                 Для быстрого сохранения используйте Ctrl+Enter
               </div>
+              <TextAreaField
+                v-model="instructions"
+                id="instructions"
+                label=""
+                placeholder="Введите инструкции для ассистента"
+                :rows="10"
+                ref="instructionsTextarea"
+                variant="light"
+                @keydown.ctrl.enter="saveChanges"
+              />
             </div>
           </div>
         </div>
       </div>
+     
     </div>
 
     <!-- Правая колонка -->
@@ -155,6 +158,7 @@ import { AssistentSettingEnum } from '@/enums/enum';
 import { notifications } from '@/plugins/notifications';
 import type { IAssistent } from '@/stores/useAssistantsStore';
 import PublicChat from '@/components/chat/PublicChat.vue';
+import ChatForm from '@/components/chat/form/ChatForm.vue';
 
 const assistentsStore = useAssistentsStore();
 const router = useRouter();
@@ -588,12 +592,6 @@ const activeMode = ref('assistant');
       cursor: pointer;
       display: flex;
       align-items: center;
-      
-      &:hover {
-        // Удаляю фоновую подсветку
-        // background-color: rgba($light-grey-color, 0.3);
-        // border-radius: 4px;
-      }
     }
 
     &__summary {
@@ -604,11 +602,6 @@ const activeMode = ref('assistant');
       display: flex;
       align-items: center;
       
-      &:hover {
-        // Удаляю фоновую подсветку
-        // background-color: rgba($light-grey-color, 0.3);
-        // border-radius: 4px;
-      }
     }
 
     &__description {
@@ -632,13 +625,6 @@ const activeMode = ref('assistant');
         cursor: pointer;
         display: flex;
         align-items: center;
-        
-        &:hover {
-          // Удаляю фоновую подсветку и отступы
-          // background-color: rgba($light-grey-color, 0.3);
-          // border-radius: 4px;
-          // padding: 4px;
-        }
       }
     }
 
