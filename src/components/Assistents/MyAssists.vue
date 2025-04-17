@@ -8,10 +8,10 @@
         <router-link :to="{ name: RouteNames.ASSISTENT_LIST }" class="my-assistents__link">
           <div class="my-assistents__link-content">
             <span class="icon icon-file" style="color: #FF6B4A;"></span>
-            <span>Создать ассистента из шаблона</span>
+            <span>Выбрать ассистента из шаблона</span>
           </div>
         </router-link>
-        <router-link :to="{ name: RouteNames.CREATE_ASSISTENT }" class="my-assistents__link">
+        <router-link :to="{ name: RouteNames.CREATE_ASSISTENT }" class="my-assistents__link disabled">
           <div class="my-assistents__link-content">
             <span class="icon icon-plus" style="color: #FF6B4A;"></span>
             <span>Создать нового ассистента</span>
@@ -141,18 +141,24 @@
   &__link {
     display: flex;
     align-items: center;
-    color: #FF6B4A;
+    color: rgb(255, 107, 74);
     text-decoration: none;
     font-size: 16px;
     padding: 16px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 107, 74, 0.2);
+    border: 2px solid rgba(255, 107, 74, 0.5);
     transition: all 0.2s ease;
     background-color: white;
     width: 100%;
 
     &:hover {
       background-color: rgba(255, 107, 74, 0.05);
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
     }
   }
 
