@@ -1,7 +1,7 @@
 <template>
   <div class="assistents">
     <TitleWrapper title="Ассистенты" subtitle="Сделано с <span class='icon icon-like'></span> в 2025" />
-    <div class="assistents__nav-group">
+    <!-- <div class="assistents__nav-group">
       <div class="assistents__btn-group" v-if="authStore.isAuthenticated">
         <InputField
           icon='icon icon-search'
@@ -10,15 +10,8 @@
           v-model="searchQuery"
           @input="handleSearch"
         />
-        <Button
-          button-type="secondary"
-          text="Создать ассистента"
-          size="medium"
-          type="button"
-          @click="navigateToCreateAssistent"
-        />
       </div>
-    </div>
+    </div> -->
     <div class="assistents__list">
       <template v-if="filteredAssistents.length">
         <AssistentsCardTemplate
