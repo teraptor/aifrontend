@@ -1,8 +1,12 @@
 import { push } from 'notivue'
 
+interface NotificationOptions {
+    timeout: number;
+}
+
 export const notifications = {
-    success: (message: string) => push.success(message),
-    error: (message: string) => push.error(message),
-    warning: (message: string) => push.warning(message),
-    info: (message: string) => push.info(message),
+    success: (message: string, options: NotificationOptions = { timeout: 5000 }) => push.success(message, options),
+    error: (message: string, options: NotificationOptions = { timeout: 5000 }) => push.error(message, options),
+    warning: (message: string, options: NotificationOptions = { timeout: 5000 }) => push.warning(message, options),
+    info: (message: string, options: NotificationOptions = { timeout: 5000 }) => push.info(message, options)
 }

@@ -1,6 +1,5 @@
 <template>
   <div :class="['assistents-card', cardClass]" v-if="assistents" @click="goToAssistentDetails">
-    <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
     <div class="assistents-card__container">
       <img :src="assistents.image" class="assistents-card__image"/>
       <div class="assistents-card__name-wrapper">
@@ -12,6 +11,7 @@
       <div :class="['assistents-card__footer-status', statusClass]">
         {{ statusText }}
       </div>
+      <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
     </div>
     <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
       <p>Скоро</p>
@@ -27,10 +27,12 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
+import { useAssistentChatStore } from '@/stores/useAssistantChatStore';
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const chatStore = useAssistentChatStore()
 
 const props = defineProps({
   assistents: {
@@ -58,9 +60,13 @@ const statusText = computed(() => {
   return assistents.status ? 'Активный' : 'Неактивный';
 });
 
-const goToAssistentDetails = () => {
+const goToAssistentDetails = async () => {
   if (cardClass.value !== 'assistents-card--locked') {
-    router.push({ name: RouteNames.ASSISTENT_DETAIL, params: { id: assistents.id } });
+    // Сохраняем ID ассистента в localStorage
+    localStorage.setItem('selectedAssistantId', assistents.id);
+    
+    // Переходим на страницу чатов
+    router.push({ name: RouteNames.Chats });
   }
 };
 
@@ -105,13 +111,11 @@ const goToSetting = (event: MouseEvent) => {
   }
 
   &__settings-icon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
     font-size: 18px;
     color: $help-color;
-    cursor: pointer;
+    cursor: default;
     transition: color 0.2s ease;
+    margin-left: auto;
 
     &:hover {
       color: $main-color;
@@ -194,7 +198,7 @@ const goToSetting = (event: MouseEvent) => {
       text-transform: lowercase;
       font-size: 12px;
       font-weight: 500;
-      border-radius: 16px;
+      border-radius: 7px;
       padding: 4px 10px;
       color: $light-color;
 
@@ -203,7 +207,7 @@ const goToSetting = (event: MouseEvent) => {
       }
 
       &--active {
-        background-color: $success-color;
+        background-color:  rgba(255, 107, 74, 0.8);
       }
       
       &--inactive {
