@@ -1,85 +1,6 @@
 <template>
   <div class="chat">
     <div class="chat__container" v-if="selectedAssistant && chatStore.activeSessionId">
-      <div class="chat-header" ref="chatHeader">
-        <div class="assistant-header" @click="toggleAssistentMenu" ref="assistentMenuTrigger">
-          <div class="assistant-header__avatar">
-            <div class="assistant-avatar" v-if="selectedAssistant">
-              {{ selectedAssistant.name.charAt(0) }}
-            </div>
-          </div>
-          <div class="assistant-header__info">
-            <h2 class="assistant-header__name">
-              {{ selectedAssistant.name }}
-              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.status }"></span>
-              <span class="dropdown-icon">▼</span>
-            </h2>
-            <div class="assistant-header__description-container">
-              <p class="assistant-header__description">
-                {{ selectedAssistant.description }}
-              </p>
-            </div>
-          </div>
-          <ChatTools
-            :assistant-name="selectedAssistant.name"
-            :assistant-description="selectedAssistant.description"
-            :assistant-id="selectedAssistant.id"
-          />
-        </div>
-
-        <div class="assistant-dropdown" v-if="isAssistentMenuOpen" ref="assistentMenu">
-          <div class="assistant-dropdown__header">Действия</div>
-          <div class="assistant-dropdown__actions">
-            <div
-              v-for="item in menuItems"
-              :key="item.id"
-              class="assistant-dropdown__action"
-              @click="item.action"
-            >
-              <span class="assistant-dropdown__action-icon">{{ item.icon }}</span>
-              <span class="assistant-dropdown__action-title">{{ item.title }}</span>
-            </div>
-          </div>
-          <div class="assistant-header__description-container">
-            <p class="assistant-header__description">
-              {{ selectedAssistant.description }}
-            </p>
-          </div>
-          <ChatTools
-            :assistant-name="selectedAssistant.name"
-            :assistant-description="selectedAssistant.description"
-            :assistant-id="selectedAssistant.id"
-          />
-        </div>
-      </div>
-
-      <div
-        class="sticky-header"
-        :class="{ 'hidden': !isHeaderSticky }"
-        ref="stickyHeader"
-        :style="stickyHeaderStyle"
-      >
-        <div class="assistant-header" @click="toggleAssistentMenu">
-          <div class="assistant-header__avatar">
-            <div class="assistant-avatar" v-if="selectedAssistant">
-              {{ selectedAssistant.name.charAt(0) }}
-            </div>
-          </div>
-          <div class="assistant-header__info">
-            <h2 class="assistant-header__name">
-              {{ selectedAssistant.name }}
-              <span class="status-indicator" :class="{ 'status-indicator--active': selectedAssistant.status }"></span>
-              <span class="dropdown-icon">▼</span>
-            </h2>
-            <div class="assistant-header__description-container">
-              <p class="assistant-header__description">
-                {{ selectedAssistant.description }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="chat-messages" ref="chatContainer">
         <template v-for="message in chatStore.sessionMessages" :key="message.id">
           <UserMessage
@@ -192,13 +113,6 @@ const isAssistentMenuOpen = ref(false)
 const assistentMenuTrigger = ref<HTMLElement | null>(null)
 const assistentMenu = ref<HTMLElement | null>(null)
 const chatHeader = ref<HTMLElement | null>(null)
-const stickyHeader = ref<HTMLElement | null>(null)
-const isHeaderSticky = ref(false)
-const stickyHeaderStyle = ref({
-  top: '0px',
-  left: '0px',
-  width: '0px'
-})
 const currentMode = ref('agent')
 const activeModel = ref('claude-3')
 const observer = ref<MutationObserver | null>(null)
@@ -361,35 +275,6 @@ watch(() => chatStore.sessionMessages, () => {
   scrollToBottom()
 }, { deep: true })
 
-// Функция для проверки видимости шапки
-const checkHeaderVisibility = () => {
-  if (!chatHeader.value || !stickyHeader.value) return
-
-  const headerRect = chatHeader.value.getBoundingClientRect()
-  const isMainHeaderVisible = headerRect.top >= 0
-
-  // Если основная шапка стала видимой, плавно скрываем прикрепленную
-  if (isMainHeaderVisible && isHeaderSticky.value) {
-    setTimeout(() => {
-      isHeaderSticky.value = false
-    }, 300)
-  } else if (!isMainHeaderVisible) {
-    // Если основная шапка не видна, показываем прикрепленную
-    isHeaderSticky.value = true
-
-    // Обновляем позицию прикрепленной шапки
-    const chatContainer = chatHeader.value.closest('.chat__container')
-    if (chatContainer) {
-      const containerRect = chatContainer.getBoundingClientRect()
-      stickyHeaderStyle.value = {
-        top: '0px',
-        left: `${containerRect.left}px`,
-        width: `${containerRect.width}px`
-      }
-    }
-  }
-}
-
 // Загрузка данных при монтировании
 onMounted(() => {
   // Подписываемся на события WebSocket
@@ -414,9 +299,6 @@ onMounted(() => {
 
     resizeObserver.value.observe(chatContainer.value);
   }
-
-  // Добавляем слушатель прокрутки
-  window.addEventListener('scroll', checkHeaderVisibility)
 })
 
 // Следим за изменением активной сессии и ассистента
@@ -437,7 +319,6 @@ watch(
 // Отписываемся от WebSocket событий при размонтировании компонента
 onUnmounted(() => {
   webSocketService.unsubscribe(WebSocketAction.NewMessage, handleNewMessage)
-  window.removeEventListener('scroll', checkHeaderVisibility)
   
   // Отключаем наблюдатели
   if (observer.value) {
@@ -637,35 +518,6 @@ const getMessagesAfterCount = (messageId: string): number => {
     margin: 0;
     max-width: 80%;
     line-height: 1.5;
-  }
-}
-
-.sticky-header {
-  position: fixed;
-  z-index: 100;
-  background-color: #ffffff;
-  border-bottom: 1px solid rgba(#999, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 8px 16px;
-  opacity: 1;
-  visibility: visible;
-  transition: all 0.3s ease-out;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-
-  &.hidden {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-100%);
-  }
-
-  .assistant-header {
-    padding: 4px;
-    border-radius: 6px;
-
-    &:hover {
-      background-color: rgba(#1890ff, 0.05);
-    }
   }
 }
 

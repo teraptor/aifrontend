@@ -198,7 +198,7 @@ onMounted(async () => {
   }
 
   &__chat {
-    width: 65%;
+    width: 74%;
     height: 100%;
     display: flex;
     flex-direction: column;

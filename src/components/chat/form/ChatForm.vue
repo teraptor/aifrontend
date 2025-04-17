@@ -99,14 +99,14 @@ const handleSend = () => {
 .chat-form {
   position: fixed;
   bottom: 0;
-  left: 43%;
+  left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 40px);
   max-width: 800px;
   padding: 20px;
   box-sizing: border-box;
   margin: 0 auto;
-  z-index: 100;
+  z-index: 0;
 }
 
 .form-container {
@@ -114,6 +114,7 @@ const handleSend = () => {
   border-radius: 24px;
   padding: 16px;
   border: 5px solid #F0F2F5;
+  width: 100%;
 }
 
 .chat-header {

@@ -5,14 +5,6 @@
         <span class="share-icon">Share</span>
       </button>
     </div>
-
-    <ShareModal
-      :is-open="isShareModalOpen"
-      :assistant-name="assistantName"
-      :assistant-description="assistantDescription"
-      :assistant-id="assistantId"
-      @close="closeShareModal"
-    />
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 <template>
   <div class="assistent-chat__dialogs" v-if="selectedAssistant">
     <div class="assistent-chat__dialogs-container">
+
       <div class="dialogs-header">
         <div class="notification-bell-container">
           <div class="notification-bell" :class="{ 'has-notifications': totalUnreadMessages > 0 }" @click="toggleNotificationsMenu" ref="notificationBellTrigger">
@@ -110,6 +111,10 @@
                 <span class="dialog-dropdown__action-icon">✏️</span>
                 <span class="dialog-dropdown__action-title">Изменить название</span>
               </div>
+              <div class="dialog-dropdown__action" @click="openShareModal(); dialogMenuOpen = null">
+                <span class="dialog-dropdown__action-icon">🔗</span>
+                <span class="dialog-dropdown__action-title">Поделиться</span>
+              </div>
               <div class="dialog-dropdown__action" @click="deleteDialog(session)">
                 <span class="dialog-dropdown__action-icon">🗑️</span>
                 <span class="dialog-dropdown__action-title">Удалить диалог</span>
@@ -152,6 +157,18 @@ const emit = defineEmits<{
 }>()
 
 const assistantChatStore = useAssistentChatStore()
+
+// Добавляем состояние для модального окна "Поделиться"
+const isShareModalOpen = ref(false)
+
+// Функции для управления модальным окном
+const openShareModal = () => {
+  isShareModalOpen.value = true
+}
+
+const closeShareModal = () => {
+  isShareModalOpen.value = false
+}
 
 // Локальные переменные для UI
 const editingDialogId = ref<string | null>(null)
@@ -372,7 +389,7 @@ const deleteDialog = async (session: any) => {
 
 <style lang="scss" scoped>
 .assistent-chat__dialogs {
-  width: 35%;
+  width: 20%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -398,6 +415,7 @@ const deleteDialog = async (session: any) => {
   background-color: #ffffff;
   overflow-y: auto;
   height: calc(100% - 61px);
+  border-radius: 0px 0px 12px 12px;
   
   &::-webkit-scrollbar {
     width: 6px;
@@ -861,6 +879,20 @@ const deleteDialog = async (session: any) => {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
+}
+
+.share-button {
+  background-color: #F97316; /* Оранжевый цвет */
+  color: white;
+  padding: 8px 16px; /* Добавляем отступы */
+  border-radius: 20px; /* Скругляем углы */
+  text-decoration: none; /* Убираем подчеркивание */
+  display: inline-block; /* Чтобы padding работал корректно */
+  transition: background-color 0.3s ease; /* Плавный переход при наведении */
+}
+
+.share-button:hover {
+  background-color: #EA580C; /* Более темный оранжевый при наведении */
 }
 </style>
 

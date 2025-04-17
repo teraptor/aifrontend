@@ -11,23 +11,35 @@
       <div :class="['assistents-card__footer-status', statusClass]">
         {{ statusText }}
       </div>
+      <div>
+        <a href="#" @click="openShareModal" class="share-button">Share</a>
+        
       <span class="assistents-card__settings-icon icon icon-cog" v-if="route.name === RouteNames.ASSISTENS" @click="goToSetting($event)"/>
+      </div>
     </div>
     <div class="assistents-card__lock-container" v-if="cardClass === 'assistents-card--locked'">
       <p>Скоро</p>
       <span class="icon icon-lock"/>
     </div>
   </div>
+  <ShareModal 
+    :is-open="isShareModalOpen"
+    :assistant-id="assistents.id"
+    :assistant-name="assistents.name"
+    :assistant-description="assistents.description"
+    @close="closeShareModal"
+  />
 </template>
 
 
 <script setup lang="ts">
 import type { IAssistent } from '@/stores/useAssistantsStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { RouteNames } from '@/router/routes/routeNames';
 import { useAssistentChatStore } from '@/stores/useAssistantChatStore';
+import ShareModal from '@/components/chat/share/ShareModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -42,6 +54,19 @@ const props = defineProps({
 })
 
 const { assistents } = props;
+
+// Состояния для модального окна Share
+const isShareModalOpen = ref(false)
+
+// Методы для управления модальным окном
+const openShareModal = (event: MouseEvent) => {
+  event.stopPropagation()
+  isShareModalOpen.value = true
+}
+
+const closeShareModal = () => {
+  isShareModalOpen.value = false
+}
 
 const cardClass = computed(() => {
   if (!assistents) return '';
@@ -214,6 +239,24 @@ const goToSetting = (event: MouseEvent) => {
         background-color: $help-color;
       }
     }
+  }
+}
+
+.share-button {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid #E5E7EB;
+
+  &:hover {
+    background-color: #E5E7EB;
+    color: #4B5563;
   }
 }
 </style>
